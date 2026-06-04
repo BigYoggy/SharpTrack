@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SharpTrack Login</title>
+    <style>
+        :root {
+            --primary-green: #0a4d33;
+            --light-green: #e9f1ed;
+            --bg-color: #fdf6e2; /* Updated background color to match the image */
+            --text-color: #333;
+            --label-color: #4a5d55;
+            --border-color: #c0ccc6;
+            --placeholder-color: #99a7a0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at bottom right, rgba(10, 77, 51, 0.05) 0%, transparent 40%),
+                              radial-gradient(circle at bottom left, rgba(10, 77, 51, 0.08) 0%, transparent 50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            z-index: 1;
+        }
+
+        /* Logo Styling */
+        .logo-section {
+            margin-bottom: 50px;
+        }
+
+        .logo-img {
+            width: 280px; /* Adjust based on the actual logo image aspect ratio */
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Form Styling */
+        .login-form {
+            text-align: left;
+
+        }
+
+        .form-group {
+            padding-bottom: 25px;
+            padding-top:25px;
+        }
+
+        label {
+            display: block;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--label-color);
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 14px 45px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 15px;
+            background-color: rgba(255, 255, 255, 0.5);
+            outline: none;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary-green);
+            background-color: #ffffff;
+        }
+
+        .input-wrapper input::placeholder {
+            color: var(--placeholder-color);
+        }
+
+        .icon-left {
+            position: absolute;
+            left: 15px;
+            color: var(--primary-green);
+            display: flex;
+            align-items: center;
+        }
+
+        .icon-right {
+            position: absolute;
+            right: 15px;
+            color: var(--primary-green);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Sign In Button */
+        .signin-btn {
+            width: 100%;
+            padding: 16px;
+            background-color: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        .signin-btn:hover {
+            background-color: #083b27;
+        }
+
+        .signin-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Footer */
+        .footer-text {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .create-account {
+            color: var(--primary-green);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        /* SVG Icons */
+        .svg-icon {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <!-- Logo -->
+        <div class="logo-section">
+            <img src="logo3.png" alt="SharpTrack Logo" class="logo-img">
+        </div>
+
+        <!-- Login Form -->
+        <form class="login-form">
+            <div class="form-group">
+                <label>Phone Number</label>
+                <div class="input-wrapper">
+                    <span class="icon-left">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    </span>
+                    <input type="tel" placeholder="0801-234-5678">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>PIN</label>
+                <div class="input-wrapper">
+                    <span class="icon-left">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </span>
+                    <input type="password" placeholder="Enter 6-digit PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*">
+                    <span class="icon-right">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                    </span>
+                </div>
+            </div>
+
+            <button type="button" class="signin-btn" onclick="window.location.href='dashboard.html'">Sign In</button>
+        </form>
+
+        <div class="footer-text">
+            Don't have an account? <a href="signup.html" class="create-account">Create Account</a>
+        </div>
+    </div>
+
+</body>
+</html>

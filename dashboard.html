@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SharpTrack - Dashboard</title>
+    <style>
+        :root {
+            --primary: #0a4d33;
+            --primary-dark: #083b27;
+            --bg: #f0ebe0;
+            --card-bg: #ffffff;
+            --border: #e8e3d8;
+            --text: #1a2e26;
+            --muted: #7a8880;
+            --orange: #e07b2a;
+            --orange-bg: #fdf3ea;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            padding-bottom: 90px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: var(--bg);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+           
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-logo img { height:56px; width: auto; object-fit: contain;
+            mix-blend-mode: multiply; }
+
+        .hamburger { cursor: pointer; display: flex; flex-direction: column; gap: 5px; }
+        .hamburger span { width: 22px; height: 2px; background: var(--text); border-radius: 2px; display: block; }
+
+        .bell-btn {
+            position: relative;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text);
+        }
+
+        .bell-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--primary);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        svg.icon {
+            width: 22px; height: 22px;
+            fill: none; stroke: currentColor;
+            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+        }
+
+        /* MAIN CONTENT */
+        .content { padding: 4px 20px 0; }
+
+        /* GREETING */
+        .greeting { margin-bottom: 20px; }
+        .greeting h1 { font-size: 22px; font-weight: 700; color: var(--text); }
+        .greeting p { font-size: 14px; color: var(--muted); margin-top: 3px; }
+
+        /* STAT CARDS */
+        .stat-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 12px;
+        }
+
+        .stat-card .label {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--muted);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-card .sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-card .sub.up { color: #2e9e5b; }
+
+        .stat-card.alert .value { color: var(--orange); font-size: 28px; }
+        .stat-card.alert .sub { color: var(--orange); font-weight: 600; }
+
+        .stat-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .stat-icon.green { background: #edf5ef; color: var(--primary); }
+        .stat-icon.orange { background: var(--orange-bg); color: var(--orange); }
+
+        /* SALES LIST */
+        .section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .section-header h2 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .view-all {
+            font-size: 13px;
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .sale-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sale-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .sale-item:first-child { padding-top: 0; }
+
+        .sale-img {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            background: #f5f5f0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .sale-info { flex: 1; min-width: 0; }
+        .sale-info .name { font-size: 14px; font-weight: 600; color: var(--text); }
+        .sale-info .qty { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+        .sale-meta { text-align: right; flex-shrink: 0; }
+        .sale-meta .amount { font-size: 14px; font-weight: 700; color: var(--text); }
+        .sale-meta .time { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+        /* QUICK ACTIONS */
+        .quick-actions { margin-bottom: 20px; }
+        .quick-actions h2 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .action-btn {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            border: none;
+            text-align: left;
+            transition: transform 0.1s;
+        }
+
+        .action-btn:active { transform: scale(0.97); }
+
+        .action-icon {
+            width: 40px; height: 40px;
+            background: #edf5ef;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .action-text .title { font-size: 14px; font-weight: 700; color: var(--primary); }
+        .action-text .sub { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            max-width: 480px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 10px 0 16px;
+            border-top: 1px solid var(--border);
+            z-index: 10;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 500;
+            border: none;
+            background: none;
+            padding: 0 8px;
+        }
+
+        .nav-item.active { color: var(--primary); }
+        .nav-item svg { width: 22px; height: 22px; }
+
+        .fab {
+            width: 52px; height: 52px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            border: none;
+            position: relative; margin-right:10px; bottom: 16px;
+            margin-top: 10px;
+            box-shadow: 0 4px 16px rgba(10,77,51,0.35);
+            color: white;
+            transition: transform 0.1s;
+        }
+
+        .fab:active { transform: scale(0.95); }
+        .fab svg { width: 24px; height: 24px; stroke: white; }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="hamburger">
+            <span></span><span></span><span></span>
+        </div>
+        <div class="nav-logo">
+            <img src="logo2.png" alt="SharpTrack" height: 1000px; width: auto; object-fit: contain>
+        </div>
+        <button class="bell-btn">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="bell-badge">3</span>
+        </button>
+    </nav>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+        <!-- GREETING -->
+        <div class="greeting">
+            <h1>Good morning, Sarah! 👋</h1>
+            <p>Here's what's happening with your business today.</p>
+        </div>
+
+        <!-- STAT CARDS -->
+        <div class="stat-cards">
+            <div class="stat-card">
+                <div class="stat-icon green">
+                    <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                </div>
+                <div class="label">Today's Total Sales</div>
+                <div class="value">₦125,450</div>
+                <div class="sub up">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+                    12% vs yesterday
+                </div>
+            </div>
+            <div class="stat-card alert">
+                <div class="stat-icon orange">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                </div>
+                <div class="label">Items Low on Stock</div>
+                <div class="value">8</div>
+                <div class="sub">Need restocking</div>
+            </div>
+        </div>
+
+        <!-- LAST 5 SALES -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Last 5 Sales</h2>
+                <a href="#" class="view-all">View all ›</a>
+            </div>
+
+            <div class="sale-item">
+                <div class="sale-img">🍜</div>
+                <div class="sale-info">
+                    <div class="name">Indomie Chicken 70g</div>
+                    <div class="qty">2 packs</div>
+                </div>
+                <div class="sale-meta">
+                    <div class="amount">₦600.00</div>
+                    <div class="time">10:45 AM</div>
+                </div>
+            </div>
+
+            <div class="sale-item">
+                <div class="sale-img">🥛</div>
+                <div class="sale-info">
+                    <div class="name">Peak Milk (Tin)</div>
+                    <div class="qty">1 tin</div>
+                </div>
+                <div class="sale-meta">
+                    <div class="amount">₦1,750.00</div>
+                    <div class="time">10:20 AM</div>
+                </div>
+            </div>
+
+            <div class="sale-item">
+                <div class="sale-img">🧴</div>
+                <div class="sale-info">
+                    <div class="name">Omo Detergent 1kg</div>
+                    <div class="qty">1 bag</div>
+                </div>
+                <div class="sale-meta">
+                    <div class="amount">₦2,800.00</div>
+                    <div class="time">09:58 AM</div>
+                </div>
+            </div>
+
+            <div class="sale-item">
+                <div class="sale-img">☕</div>
+                <div class="sale-info">
+                    <div class="name">Milo (Tin)</div>
+                    <div class="qty">1 tin</div>
+                </div>
+                <div class="sale-meta">
+                    <div class="amount">₦1,900.00</div>
+                    <div class="time">09:30 AM</div>
+                </div>
+            </div>
+
+            <div class="sale-item">
+                <div class="sale-img">🌾</div>
+                <div class="sale-info">
+                    <div class="name">Golden Penny Rice 5kg</div>
+                    <div class="qty">1 bag</div>
+                </div>
+                <div class="sale-meta">
+                    <div class="amount">₦4,500.00</div>
+                    <div class="time">08:50 AM</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUICK ACTIONS -->
+        <div class="quick-actions">
+            <h2>Quick Actions</h2>
+            <div class="action-grid">
+                <button class="action-btn" onclick="window.location.href='add-sale.html'">
+                    <div class="action-icon">
+                        <svg class="icon" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
+                    </div>
+                    <div class="action-text">
+                        <div class="title">Add Sale</div>
+                        <div class="sub">Record a new sale</div>
+                    </div>
+                </button>
+                <button class="action-btn" onclick="window.location.href='add-stock.html'">
+                    <div class="action-icon">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    </div>
+                    <div class="action-text">
+                        <div class="title">Add Stock</div>
+                        <div class="sub">Add new inventory</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+        <button class="nav-item active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Dashboard
+        </button>
+        <button class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            Inventory
+        </button>
+        <button class="fab" onclick=window.location.href="add-stock.html">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <a href="record-sales.html" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round"
+                 stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"/>
+                <line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/>
+                <line x1="3" y1="6" x2="3.01" y2="6"/>
+                <line x1="3" y1="12" x2="3.01" y2="12"/>
+                <line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+            Sales
+        </a>
+        <button class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            More
+        </button>
+    </nav>
+
+</body>
+</html>
