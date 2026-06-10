@@ -414,7 +414,7 @@
     resendBtn.textContent = 'Sending...';
 
     try {
-      const res = await fetch('https://sharptrack-api.onrender.com', {
+      const res = await fetch('https://sharptrack-api.onrender.com/api/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone })
@@ -459,7 +459,7 @@
 
     try {
       // Step 1: Verify OTP
-      const verifyRes = await fetch('https://sharptrack-api.onrender.com', {
+      const verifyRes = await fetch('https://sharptrack-api.onrender.com/api/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, otp })
@@ -478,7 +478,7 @@
       }
 
       // Step 2: Register the user
-      const registerRes = await fetch('https://sharptrack-api.onrender.com', {
+      const registerRes = await fetch('https://sharptrack-api.onrender.com/api/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
