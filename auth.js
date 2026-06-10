@@ -20,10 +20,6 @@ router.post('/register', async (req, res) => {
         return res.status(400).json({ error: 'PIN must be exactly 6 digits' });
     }
 
-        const otpRecord = otpStore[phone];
-    if (!otpRecord || !otpRecord.verified) {
-        return res.status(400).json({ error: 'Phone number not verified. Please verify with OTP first.' });
-    }
     try {
         const existingUser = await prisma.user.findUnique({ where: { phone } });
         if (existingUser) {
