@@ -129,10 +129,45 @@
         </div>
 
         <!-- STAT CARDS -->
-        <div class="stat-cards" id="stat-cards">
-            <div class="skeleton skeleton-stat"></div>
-            <div class="skeleton skeleton-stat"></div>
+        <div class="stat-cards" id="stat-cards" style="grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px;">
+            <div class="skeleton skeleton-stat" style="height: 100px;"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="skeleton skeleton-stat"></div>
+                <div class="skeleton skeleton-stat"></div>
+            </div>
         </div>
+
+        <!-- WEEKLY SALES TREND -->
+        <div class="section analytics-section">
+            <div class="section-header">
+                <h2>Weekly Sales Trend</h2>
+            </div>
+            <div class="chart-container" id="weekly-chart-container">
+                <div class="chart-bars" id="weekly-chart-bars">
+                    <div style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:space-around;padding:0 8px;">
+                        <div class="skeleton" style="width:20px;height:40px;border-radius:4px 4px 0 0;"></div>
+                        <div class="skeleton" style="width:20px;height:80px;border-radius:4px 4px 0 0;"></div>
+                        <div class="skeleton" style="width:20px;height:50px;border-radius:4px 4px 0 0;"></div>
+                        <div class="skeleton" style="width:20px;height:90px;border-radius:4px 4px 0 0;"></div>
+                        <div class="skeleton" style="width:20px;height:30px;border-radius:4px 4px 0 0;"></div>
+                        <div class="skeleton" style="width:20px;height:70px;border-radius:4px 4px 0 0;"></div>
+                        <div class="skeleton" style="width:20px;height:100px;border-radius:4px 4px 0 0;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOP SELLING PRODUCTS -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Top-Selling Products</h2>
+            </div>
+            <div id="top-selling-products">
+                <div class="skeleton skeleton-text w-75" style="margin: 8px 0;"></div>
+                <div class="skeleton skeleton-text w-50" style="margin: 8px 0;"></div>
+            </div>
+        </div>
+
 
         <!-- RECENT SALES -->
         <div class="section">
@@ -201,9 +236,15 @@
     <script>
         if (!initPage('dashboard')) { /* redirected */ }
         else {
-            injectNavbar();
-            injectBottomNav('dashboard');
-            loadDashboard();
+            // Check if user needs onboarding
+            const cachedUser = getUser();
+            if (cachedUser && cachedUser.onboardingCompleted === false) {
+                window.location.href = 'onboarding.html';
+            } else {
+                injectNavbar();
+                injectBottomNav('dashboard');
+                loadDashboard();
+            }
         }
 
         async function loadDashboard() {
@@ -218,12 +259,14 @@
 
             // Fetch fresh data in parallel
             try {
-                const [salesData, productStats, recentSales, activityData, userData] = await Promise.allSettled([
+                const [salesData, productStats, recentSales, activityData, userData, weeklyData, topProductsData] = await Promise.allSettled([
                     apiRequest('/api/sales/today'),
                     apiRequest('/api/products/stats'),
                     apiRequest('/api/sales/recent'),
                     apiRequest('/api/activity?limit=5'),
-                    apiRequest('/api/auth/me')
+                    apiRequest('/api/auth/me'),
+                    apiRequest('/api/sales/weekly'),
+                    apiRequest('/api/sales/top-products')
                 ]);
 
                 // Update user info if fresh data available
@@ -239,6 +282,12 @@
                     salesData.status === 'fulfilled' ? salesData.value : null,
                     productStats.status === 'fulfilled' ? productStats.value : null
                 );
+
+                // Weekly Chart
+                renderWeeklyChart(weeklyData.status === 'fulfilled' ? weeklyData.value.weekly : []);
+
+                // Top Selling Products
+                renderTopSellingProducts(topProductsData.status === 'fulfilled' ? topProductsData.value.topProducts : []);
 
                 // Recent sales
                 renderRecentSales(recentSales.status === 'fulfilled' ? recentSales.value.sales : []);
@@ -256,28 +305,86 @@
             const todayTotal = sales ? sales.total : 0;
             const pctChange = sales ? sales.percentChange : 0;
             const lowStock = products ? products.lowStockCount : 0;
+            const inventoryValue = products ? products.totalValue : 0;
 
             container.innerHTML = `
-                <div class="stat-card animate-fadeUp">
+                <div class="stat-card animate-fadeUp" style="grid-column: 1 / -1;">
                     <div class="stat-icon green">
                         <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
                     </div>
                     <div class="label">Today's Sales</div>
-                    <div class="value">${formatCurrency(todayTotal)}</div>
+                    <div class="value" style="font-size: 26px;">${formatCurrency(todayTotal)}</div>
                     <div class="sub ${pctChange >= 0 ? 'up' : 'down'}">
                         ${pctChange !== 0 ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="${pctChange >= 0 ? '18 15 12 9 6 15' : '6 9 12 15 18 9'}"/></svg>
                         ${Math.abs(pctChange)}% vs yesterday` : 'No data from yesterday'}
                     </div>
                 </div>
-                <div class="stat-card ${lowStock > 0 ? 'alert' : ''} animate-fadeUp" style="animation-delay:0.1s;">
-                    <div class="stat-icon ${lowStock > 0 ? 'orange' : 'green'}">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; grid-column: 1 / -1;">
+                    <div class="stat-card animate-fadeUp" style="animation-delay:0.05s;">
+                        <div class="stat-icon blue">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        </div>
+                        <div class="label">Stock Value</div>
+                        <div class="value" style="font-size: 16px;">${formatCurrency(inventoryValue)}</div>
+                        <div class="sub">Total asset value</div>
                     </div>
-                    <div class="label">Low Stock Items</div>
-                    <div class="value">${lowStock}</div>
-                    <div class="sub">${lowStock > 0 ? 'Need restocking' : 'All stocked up!'}</div>
+                    <div class="stat-card ${lowStock > 0 ? 'alert' : ''} animate-fadeUp" style="animation-delay:0.1s;">
+                        <div class="stat-icon ${lowStock > 0 ? 'orange' : 'green'}">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        </div>
+                        <div class="label">Low Stock</div>
+                        <div class="value" style="font-size: 16px;">${lowStock} items</div>
+                        <div class="sub">${lowStock > 0 ? 'Restock needed' : 'All good!'}</div>
+                    </div>
                 </div>
             `;
+        }
+
+        function renderWeeklyChart(weeklySales) {
+            const container = document.getElementById('weekly-chart-bars');
+            if (!container) return;
+
+            if (!weeklySales || weeklySales.length === 0) {
+                container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);width:100%;">No sales trend data yet</div>`;
+                return;
+            }
+
+            const maxAmount = Math.max(...weeklySales.map(d => d.amount), 1000); // Minimum scale of ₦1,000
+
+            container.innerHTML = weeklySales.map(d => {
+                const heightPercent = Math.max((d.amount / maxAmount) * 100, 4); // Min 4% height so bar is visible
+                return `
+                    <div class="chart-bar-wrapper">
+                        <div class="chart-bar-tooltip">₦${formatNumber(Math.round(d.amount))}</div>
+                        <div class="chart-bar" style="height: ${heightPercent}%;"></div>
+                        <div class="chart-label">${d.dayName}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderTopSellingProducts(topProducts) {
+            const container = document.getElementById('top-selling-products');
+            if (!container) return;
+
+            if (!topProducts || topProducts.length === 0) {
+                container.innerHTML = `<div style="text-align:center;padding:16px 0;color:var(--muted);font-size:13px;">No sales recorded yet.</div>`;
+                return;
+            }
+
+            container.innerHTML = topProducts.map((p, i) => `
+                <div class="list-item animate-slideUp" style="animation-delay:${i * 0.05}s;">
+                    <div class="list-item-img">🔥</div>
+                    <div class="list-item-info">
+                        <div class="name">${p.name}</div>
+                        <div class="sub">Sold: ${p.quantity} ${p.unit || 'pcs'}</div>
+                    </div>
+                    <div class="list-item-meta">
+                        <div class="amount" style="color: var(--primary);">${formatCurrency(p.revenue)}</div>
+                        <div class="time">Revenue</div>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function renderRecentSales(sales) {

@@ -76,6 +76,21 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 });
 
+// GET ALL SALES
+router.get('/', authMiddleware, async (req, res) => {
+    try {
+        const sales = await prisma.sale.findMany({
+            where: { userId: req.userId },
+            include: { product: true },
+            orderBy: { soldAt: 'desc' }
+        });
+        res.json({ sales });
+    } catch (err) {
+        console.error('Get all sales error:', err.message);
+        res.status(500).json({ error: 'Failed to load sales history' });
+    }
+});
+
 // GET TODAY'S SALES
 router.get('/today', authMiddleware, async (req, res) => {
     const start = new Date();
@@ -155,6 +170,88 @@ router.get('/stats', authMiddleware, async (req, res) => {
     } catch (err) {
         console.error('Get sales stats error:', err.message);
         res.status(500).json({ error: 'Failed to load sales stats' });
+    }
+});
+
+// GET WEEKLY SALES (Last 7 Days)
+router.get('/weekly', authMiddleware, async (req, res) => {
+    const start = new Date();
+    start.setDate(start.getDate() - 6); // 7 days including today
+    start.setHours(0, 0, 0, 0);
+
+    try {
+        const sales = await prisma.sale.findMany({
+            where: {
+                userId: req.userId,
+                soldAt: { gte: start }
+            },
+            orderBy: { soldAt: 'asc' }
+        });
+
+        // Initialize last 7 days mapping
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const weeklyData = [];
+        
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            weeklyData.push({
+                dayName: days[d.getDay()],
+                dateString: d.toISOString().split('T')[0],
+                amount: 0,
+                count: 0
+            });
+        }
+
+        // Aggregate sales by date
+        sales.forEach(sale => {
+            const saleDate = sale.soldAt.toISOString().split('T')[0];
+            const target = weeklyData.find(item => item.dateString === saleDate);
+            if (target) {
+                target.amount += sale.totalAmount;
+                target.count += 1;
+            }
+        });
+
+        res.json({ weekly: weeklyData });
+    } catch (err) {
+        console.error('Get weekly sales error:', err.message);
+        res.status(500).json({ error: 'Failed to load weekly sales' });
+    }
+});
+
+// GET TOP-SELLING PRODUCTS
+router.get('/top-products', authMiddleware, async (req, res) => {
+    try {
+        const sales = await prisma.sale.findMany({
+            where: { userId: req.userId },
+            include: { product: true }
+        });
+
+        const productSales = {};
+        sales.forEach(s => {
+            if (!s.product) return;
+            if (!productSales[s.productId]) {
+                productSales[s.productId] = {
+                    id: s.productId,
+                    name: s.product.name,
+                    quantity: 0,
+                    revenue: 0,
+                    unit: s.product.unit
+                };
+            }
+            productSales[s.productId].quantity += s.quantitySold;
+            productSales[s.productId].revenue += s.totalAmount;
+        });
+
+        const sorted = Object.values(productSales)
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 5);
+
+        res.json({ topProducts: sorted });
+    } catch (err) {
+        console.error('Get top products error:', err.message);
+        res.status(500).json({ error: 'Failed to load top products' });
     }
 });
 

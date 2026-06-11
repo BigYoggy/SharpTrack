@@ -3,64 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SharpTrack — Sign In</title>
-    <meta name="description" content="Sign in to SharpTrack to manage your inventory, track sales, and grow your business.">
+    <title>SharpTrack — Inventory & Sales App for Nigerian Merchants</title>
+    <meta name="description" content="SharpTrack helps retail stores and merchants across Nigeria manage stock, record sales, and monitor business growth instantly.">
     <link rel="icon" type="image/png" href="logo2.png">
     <link rel="stylesheet" href="css/design-system.css">
     <style>
         body {
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
-            padding: 20px;
+            padding: 20px 16px 40px;
             background-image: radial-gradient(circle at bottom right, rgba(10, 77, 51, 0.05) 0%, transparent 40%),
                               radial-gradient(circle at bottom left, rgba(10, 77, 51, 0.08) 0%, transparent 50%);
         }
 
-        .login-container {
+        .landing-container {
             width: 100%;
-            max-width: 400px;
+            max-width: 440px;
             text-align: center;
             animation: fadeUp 0.4s ease both;
         }
 
-        .logo-section { margin-bottom: 36px; }
-        .logo-img { width: 260px; max-width: 100%; height: auto; mix-blend-mode: multiply; }
+        .logo-section { margin: 24px 0 12px; }
+        .logo-img { width: 220px; max-width: 100%; height: auto; mix-blend-mode: multiply; }
 
         [data-theme="dark"] .logo-img { filter: brightness(1.5); mix-blend-mode: normal; }
 
-        .login-form { text-align: left; }
-
-        .footer-text {
-            margin-top: 28px;
-            font-size: 14px;
-            color: var(--muted);
-            font-weight: 500;
+        .hero-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--text);
+            line-height: 1.25;
+            margin-top: 16px;
         }
 
-        .footer-text a {
+        .hero-desc {
+            font-size: 14.5px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            line-height: 1.45;
+        }
+
+        .trust-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--primary-light);
             color: var(--primary);
-            text-decoration: none;
+            font-size: 12.5px;
             font-weight: 700;
-            transition: color 0.2s;
+            padding: 6px 12px;
+            border-radius: var(--radius-full);
+            margin-bottom: 28px;
+            margin-top: 16px;
         }
-        .footer-text a:hover { text-decoration: underline; color: var(--primary-dark); }
 
-        .divider {
+        .features-section {
+            text-align: left;
+            margin-bottom: 24px;
+        }
+
+        .features-section h2 {
+            font-size: 12.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 14px 16px;
+            display: flex;
+            gap: 14px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .feature-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .feature-text h3 {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .feature-text p {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            margin-top: 2px;
+        }
+
+        .footer-links {
+            margin-top: 32px;
+            font-size: 13.5px;
+        }
+        .footer-links a {
+            color: var(--primary);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        /* Slide-up login panel styles */
+        .login-panel {
+            width: 100%;
+            max-width: 400px;
+            text-align: left;
+            animation: fadeUp 0.35s ease both;
+        }
+
+        .login-panel-header {
+            margin: 16px 0 24px;
+        }
+
+        .btn-back {
             display: flex;
             align-items: center;
-            gap: 16px;
-            margin: 24px 0;
-            color: var(--muted);
-            font-size: 12px;
-            font-weight: 600;
+            gap: 6px;
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0;
+            font-family: inherit;
         }
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border);
+        .btn-back:hover {
+            color: var(--primary-dark);
         }
 
         .welcome-back {
@@ -75,17 +154,98 @@
             color: var(--muted);
             margin-bottom: 28px;
         }
+
+        .login-form { text-align: left; }
+
+        .footer-text {
+            margin-top: 28px;
+            font-size: 14px;
+            color: var(--muted);
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .footer-text a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+            transition: color 0.2s;
+        }
+        .footer-text a:hover { text-decoration: underline; color: var(--primary-dark); }
     </style>
 </head>
 <body>
 
-    <div class="login-container">
+    <!-- LANDING MARKETING CONTAINER -->
+    <div class="landing-container" id="landing-container">
         <!-- Logo -->
         <div class="logo-section">
             <img src="logo2.png" alt="SharpTrack Logo" class="logo-img">
         </div>
 
-        <h1 class="welcome-back">Welcome back!</h1>
+        <h1 class="hero-title">Track stock. Record sales. Grow your business.</h1>
+        <p class="hero-desc">The professional inventory & sales tracker designed for retail stores & small business merchants in Nigeria.</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; margin: 24px 0 28px;">
+            <button class="btn btn-primary btn-block btn-lg" onclick="showLoginForm()">Sign In to Shop</button>
+            <button class="btn btn-outline btn-block btn-lg" onclick="window.location.href='signup.html'">Register New Shop</button>
+        </div>
+
+        <!-- TRUST BADGE -->
+        <div class="trust-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:2px;"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Used by retail merchants across Nigeria</span>
+        </div>
+
+        <!-- FEATURES SECTION -->
+        <div class="features-section">
+            <h2>Grow Your Business With Us</h2>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📦</div>
+                <div class="feature-text">
+                    <h3>Real-Time Inventory</h3>
+                    <p>Track quantities, get low stock alerts, and never run out of top items.</p>
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <div class="feature-text">
+                    <h3>Fast Sales Logs</h3>
+                    <p>Record transactions in 2 seconds. Track cash and bank transfer payments.</p>
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📈</div>
+                <div class="feature-text">
+                    <h3>Sleek Analytics</h3>
+                    <p>View weekly sales trend charts and insights on your top-performing products.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-links">
+            <a href="help.html">Help & FAQs Center</a>
+        </div>
+    </div>
+
+    <!-- LOGIN FORM CONTAINER (HIDDEN BY DEFAULT) -->
+    <div class="login-panel hidden" id="login-panel">
+        <div class="login-panel-header">
+            <button class="btn-back" onclick="hideLoginForm()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                Back to Home
+            </button>
+        </div>
+
+        <!-- Logo -->
+        <div class="logo-section" style="text-align: center; margin-bottom: 24px;">
+            <img src="logo2.png" alt="SharpTrack Logo" class="logo-img" style="width: 160px;">
+        </div>
+
+        <h2 class="welcome-back">Welcome back!</h2>
         <p class="welcome-sub">Sign in with your phone number and PIN</p>
 
         <!-- Login Form -->
@@ -117,7 +277,7 @@
                 </div>
             </div>
 
-            <button type="button" class="btn btn-primary btn-block btn-lg" id="login-btn" onclick="handleLogin()">
+            <button type="button" class="btn btn-primary btn-block btn-lg" id="login-btn" onclick="handleLogin()" style="margin-top: 8px;">
                 Sign In
             </button>
         </div>
@@ -133,6 +293,17 @@
         initTheme();
         if (isLoggedIn()) {
             window.location.href = 'dashboard.html';
+        }
+
+        function showLoginForm() {
+            document.getElementById('landing-container').classList.add('hidden');
+            document.getElementById('login-panel').classList.remove('hidden');
+            document.getElementById('login-phone').focus();
+        }
+
+        function hideLoginForm() {
+            document.getElementById('login-panel').classList.add('hidden');
+            document.getElementById('landing-container').classList.remove('hidden');
         }
 
         // Toggle PIN visibility

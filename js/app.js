@@ -318,16 +318,58 @@ function injectNavbar() {
     navbar.id = 'st-navbar';
     navbar.className = 'navbar';
     navbar.innerHTML = `
-        <button class="hamburger" aria-label="Menu">
-            <span></span><span></span><span></span>
-        </button>
+        <div class="avatar-menu-container">
+            <button class="avatar-btn" onclick="toggleAvatarMenu(event)" aria-label="User Menu">
+                <span class="avatar-initials" id="nav-avatar-initials">U</span>
+            </button>
+            <div id="avatar-dropdown" class="avatar-dropdown hidden">
+                <div class="avatar-dropdown-user">
+                    <div class="avatar-large" id="nav-dropdown-avatar">U</div>
+                    <div class="avatar-user-info">
+                        <div class="avatar-user-name" id="nav-dropdown-name">Loading...</div>
+                        <div class="avatar-user-store" id="nav-dropdown-store">My Shop</div>
+                    </div>
+                </div>
+                <div class="avatar-dropdown-divider"></div>
+                <a href="more.html" class="avatar-dropdown-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Profile Settings
+                </a>
+                <button onclick="toggleNotifPanel(); closeAvatarMenu();" class="avatar-dropdown-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    Notifications
+                </button>
+                <button onclick="toggleTheme(); closeAvatarMenu();" class="avatar-dropdown-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    Toggle Dark Mode
+                </button>
+                <button onclick="showShortcutGuide(); closeAvatarMenu();" class="avatar-dropdown-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="10" y1="8" x2="10" y2="8"/><line x1="14" y1="8" x2="14" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="6" y2="12"/><line x1="10" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="14" y2="12"/><line x1="18" y1="12" x2="18" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>
+                    Keyboard Shortcuts
+                </button>
+                <a href="help.html" class="avatar-dropdown-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    Help & FAQs
+                </a>
+                <div class="avatar-dropdown-divider"></div>
+                <button onclick="clearAuth(); window.location.href='index.html';" class="avatar-dropdown-item text-red">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Sign Out
+                </button>
+            </div>
+        </div>
         <div class="nav-logo">
             <img src="logo2.png" alt="SharpTrack">
         </div>
-        <button class="bell-btn" onclick="toggleNotifPanel()" aria-label="Notifications">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            <span class="bell-badge hidden">0</span>
-        </button>
+        <div style="display:flex;gap:4px;align-items:center;">
+            <button class="bell-btn" onclick="toggleGlobalSearch(true)" aria-label="Search" title="Search (Press /)">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+            <button class="bell-btn" onclick="toggleNotifPanel()" aria-label="Notifications">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <span class="bell-badge hidden">0</span>
+            </button>
+        </div>
     `;
     document.body.prepend(navbar);
 }
@@ -362,6 +404,77 @@ function injectBottomNav(activePage) {
     document.body.appendChild(nav);
 }
 
+/* ── HELPER DYNAMIC SCRIPT LOAD ── */
+async function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) {
+            resolve();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+/* ── KEYBOARD SHORTCUTS MANAGER ── */
+let lastKeyPress = '';
+let lastKeyPressTime = 0;
+
+function handleGlobalShortcuts(e) {
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+        return;
+    }
+
+    const key = e.key.toLowerCase();
+    const now = Date.now();
+
+    if (key === 't') {
+        e.preventDefault();
+        toggleTheme();
+        showToast('success', 'Theme toggled', `Switched to ${getTheme()} mode`);
+        return;
+    }
+
+    if (key === 'n') {
+        e.preventDefault();
+        toggleNotifPanel();
+        return;
+    }
+
+    if (lastKeyPress === 'g' && (now - lastKeyPressTime < 1500)) {
+        if (key === 'd') {
+            e.preventDefault();
+            window.location.href = 'dashboard.html';
+        } else if (key === 'i') {
+            e.preventDefault();
+            window.location.href = 'inventory.html';
+        } else if (key === 's') {
+            e.preventDefault();
+            window.location.href = 'record-sale.html';
+        } else if (key === 'a') {
+            e.preventDefault();
+            window.location.href = 'add-stock.html';
+        } else if (key === 'm') {
+            e.preventDefault();
+            window.location.href = 'more.html';
+        } else if (key === 'h') {
+            e.preventDefault();
+            window.location.href = 'help.html';
+        }
+        lastKeyPress = '';
+    } else {
+        if (key === 'g') {
+            lastKeyPress = 'g';
+            lastKeyPressTime = now;
+        } else {
+            lastKeyPress = '';
+        }
+    }
+}
+
 /* ── PAGE INIT ── */
 function initPage(activePage, requireAuth = true) {
     initTheme();
@@ -371,6 +484,27 @@ function initPage(activePage, requireAuth = true) {
     if (requireAuth) {
         injectNotifPanel();
         loadNotificationCount();
+        
+        // Dynamically load Waves 1, 2 & 3 features
+        Promise.all([
+            loadScript('js/command-palette.js'),
+            loadScript('js/search.js'),
+            loadScript('js/avatar-menu.js'),
+            loadScript('js/export.js'),
+            loadScript('js/feedback.js'),
+            loadScript('js/whats-new.js')
+        ]).then(() => {
+            initCommandPalette();
+            initGlobalSearch();
+            initAvatarMenu();
+            // Automatically trigger changelog check on dashboard load
+            if (activePage === 'dashboard') {
+                checkWhatsNew();
+            }
+        }).catch(err => console.error('Failed to load extensions', err));
+
+        // Listen for global keyboard shortcuts
+        document.addEventListener('keydown', handleGlobalShortcuts);
     }
 
     return true;

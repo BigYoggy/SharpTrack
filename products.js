@@ -58,17 +58,19 @@ router.get('/stats', authMiddleware, async (req, res) => {
     try {
         const products = await prisma.product.findMany({
             where: { userId: req.userId },
-            select: { id: true, quantity: true, reorderLevel: true }
+            select: { id: true, quantity: true, reorderLevel: true, sellingPrice: true }
         });
 
         const totalProducts = products.length;
         const lowStockItems = products.filter(p => p.quantity <= p.reorderLevel);
         const outOfStock = products.filter(p => p.quantity === 0);
+        const totalValue = products.reduce((sum, p) => sum + (p.quantity * p.sellingPrice), 0);
 
         res.json({ 
             totalProducts,
             lowStockCount: lowStockItems.length,
-            outOfStockCount: outOfStock.length
+            outOfStockCount: outOfStock.length,
+            totalValue
         });
     } catch (err) {
         console.error('Get product stats error:', err.message);

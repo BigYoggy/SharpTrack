@@ -259,6 +259,73 @@ router.put('/pin', authMiddleware, async (req, res) => {
     }
 });
 
+// GET USER ACHIEVEMENTS
+router.get('/achievements', authMiddleware, async (req, res) => {
+    try {
+        const productCount = await prisma.product.count({ where: { userId: req.userId } });
+        const saleCount = await prisma.sale.count({ where: { userId: req.userId } });
+        const user = await prisma.user.findUnique({ where: { id: req.userId } });
+        
+        // Dynamic achievements based on user activity
+        const achievementsList = [
+            {
+                id: 'first_product',
+                title: 'First Product',
+                description: 'Add your first product to inventory',
+                unlocked: productCount > 0,
+                icon: '📦'
+            },
+            {
+                id: 'first_sale',
+                title: 'First Sale',
+                description: 'Record your first sales transaction',
+                unlocked: saleCount > 0,
+                icon: '💰'
+            },
+            {
+                id: 'sales_10',
+                title: 'Sales Star',
+                description: 'Record 10 sales transactions',
+                unlocked: saleCount >= 10,
+                icon: '⭐'
+            },
+            {
+                id: 'sales_50',
+                title: 'Super Merchant',
+                description: 'Record 50 sales transactions',
+                unlocked: saleCount >= 50,
+                icon: '🏆'
+            },
+            {
+                id: 'store_set',
+                title: 'Shop Owner',
+                description: 'Configure your customized store name',
+                unlocked: !!user.storeName && user.storeName !== 'My Shop',
+                icon: '🏪'
+            },
+            {
+                id: 'email_set',
+                title: 'Verified Merchant',
+                description: 'Add your email to profile card',
+                unlocked: !!user.email,
+                icon: '🛡️'
+            },
+            {
+                id: 'dark_mode',
+                title: 'Night Owl',
+                description: 'Enable dark mode style preferences',
+                unlocked: user.darkMode,
+                icon: '🌙'
+            }
+        ];
+
+        res.json({ achievements: achievementsList });
+    } catch (err) {
+        console.error('Get achievements error:', err.message);
+        res.status(500).json({ error: 'Failed to load achievements' });
+    }
+});
+
 module.exports = router;
 module.exports.logActivity = logActivity;
 module.exports.createNotification = createNotification;
