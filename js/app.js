@@ -2,7 +2,9 @@
    SHARPTRACK — SHARED APPLICATION JS
    ============================================ */
 
-const API_URL = 'https://sharptrack-api.onrender.com';
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? window.location.origin
+    : 'https://sharptrack-api.onrender.com';
 
 /* ── AUTH HELPERS ── */
 function getToken() {
@@ -240,7 +242,31 @@ async function loadNotifications() {
     const body = document.getElementById('notif-panel-body');
     if (!body) return;
 
-    body.innerHTML = '<div class="page-loader"><div class="spinner-lg"></div></div>';
+    body.innerHTML = `
+        <div class="notif-panel-skeleton" style="display:flex; flex-direction:column; gap:10px; opacity:0.8; animation:pulse 1.5s infinite alternate;">
+            <div style="display:flex; gap:12px; align-items:center; padding:12px; background:var(--card-bg); border-radius:var(--radius-md); border:1px solid var(--border);">
+                <div class="skeleton skeleton-circle" style="width:36px; height:36px; flex-shrink:0;"></div>
+                <div style="flex:1;">
+                    <div class="skeleton skeleton-text w-75" style="height:12px; margin-bottom:6px;"></div>
+                    <div class="skeleton skeleton-text w-40" style="height:10px; margin-bottom:0;"></div>
+                </div>
+            </div>
+            <div style="display:flex; gap:12px; align-items:center; padding:12px; background:var(--card-bg); border-radius:var(--radius-md); border:1px solid var(--border);">
+                <div class="skeleton skeleton-circle" style="width:36px; height:36px; flex-shrink:0;"></div>
+                <div style="flex:1;">
+                    <div class="skeleton skeleton-text w-75" style="height:12px; margin-bottom:6px;"></div>
+                    <div class="skeleton skeleton-text w-40" style="height:10px; margin-bottom:0;"></div>
+                </div>
+            </div>
+            <div style="display:flex; gap:12px; align-items:center; padding:12px; background:var(--card-bg); border-radius:var(--radius-md); border:1px solid var(--border);">
+                <div class="skeleton skeleton-circle" style="width:36px; height:36px; flex-shrink:0;"></div>
+                <div style="flex:1;">
+                    <div class="skeleton skeleton-text w-75" style="height:12px; margin-bottom:6px;"></div>
+                    <div class="skeleton skeleton-text w-40" style="height:10px; margin-bottom:0;"></div>
+                </div>
+            </div>
+        </div>
+    `;
 
     try {
         const data = await apiRequest('/api/notifications');
@@ -393,12 +419,18 @@ function injectBottomNav(activePage) {
 
     nav.innerHTML = pages.map(p => {
         if (p.id === 'fab') {
-            return `<button class="fab" onclick="window.location.href='${p.href}'"><svg viewBox="0 0 24 24">${p.icon}</svg></button>`;
+            return `<div class="bottom-nav-col fab-col">
+                <button class="fab" id="bottom-fab" onclick="window.location.href='${p.href}'" aria-label="Add Product">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${p.icon}</svg>
+                </button>
+            </div>`;
         }
-        return `<button class="nav-item ${activePage === p.id ? 'active' : ''}" onclick="window.location.href='${p.href}'">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p.icon}</svg>
-            ${p.label}
-        </button>`;
+        return `<div class="bottom-nav-col">
+            <button class="nav-item ${activePage === p.id ? 'active' : ''}" id="nav-item-${p.id}" onclick="window.location.href='${p.href}'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p.icon}</svg>
+                <span>${p.label}</span>
+            </button>
+        </div>`;
     }).join('');
 
     document.body.appendChild(nav);

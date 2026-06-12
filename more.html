@@ -121,16 +121,32 @@
 
     <div class="content">
         <!-- PROFILE CARD -->
-        <div class="profile-section animate-fadeUp" id="profileCard">
+        <div class="profile-section animate-fadeUp" id="profileCard" style="margin-bottom: 16px;">
             <div class="profile-avatar" id="profileAvatar">?</div>
-            <div class="profile-info">
-                <div class="name" id="profileName">Loading...</div>
-                <div class="phone" id="profilePhone">...</div>
-                <div class="store" id="profileStore">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            <div class="profile-info" style="flex: 1;">
+                <div class="store" id="profileStore" style="font-size: 18px; font-weight: 800; opacity: 1; margin-top: 0; color: white;">
                     <span>—</span>
                 </div>
+                <div class="name" id="profileName" style="font-size: 14px; opacity: 0.9; margin-top: 2px;">Loading...</div>
+                <div class="phone" id="profilePhone" style="font-size: 13px; opacity: 0.8; margin-top: 2px;">...</div>
+                <div class="email" id="profileEmail" style="font-size: 13px; opacity: 0.8; margin-top: 2px;">Not provided</div>
             </div>
+        </div>
+
+        <!-- PROFILE ACTIONS GRID -->
+        <div class="settings-card mb-3 animate-fadeUp" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: none; border: none; padding: 0; animation-delay: 0.05s;">
+            <button class="btn btn-outline btn-sm" onclick="showEdit()" style="padding: 12px 4px; font-size: 12px; border-radius: var(--radius-md); font-weight: 700;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-bottom:2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Edit Profile
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="showPinChange()" style="padding: 12px 4px; font-size: 12px; border-radius: var(--radius-md); font-weight: 700;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-bottom:2px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Change PIN
+            </button>
+            <button class="btn btn-outline btn-sm text-red" onclick="handleSignOut()" style="padding: 12px 4px; font-size: 12px; border-color: var(--red); color: var(--red); border-radius: var(--radius-md); font-weight: 700;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-bottom:2px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Logout
+            </button>
         </div>
 
         <!-- EDIT PROFILE FORM (hidden by default) -->
@@ -187,7 +203,7 @@
         </div>
 
         <!-- ACHIEVEMENTS -->
-        <div class="settings-section">
+        <div class="settings-section animate-fadeUp" style="animation-delay: 0.1s;">
             <div class="label">Merchant Achievements</div>
             <div class="settings-card" style="padding: 16px;">
                 <div class="achievements-grid" id="achievementsGrid">
@@ -199,27 +215,42 @@
             </div>
         </div>
 
-        <!-- ACCOUNT & SECURITY -->
-        <div class="settings-section">
-            <div class="label">Account & Security</div>
+        <!-- HELP CENTER -->
+        <div class="settings-section animate-fadeUp" style="animation-delay: 0.15s;">
+            <div class="label">Help Center</div>
             <div class="settings-card">
-                <button class="settings-item" onclick="showEdit()">
-                    <div class="settings-icon primary"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-                    <div class="settings-text"><div class="title">Edit Profile</div><div class="sub">Shop details, email, and name</div></div>
+                <button class="settings-item" onclick="window.location.href='help.html'">
+                    <div class="settings-icon primary"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+                    <div class="settings-text"><div class="title">FAQ</div><div class="sub">Find solutions to common merchant questions</div></div>
                     <div class="settings-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                 </button>
-                <button class="settings-item" onclick="showPinChange()">
-                    <div class="settings-icon orange"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-                    <div class="settings-text"><div class="title">Change PIN</div><div class="sub">Update your 6-digit login PIN</div></div>
+                <button class="settings-item" onclick="openSupportModal()">
+                    <div class="settings-icon green"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+                    <div class="settings-text"><div class="title">Contact Support</div><div class="sub">Chat with our dedicated support team</div></div>
+                    <div class="settings-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+                </button>
+                <button class="settings-item" onclick="showFeedbackModal()">
+                    <div class="settings-icon blue"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+                    <div class="settings-text"><div class="title">Send Feedback</div><div class="sub">Suggest new feature additions or changes</div></div>
+                    <div class="settings-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+                </button>
+                <button class="settings-item" onclick="openBugReportModal()">
+                    <div class="settings-icon red"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                    <div class="settings-text"><div class="title">Report Bug</div><div class="sub">Let us know if you find layout or server errors</div></div>
                     <div class="settings-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                 </button>
             </div>
         </div>
 
-        <!-- DATA PORTABILITY -->
-        <div class="settings-section">
-            <div class="label">Data & Portability</div>
+        <!-- PREFERENCES & EXPORTS -->
+        <div class="settings-section animate-fadeUp" style="animation-delay: 0.2s;">
+            <div class="label">Preferences & Data Tools</div>
             <div class="settings-card">
+                <div class="settings-item" onclick="handleDarkModeToggle()">
+                    <div class="settings-icon blue"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+                    <div class="settings-text"><div class="title">Dark Mode</div><div class="sub">Sleek styling option for low-light tracking</div></div>
+                    <div class="toggle-track" id="darkModeToggle"><div class="toggle-knob"></div></div>
+                </div>
                 <button class="settings-item" onclick="triggerInventoryExport()">
                     <div class="settings-icon blue"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
                     <div class="settings-text"><div class="title">Export Inventory</div><div class="sub">Download product catalog as CSV</div></div>
@@ -227,70 +258,95 @@
                 </button>
                 <button class="settings-item" onclick="triggerSalesExport()">
                     <div class="settings-icon blue"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
-                    <div class="settings-text"><div class="title">Export Sales History</div><div class="sub">Download all logged sale records as CSV</div></div>
-                    <div class="settings-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
-                </button>
-            </div>
-        </div>
-
-        <!-- PREFERENCES -->
-        <div class="settings-section">
-            <div class="label">Preferences</div>
-            <div class="settings-card">
-                <div class="settings-item" onclick="handleDarkModeToggle()">
-                    <div class="settings-icon blue"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
-                    <div class="settings-text"><div class="title">Dark Mode</div><div class="sub">Reduce eye strain at night</div></div>
-                    <div class="toggle-track" id="darkModeToggle"><div class="toggle-knob"></div></div>
-                </div>
-                <button class="settings-item" onclick="toggleNotifPanel()">
-                    <div class="settings-icon green"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
-                    <div class="settings-text"><div class="title">Notifications Panel</div><div class="sub">View and mark alerts as read</div></div>
+                    <div class="settings-text"><div class="title">Export Sales History</div><div class="sub">Download transaction logs as CSV</div></div>
                     <div class="settings-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                 </button>
                 <button class="settings-item" onclick="showShortcutGuide()">
                     <div class="settings-icon primary"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="10" y1="8" x2="10" y2="8"/><line x1="14" y1="8" x2="14" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="6" y2="12"/><line x1="10" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="14" y2="12"/><line x1="18" y1="12" x2="18" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg></div>
-                    <div class="settings-text"><div class="title">Keyboard Shortcuts</div><div class="sub">Show hotkey cheat sheet</div></div>
+                    <div class="settings-text"><div class="title">Keyboard Shortcuts</div><div class="sub">Show quick hotkey helper cheat sheet</div></div>
                     <div class="settings-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                 </button>
             </div>
         </div>
 
-        <!-- FEEDBACK & UPDATES -->
-        <div class="settings-section">
-            <div class="label">Feedback & Updates</div>
+        <!-- APP INFORMATION -->
+        <div class="settings-section animate-fadeUp" style="animation-delay: 0.25s;">
+            <div class="label">App Information</div>
+            <div class="settings-card" style="padding: 16px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13.5px;">
+                    <span class="text-muted">App Version</span>
+                    <span class="font-semibold" style="color: var(--text);">v1.2.0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13.5px;">
+                    <span class="text-muted">Build Number</span>
+                    <span class="font-semibold" style="color: var(--text);">108</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 14px;">
+                    <span class="text-muted">Release Date</span>
+                    <span class="font-semibold" style="color: var(--text);">June 12, 2026</span>
+                </div>
+                <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px;">
+                    <button class="btn btn-outline btn-block btn-sm" onclick="restartTutorial()" style="font-size: 12.5px; padding: 10px; border-radius: var(--radius-md); font-weight: 700;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle; margin-right:4px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                        Restart Tutorial Walkthrough
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- LEGAL -->
+        <div class="settings-section animate-fadeUp" style="animation-delay: 0.3s; margin-bottom: 32px;">
+            <div class="label">Legal Documents</div>
             <div class="settings-card">
-                <button class="settings-item" onclick="showFeedbackModal()">
-                    <div class="settings-icon green"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
-                    <div class="settings-text"><div class="title">Send Feedback</div><div class="sub">Suggest a feature or report a bug</div></div>
+                <button class="settings-item" onclick="openLegalModal('privacy')">
+                    <div class="settings-icon primary"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                    <div class="settings-text"><div class="title">Privacy Policy</div><div class="sub">Merchant information handling policy</div></div>
                     <div class="settings-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                 </button>
-                <button class="settings-item" onclick="showWhatsNewModal()">
-                    <div class="settings-icon orange"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
-                    <div class="settings-text"><div class="title">What's New</div><div class="sub">Changelog and feature updates</div></div>
-                    <div class="settings-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
-                </button>
-            </div>
-        </div>
-
-        <!-- SUPPORT -->
-        <div class="settings-section">
-            <div class="label">Support</div>
-            <div class="settings-card">
-                <button class="settings-item" onclick="window.location.href='help.html'">
-                    <div class="settings-icon primary"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-                    <div class="settings-text"><div class="title">Help & FAQs Center</div><div class="sub">Learn how to record sales & track stock</div></div>
+                <button class="settings-item" onclick="openLegalModal('terms')">
+                    <div class="settings-icon primary"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+                    <div class="settings-text"><div class="title">Terms of Service</div><div class="sub">General terms and usage rules</div></div>
                     <div class="settings-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                 </button>
             </div>
         </div>
+    </div>
 
-        <!-- SIGN OUT -->
-        <button class="signout-btn" onclick="handleSignOut()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:middle;margin-right:8px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Sign Out
-        </button>
+    <!-- SUPPORT MODAL -->
+    <div id="supportModal" class="modal-overlay" onclick="closeSupportModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-handle"></div>
+            <h2 style="font-size:18px; font-weight:800; margin-bottom:8px; text-align:center; color: var(--text);">Contact Support</h2>
+            <p style="font-size:13px; color:var(--muted); text-align:center; margin-bottom:20px; line-height:1.45;">We are available 24/7 to support retail store merchants across Nigeria.</p>
+            
+            <div class="settings-card" style="margin-bottom:24px;">
+                <a href="https://wa.me/2348012345678" target="_blank" class="settings-item" style="text-decoration:none;">
+                    <div class="settings-icon green" style="background:#e8f5e9; color:#2e9e5b;"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+                    <div class="settings-text"><div class="title" style="color:var(--text); font-weight:600;">WhatsApp Support</div><div class="sub">Instant chat with a merchant support agent</div></div>
+                    <div class="settings-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+                </a>
+                <a href="mailto:support@sharptrack.com.ng" class="settings-item" style="text-decoration:none;">
+                    <div class="settings-icon blue" style="background:#e3f2fd; color:#1976d2;"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+                    <div class="settings-text"><div class="title" style="color:var(--text); font-weight:600;">Email Support</div><div class="sub">support@sharptrack.com.ng</div></div>
+                    <div class="settings-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+                </a>
+            </div>
+            
+            <button class="btn btn-primary btn-block" onclick="closeSupportModal()">Dismiss</button>
+        </div>
+    </div>
 
-        <div class="version">SharpTrack v1.1.0</div>
+    <!-- LEGAL MODAL -->
+    <div id="legalModal" class="modal-overlay" onclick="closeLegalModal()">
+        <div class="modal" onclick="event.stopPropagation()" style="max-height:80vh; display:flex; flex-direction:column; padding-bottom: 24px;">
+            <div class="modal-handle"></div>
+            <h2 id="legalModalTitle" style="font-size:18px; font-weight:800; margin-bottom:12px; text-align:center; color: var(--text);">Legal Documents</h2>
+            <div id="legalModalBody" style="font-size:13.5px; line-height:1.6; color:var(--text-secondary); overflow-y:auto; flex:1; margin-bottom:20px; padding: 4px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+                <!-- Content injected dynamically -->
+            </div>
+            <button class="btn btn-primary btn-block" onclick="closeLegalModal()" style="flex-shrink:0;">Close</button>
+        </div>
+    </div>
     </div>
 
     <script src="js/app.js"></script>
@@ -364,7 +420,71 @@
             document.getElementById('profileName').textContent = user.name;
             document.getElementById('profilePhone').textContent = user.phone;
             const storeEl = document.getElementById('profileStore');
-            storeEl.querySelector('span').textContent = user.storeName || 'Add a store name';
+            storeEl.querySelector('span').textContent = user.storeName || 'Add store name';
+            const emailEl = document.getElementById('profileEmail');
+            if (emailEl) {
+                emailEl.textContent = user.email || 'Not provided';
+            }
+        }
+
+        // Support Modal
+        function openSupportModal() {
+            document.getElementById('supportModal').classList.add('open');
+        }
+        function closeSupportModal() {
+            document.getElementById('supportModal').classList.remove('open');
+        }
+        
+        // Bug report (reuses feedback with bug category preselected)
+        function openBugReportModal() {
+            if (typeof showFeedbackModal === 'function') {
+                showFeedbackModal();
+                setTimeout(() => {
+                    const select = document.getElementById('feedback-category');
+                    if (select) select.value = 'bug';
+                }, 150);
+            } else {
+                showToast('info', 'Report Bug', 'Please email support@sharptrack.com.ng to report bugs.');
+            }
+        }
+
+        // Legal Modal
+        function openLegalModal(type) {
+            const title = document.getElementById('legalModalTitle');
+            const body = document.getElementById('legalModalBody');
+            
+            if (type === 'privacy') {
+                title.textContent = 'Privacy Policy';
+                body.innerHTML = `
+                    <p style="margin-bottom:12px;"><strong>Effective Date: June 12, 2026</strong></p>
+                    <p style="margin-bottom:12px;">At SharpTrack, we protect the privacy of retail merchants. We collect store transaction history, inventory status, and business logs strictly to provide real-time sales reporting and alert metrics.</p>
+                    <p style="margin-bottom:12px;">Your credentials, including login PINs, are fully encrypted and salted using standard cryptographic algorithms on our backend database.</p>
+                    <p style="margin-bottom:12px;">We do not share, sell, or lease merchant business logs or customer details to third-party advertising companies. All analytics are computed in a secure environment.</p>
+                    <p>For inquiries regarding data deletion or exports, please reach out to us at <strong>privacy@sharptrack.com.ng</strong>.</p>
+                `;
+            } else {
+                title.textContent = 'Terms of Service';
+                body.innerHTML = `
+                    <p style="margin-bottom:12px;"><strong>Last Updated: June 12, 2026</strong></p>
+                    <p style="margin-bottom:12px;">By creating a merchant account on SharpTrack, you agree to utilize our inventory monitoring and sales logging software strictly for lawful retail business tracking.</p>
+                    <p style="margin-bottom:12px;">Our software services are provided on an 'as-is' and 'as-available' basis. SharpTrack does not guarantee 100% uninterrupted uptime and is not liable for data sync delays caused by network failure.</p>
+                    <p style="margin-bottom:12px;">Merchants remain solely responsible for the accuracy of their registered sales, tax computations, and stock counts.</p>
+                    <p>SharpTrack reserves the right to suspend merchant accounts engaged in fraudulent logs or violating server endpoints security thresholds.</p>
+                `;
+            }
+            document.getElementById('legalModal').classList.add('open');
+        }
+        function closeLegalModal() {
+            document.getElementById('legalModal').classList.remove('open');
+        }
+
+        // Restart onboarding tutorial
+        function restartTutorial() {
+            localStorage.removeItem('onboardingComplete');
+            showToast('success', 'Tutorial Reset', 'Onboarding walkthrough will start when you go to Dashboard.');
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 800);
         }
 
         function showEdit() {

@@ -233,18 +233,23 @@
     <!-- Bottom nav injected by JS -->
 
     <script src="js/app.js"></script>
+    <script src="js/onboarding.js"></script>
     <script>
         if (!initPage('dashboard')) { /* redirected */ }
         else {
-            // Check if user needs onboarding
-            const cachedUser = getUser();
-            if (cachedUser && cachedUser.onboardingCompleted === false) {
-                window.location.href = 'onboarding.html';
-            } else {
-                injectNavbar();
-                injectBottomNav('dashboard');
-                loadDashboard();
-            }
+            injectNavbar();
+            injectBottomNav('dashboard');
+            loadDashboard();
+            
+            // Check if user needs onboarding walkthrough
+            setTimeout(() => {
+                const cachedUser = getUser();
+                if (localStorage.getItem('onboardingComplete') !== 'true' || (cachedUser && cachedUser.onboardingCompleted === false)) {
+                    if (typeof startOnboardingTour === 'function') {
+                        startOnboardingTour();
+                    }
+                }
+            }, 800);
         }
 
         async function loadDashboard() {
@@ -396,9 +401,9 @@
                         <div class="empty-state-icon">
                             <svg class="icon" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                         </div>
-                        <h3>No sales yet</h3>
+                        <h3>No sales recorded yet.</h3>
                         <p>Record your first sale to see it appear here.</p>
-                        <button class="btn btn-primary btn-sm" onclick="window.location.href='record-sale.html'">Record a Sale</button>
+                        <button class="btn btn-primary btn-sm" onclick="window.location.href='record-sale.html'">Record Sale</button>
                     </div>
                 `;
                 return;

@@ -19,24 +19,7 @@
         .page-title h1 { font-size: 24px; }
         .page-title p { font-size: 14px; color: var(--muted); margin-top: 3px; }
 
-        .add-stock-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            padding: 10px 16px;
-            font-size: 13px;
-            font-weight: 700;
-            font-family: var(--font-family);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: transform 0.1s, background-color 0.2s;
-            white-space: nowrap;
-        }
-        .add-stock-btn:hover { background: var(--primary-dark); }
-        .add-stock-btn:active { transform: scale(0.97); }
+        /* Standardized button styles used in page */
 
         .inventory-item {
             display: flex;
@@ -76,7 +59,7 @@
                 <h1>Inventory</h1>
                 <p>Manage and monitor your products.</p>
             </div>
-            <button class="add-stock-btn" onclick="window.location.href='add-stock.html'">
+            <button class="btn btn-primary btn-sm" onclick="window.location.href='add-stock.html'">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Add Stock
             </button>
@@ -188,7 +171,7 @@
                         </div>
                         <h3>No products yet</h3>
                         <p>Add your first product to start tracking your inventory.</p>
-                        <button class="btn btn-primary btn-sm" onclick="window.location.href='add-stock.html'">Add Stock</button>
+                        <button class="btn btn-primary btn-sm" onclick="window.location.href='add-stock.html'">Add Product</button>
                     </div>
                 `;
                 return;
