@@ -1860,6 +1860,71 @@ svg.icon-lg { width: 28px; height: 28px; }
     line-height: 1.55;
     margin-bottom: 24px;
 }
+.dashboard-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
 
+.profile-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
 
+@media (max-width: 400px) {
+    /* Stack form inputs grids */
+    .name-row, .unit-row {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+    
+    /* Stack dashboard stats cards */
+    .stat-cards, .dashboard-stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Stack dashboard quick action button grid */
+    .action-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+    
+    /* Stack settings profile action buttons */
+    .profile-actions-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+    
+    /* Achievements grid to 2 columns */
+    .achievements-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+    
+    /* Toast notifications full screen margins */
+    .toast-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 12px !important;
+    }
+}
 
+@media (max-width: 380px) {
+    /* Product selection items wrapping logic */
+    .product-item {
+        flex-wrap: wrap !important;
+        row-gap: 8px !important;
+    }
+    .product-info {
+        flex: 1 1 calc(100% - 60px) !important;
+    }
+    .product-price {
+        margin-left: 60px !important;
+        text-align: left !important;
+        flex: 1 !important;
+    }
+    .qty-control {
+        margin-left: auto !important;
+    }
+}

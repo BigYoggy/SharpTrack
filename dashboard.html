@@ -91,7 +91,7 @@
         }
 
         .action-text .title { font-size: 14px; font-weight: 700; color: var(--primary); }
-        .action-text .sub { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; }
+        .action-text .sub { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: normal; word-break: break-word; }
 
         .activity-section { margin-bottom: 20px; }
         .activity-item {
@@ -131,7 +131,7 @@
         <!-- STAT CARDS -->
         <div class="stat-cards" id="stat-cards" style="grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px;">
             <div class="skeleton skeleton-stat" style="height: 100px;"></div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="dashboard-stats-grid">
                 <div class="skeleton skeleton-stat"></div>
                 <div class="skeleton skeleton-stat"></div>
             </div>
@@ -324,7 +324,7 @@
                         ${Math.abs(pctChange)}% vs yesterday` : 'No data from yesterday'}
                     </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; grid-column: 1 / -1;">
+                <div class="dashboard-stats-grid" style="grid-column: 1 / -1;">
                     <div class="stat-card animate-fadeUp" style="animation-delay:0.05s;">
                         <div class="stat-icon blue">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>

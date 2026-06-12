@@ -38,6 +38,9 @@
         }
 
         .unit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 400px) {
+            .unit-row { grid-template-columns: 1fr; gap: 8px; }
+        }
 
         .input-wrapper input:not([type="number"]),
         .input-wrapper select { padding-left: 44px; }
