@@ -174,7 +174,7 @@ function updateSpotlight(step) {
     cutout.setAttribute('ry', rx);
 
     // Position Tooltip and Arrow relative to cutout
-    const tooltipWidth = onboardingTooltip.offsetWidth || 320;
+    const tooltipWidth = Math.min(onboardingTooltip.offsetWidth || 300, window.innerWidth - 20);
     const tooltipHeight = onboardingTooltip.offsetHeight || 140;
     const screenHeight = window.innerHeight;
     const screenWidth = window.innerWidth;

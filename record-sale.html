@@ -34,9 +34,9 @@
         .product-info .name { font-size: 14px; font-weight: 600; color: var(--text); }
         .product-info .stock { font-size: 12px; color: var(--primary); margin-top: 2px; }
 
-        .product-price { font-size: 14px; font-weight: 700; color: var(--text); flex-shrink: 0; min-width: 70px; text-align: right; }
+        .product-price { font-size: 13px; font-weight: 700; color: var(--text); flex-shrink: 1; min-width: 0; text-align: right; white-space: nowrap; }
 
-        .qty-control { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .qty-control { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
         .qty-btn {
             width: 38px; height: 38px; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
@@ -47,6 +47,14 @@
         .qty-btn:active { transform: scale(0.92); background: var(--primary-light); border-color: var(--primary); }
 
         .qty-num { font-size: 14px; font-weight: 700; min-width: 20px; text-align: center; }
+
+        /* Responsive: on very narrow screens wrap the price + qty below product info */
+        @media (max-width: 360px) {
+            .product-item { flex-wrap: wrap; }
+            .product-info { flex: 1 1 calc(100% - 60px); }
+            .product-price { flex: 1; text-align: left; margin-left: 60px; }
+            .qty-control { margin-left: auto; }
+        }
 
         /* CART */
         .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
