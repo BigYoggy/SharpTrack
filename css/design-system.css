@@ -1930,3 +1930,94 @@ svg.icon-lg { width: 28px; height: 28px; }
         margin-left: auto !important;
     }
 }
+
+/* ── ONBOARDING WALKTHROUGH MOBILE RESPONSIVENESS ── */
+@media (max-width: 480px) {
+    .onboarding-overlay-container {
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 99990 !important;
+    }
+
+    .onboarding-tooltip {
+        left: 16px !important;
+        right: 16px !important;
+        width: auto !important;
+        max-width: none !important;
+        padding: 14px 16px !important;
+        gap: 10px !important;
+    }
+
+    .onboarding-tooltip:not(.welcome-step) {
+        transform: none !important;
+    }
+
+    .onboarding-tooltip.welcome-step {
+        transform: translateY(-50%) !important;
+    }
+
+    .onboarding-tooltip h3 {
+        font-size: 15px !important;
+    }
+
+    .onboarding-tooltip p {
+        font-size: 14px !important;
+        line-height: 1.5 !important;
+    }
+
+    .onboarding-tooltip-actions {
+        margin-top: 8px !important;
+        gap: 8px !important;
+    }
+
+    .onboarding-tooltip-actions .btn-group {
+        gap: 6px !important;
+    }
+
+    .onboarding-btn {
+        height: 48px !important;
+        min-height: 48px !important;
+        font-size: 14px !important;
+        padding: 0 12px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: var(--radius-md) !important;
+    }
+
+    .onboarding-btn-skip {
+        padding: 0 8px !important;
+    }
+
+    .onboarding-completion-overlay {
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 99998 !important;
+        padding: 16px !important;
+    }
+
+    .onboarding-completion-modal {
+        padding: 24px 20px !important;
+        width: 100% !important;
+        max-width: 340px !important;
+    }
+
+    .onboarding-completion-modal h2 {
+        font-size: 18px !important;
+    }
+
+    .onboarding-completion-modal p {
+        font-size: 14px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .onboarding-btn-start,
+    .onboarding-btn-restart {
+        height: 48px !important;
+        min-height: 48px !important;
+        font-size: 14px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+}

@@ -106,9 +106,9 @@ function renderStep(stepIndex) {
                 ${ONBOARDING_STEPS.map((_, i) => `<div class="dot ${i === stepIndex ? 'active' : ''}"></div>`).join('')}
             </div>
             <div class="btn-group">
-                <button class="btn btn-ghost btn-sm" onclick="skipOnboarding()" style="padding: 6px 10px; font-size:12px; font-weight:700;">Skip</button>
-                ${stepIndex > 0 ? `<button class="btn btn-outline btn-sm" onclick="prevOnboardingStep()" style="padding: 6px 10px; font-size:12px; font-weight:700;">Back</button>` : ''}
-                <button class="btn btn-primary btn-sm" onclick="nextOnboardingStep()" style="padding: 6px 12px; font-size:12px; font-weight:700;">${stepIndex === ONBOARDING_STEPS.length - 1 ? 'Done' : 'Next'}</button>
+                <button class="btn btn-ghost btn-sm onboarding-btn onboarding-btn-skip" onclick="skipOnboarding()">Skip</button>
+                ${stepIndex > 0 ? `<button class="btn btn-outline btn-sm onboarding-btn onboarding-btn-back" onclick="prevOnboardingStep()">Back</button>` : ''}
+                <button class="btn btn-primary btn-sm onboarding-btn onboarding-btn-next" onclick="nextOnboardingStep()">${stepIndex === ONBOARDING_STEPS.length - 1 ? 'Done' : 'Next'}</button>
             </div>
         </div>
     `;
@@ -136,7 +136,11 @@ function updateSpotlight(step) {
         onboardingTooltip.style.left = '50%';
         onboardingTooltip.style.transform = 'translate(-50%, -50%)';
         onboardingArrow.style.display = 'none';
+        
+        onboardingTooltip.classList.add('welcome-step');
         return;
+    } else {
+        onboardingTooltip.classList.remove('welcome-step');
     }
 
     // Target element exists
@@ -253,8 +257,8 @@ function showCompletionScreen() {
                 <h2>You're all set!</h2>
                 <p>You are ready to start managing your inventory and tracking sales like a pro. Let's grow your retail store business together!</p>
                 <div style="display:flex; flex-direction:column; gap:10px;">
-                    <button class="btn btn-primary btn-block" onclick="finishOnboardingTour(true)">Get Started</button>
-                    <button class="btn btn-outline btn-block btn-sm" onclick="finishOnboardingTour(false)" style="font-size:13px; font-weight:700;">Restart Tutorial</button>
+                    <button class="btn btn-primary btn-block onboarding-btn-start" onclick="finishOnboardingTour(true)">Get Started</button>
+                    <button class="btn btn-outline btn-block btn-sm onboarding-btn-restart" onclick="finishOnboardingTour(false)">Restart Tutorial</button>
                 </div>
             </div>
         `;
