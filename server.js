@@ -13,10 +13,53 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 
+const jwt = require('jsonwebtoken');
+
+// Protect admin static pages
+app.use('/admin', (req, res, next) => {
+    // Allow login, style assets and logo image requests to bypass
+    if (req.path === '/login' || req.path === '/login.html' || req.path.includes('style.css') || req.path.includes('logo') || req.path.includes('logo2.png') || req.path.includes('logo3.png')) {
+        return next();
+    }
+
+    const cookies = {};
+    if (req.headers.cookie) {
+        req.headers.cookie.split(';').forEach(c => {
+            const parts = c.split('=');
+            cookies[parts[0].trim()] = decodeURIComponent((parts[1] || '').trim());
+        });
+    }
+    const token = cookies.admin_token;
+
+    if (!token) {
+        return res.redirect('/admin/login');
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded.role !== 'SUPER_ADMIN') {
+            res.clearCookie('admin_token');
+            return res.redirect('/admin/login');
+        }
+        next();
+    } catch (err) {
+        res.clearCookie('admin_token');
+        return res.redirect('/admin/login');
+    }
+});
+
+// Serve admin login HTML on /admin/login
+app.get('/admin/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin', 'login.html'));
+});
+
 // Serve static frontend files
 app.use(express.static(path.join(__dirname)));
 
 // API Routes
+const adminRoutes = require('./adminRoutes');
+app.use('/api/admin', adminRoutes);
+
 const authRoutes = require('./auth');
 app.use('/api/auth', authRoutes);
 

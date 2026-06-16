@@ -17,6 +17,7 @@ model User {
   profilePhoto         String?
   onboardingCompleted  Boolean        @default(false)
   darkMode             Boolean        @default(false)
+  status               String         @default("Active")
   products             Product[]
   sales                Sale[]
   notifications        Notification[]
@@ -26,16 +27,21 @@ model User {
 }
 
 model Product {
-  id           String   @id @default(cuid())
-  name         String
-  sellingPrice Float
-  quantity     Int
-  reorderLevel Int      @default(5)
-  unit         String   @default("pieces")
-  userId       String
-  user         User     @relation(fields: [userId], references: [id])
-  sales        Sale[]
-  createdAt    DateTime @default(now())
+  id             String   @id @default(cuid())
+  name           String
+  sellingPrice   Float
+  quantity       Int
+  reorderLevel   Int      @default(5)
+  unit           String   @default("pieces")
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  barcode        String?
+  brand          String?
+  category       String?
+  specifications String?
+  image          String?
+  sales          Sale[]
+  createdAt      DateTime @default(now())
 }
 
 model Sale {
@@ -68,4 +74,34 @@ model ActivityLog {
   action    String
   details   String?
   createdAt DateTime @default(now())
+}
+
+model Admin {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("SUPER_ADMIN")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+}
+
+model IngestionItem {
+  id            String   @id @default(uuid())
+  name          String
+  barcode       String?
+  brand         String
+  category      String
+  spec          String?
+  source        String
+  status        String   @default("review") // review, imported, duplicate, failed
+  reason        String?  // for review
+  error         String?  // for failed
+  duplicateOfId String?  // reference to product id for duplicates
+  createdAt     DateTime @default(now())
 }
