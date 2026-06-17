@@ -37,7 +37,7 @@ app.use('/admin', (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if (decoded.role !== 'SUPER_ADMIN') {
+        if (!['SUPER_ADMIN', 'ADMIN', 'SUPPORT', 'MODERATOR'].includes(decoded.role)) {
             res.clearCookie('admin_token');
             return res.redirect('/admin/login');
         }

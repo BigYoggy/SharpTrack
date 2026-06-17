@@ -66,6 +66,12 @@
                             <span class="badge badge-accent" id="ingestion-badge">5</span>
                         </button>
                     </li>
+                    <li id="nav-item-admins">
+                        <button class="nav-item" data-target="admins">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            <span>Admin Management</span>
+                        </button>
+                    </li>
                     <li>
                         <button class="nav-item" data-target="settings">
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -181,73 +187,81 @@
                         <div class="metric-card">
                             <div class="metric-header">
                                 <span class="metric-label">Total Registered Users</span>
-                                <div class="metric-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
+                                <div class="metric-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></div>
                             </div>
-                            <div class="metric-val" id="stat-total-users">24,582</div>
-                            <div class="metric-delta delta-up">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                                <span>+12.4% vs last month</span>
-                            </div>
+                            <div class="metric-val" id="stat-total-users">0</div>
                         </div>
 
                         <div class="metric-card">
                             <div class="metric-header">
-                                <span class="metric-label">Active Businesses</span>
-                                <div class="metric-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></div>
+                                <span class="metric-label">Active Users</span>
+                                <div class="metric-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
                             </div>
-                            <div class="metric-val" id="stat-active-businesses">18,291</div>
-                            <div class="metric-delta delta-up">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                                <span>+8.2% vs last month</span>
-                            </div>
+                            <div class="metric-val" id="stat-active-users">0</div>
                         </div>
 
                         <div class="metric-card">
                             <div class="metric-header">
-                                <span class="metric-label">Global Products Database</span>
+                                <span class="metric-label">Suspended Users</span>
+                                <div class="metric-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>
+                            </div>
+                            <div class="metric-val" id="stat-suspended-users">0</div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-label">Total Products</span>
                                 <div class="metric-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline></svg></div>
                             </div>
-                            <div class="metric-val" id="stat-products-count">482,912</div>
-                            <div class="metric-delta delta-up">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                                <span>+4,152 added today</span>
-                            </div>
+                            <div class="metric-val" id="stat-products-count">0</div>
                         </div>
 
                         <div class="metric-card">
                             <div class="metric-header">
-                                <span class="metric-label">AI Product Identifications</span>
+                                <span class="metric-label">Total Sales Transactions</span>
+                                <div class="metric-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg></div>
+                            </div>
+                            <div class="metric-val" id="stat-total-sales">0</div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-label">Revenue Today</span>
+                                <div class="metric-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+                            </div>
+                            <div class="metric-val" id="stat-revenue-today">₦0</div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-label">Revenue This Month</span>
+                                <div class="metric-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+                            </div>
+                            <div class="metric-val" id="stat-revenue-month">₦0</div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-label">Total AI Ingestions</span>
                                 <div class="metric-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg></div>
                             </div>
-                            <div class="metric-val" id="stat-ai-idents">142,504</div>
-                            <div class="metric-delta delta-up">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                                <span>94.8% scan match rate</span>
-                            </div>
+                            <div class="metric-val" id="stat-ai-idents">0</div>
                         </div>
 
                         <div class="metric-card">
                             <div class="metric-header">
-                                <span class="metric-label">Merchant Sales Today</span>
-                                <div class="metric-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+                                <span class="metric-label">Pending AI Reviews</span>
+                                <div class="metric-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
                             </div>
-                            <div class="metric-val" id="stat-revenue-today">₦4,281,900</div>
-                            <div class="metric-delta delta-up">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                                <span>+18.7% vs yesterday</span>
-                            </div>
+                            <div class="metric-val" id="stat-pending-reviews">0</div>
                         </div>
 
-                        <div class="metric-card col-span-2-desktop">
+                        <div class="metric-card">
                             <div class="metric-header">
-                                <span class="metric-label">Merchant Sales This Month</span>
-                                <div class="metric-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+                                <span class="metric-label">Failed AI Imports</span>
+                                <div class="metric-icon-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
                             </div>
-                            <div class="metric-val" id="stat-revenue-month">₦128,495,200</div>
-                            <div class="metric-delta delta-up">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                                <span>+22.3% vs target growth</span>
-                            </div>
+                            <div class="metric-val" id="stat-failed-imports">0</div>
                         </div>
                     </div>
 
@@ -539,6 +553,44 @@
                     </div>
                 </section>
 
+                <!-- 8. ADMIN ROLE MANAGEMENT -->
+                <section id="admins" class="panel-section">
+                    <div class="panel-header-desc">
+                        <h1 class="panel-title">Admin Management</h1>
+                        <p class="panel-subtitle">Create new administrators, configure security access permissions, and update accounts status.</p>
+                    </div>
+
+                    <div class="card list-card">
+                        <div class="table-toolbar">
+                            <div class="search-box">
+                                <span style="font-weight:600;font-size:14px;color:var(--text-secondary)">System Administrators Console</span>
+                            </div>
+                            <button class="btn btn-primary" id="btn-add-admin" onclick="openModal('admin-modal')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Add Administrator
+                            </button>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="data-table" id="admins-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email Address</th>
+                                        <th>Role Group</th>
+                                        <th>Account Status</th>
+                                        <th>Created Date</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admins-table-body">
+                                    <!-- Dynamic admin rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- 7. SETTINGS -->
                 <section id="settings" class="panel-section">
                     <div class="panel-header-desc">
@@ -707,6 +759,48 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('product-modal')">Cancel</button>
                     <button type="submit" class="btn btn-primary" id="product-modal-submit-btn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- C. Admin Add/Edit Modal -->
+    <div class="modal-backdrop" id="admin-modal">
+        <div class="modal-content glass-modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="admin-modal-title">Create Administrator</h3>
+                <button class="modal-close" onclick="closeModal('admin-modal')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <form id="admin-form">
+                <div class="modal-body">
+                    <input type="hidden" id="admin-modal-id">
+                    <div class="form-group mb-3">
+                        <label for="admin-modal-name">Full Name</label>
+                        <input type="text" id="admin-modal-name" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="admin-modal-email">Email Address</label>
+                        <input type="email" id="admin-modal-email" required autocomplete="username">
+                    </div>
+                    <div class="form-group mb-3" id="admin-password-group">
+                        <label for="admin-modal-password">Login Password</label>
+                        <input type="password" id="admin-modal-password" autocomplete="new-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-modal-role">System Role Group</label>
+                        <select id="admin-modal-role" required>
+                            <option value="SUPER_ADMIN">SUPER_ADMIN (Full Access)</option>
+                            <option value="ADMIN" selected>ADMIN (Dashboard, User, Products)</option>
+                            <option value="SUPPORT">SUPPORT (Read-only Analytics, Tickets)</option>
+                            <option value="MODERATOR">MODERATOR (Accounts Moderation)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('admin-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="admin-modal-submit-btn">Save Admin</button>
                 </div>
             </form>
         </div>

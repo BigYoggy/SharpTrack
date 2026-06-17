@@ -118,6 +118,10 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ error: 'Invalid phone number or PIN' });
         }
 
+        if (user.status === 'Suspended') {
+            return res.status(403).json({ error: 'This merchant account has been suspended. Please contact support.' });
+        }
+
         const pinMatch = await bcrypt.compare(pin, user.password);
         if (!pinMatch) {
             return res.status(400).json({ error: 'Invalid phone number or PIN' });

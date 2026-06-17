@@ -326,6 +326,8 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    min-width: 0;
+    overflow-x: hidden;
     transition: margin-left var(--transition-normal);
 }
 
@@ -726,7 +728,7 @@ body {
 /* --- METRICS CARDS GRID --- */
 .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 20px;
     margin-bottom: 32px;
 }

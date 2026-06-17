@@ -70,6 +70,10 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ error: 'Invalid email or password' });
         }
 
+        if (admin.status === 'Disabled') {
+            return res.status(403).json({ error: 'This administrator account has been disabled. Please contact support.' });
+        }
+
         const isMatch = await bcrypt.compare(password, admin.passwordHash);
         if (!isMatch) {
             recordFailedAttempt(cleanEmail);
@@ -116,23 +120,36 @@ router.post('/logout', (req, res) => {
 });
 
 // 3. GET CURRENT ADMIN
-router.get('/me', adminAuth, (req, res) => {
-    res.json({
-        admin: {
-            id: req.adminId,
-            email: req.adminEmail,
-            role: req.adminRole
-        }
-    });
+router.get('/me', adminAuth, async (req, res) => {
+    try {
+        const admin = await prisma.admin.findUnique({ where: { id: req.adminId } });
+        res.json({
+            admin: {
+                id: admin.id,
+                name: admin.name || '',
+                email: admin.email,
+                role: admin.role,
+                status: admin.status,
+                profilePhoto: admin.profilePhoto || ''
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch admin profile' });
+    }
 });
 
 // 4. GET DASHBOARD STATS
 router.get('/stats', adminAuth, async (req, res) => {
     try {
+        // Enforce Support access (read-only analytics is supported)
+        if (!['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(req.adminRole)) {
+            return res.status(403).json({ error: 'Access denied. Insufficient privileges.' });
+        }
+
         const totalUsers = await prisma.user.count();
-        const totalBusinesses = await prisma.user.count({
-            where: { storeName: { not: null } }
-        });
+        const activeUsers = await prisma.user.count({ where: { status: 'Active' } });
+        const suspendedUsers = await prisma.user.count({ where: { status: 'Suspended' } });
+        
         const totalProducts = await prisma.product.count();
         const totalSales = await prisma.sale.count();
 
@@ -156,13 +173,22 @@ router.get('/stats', adminAuth, async (req, res) => {
         });
         const revenueMonth = monthSales.reduce((sum, s) => sum + s.totalAmount, 0);
 
+        // AI Ingestion metrics
+        const totalIngestion = await prisma.ingestionItem.count();
+        const pendingIngestion = await prisma.ingestionItem.count({ where: { status: 'review' } });
+        const failedIngestion = await prisma.ingestionItem.count({ where: { status: 'failed' } });
+
         res.json({
             totalUsers,
-            totalBusinesses,
+            activeUsers,
+            suspendedUsers,
             totalProducts,
             totalSales,
             revenueToday,
-            revenueMonth
+            revenueMonth,
+            totalIngestion,
+            pendingIngestion,
+            failedIngestion
         });
     } catch (err) {
         console.error('Failed to aggregate admin stats:', err);
@@ -172,6 +198,10 @@ router.get('/stats', adminAuth, async (req, res) => {
 
 // 5. GET SALES TREND CHART DATA
 router.get('/charts/sales-trend', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+
     const range = parseInt(req.query.range) || 30;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - range + 1);
@@ -237,6 +267,11 @@ router.get('/users', adminAuth, async (req, res) => {
 });
 
 router.post('/users/:id/suspend', adminAuth, async (req, res) => {
+    // Only SUPER_ADMIN, ADMIN, or MODERATOR can perform user status actions
+    if (!['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied. Insufficient permissions.' });
+    }
+
     try {
         const user = await prisma.user.findUnique({ where: { id: req.params.id } });
         if (!user) return res.status(404).json({ error: 'User not found' });
@@ -253,7 +288,7 @@ router.post('/users/:id/suspend', adminAuth, async (req, res) => {
             data: {
                 userId: req.params.id,
                 action: 'User status change',
-                details: `Super Admin set merchant ${updated.name} status to ${updated.status}.`
+                details: `Admin set merchant ${updated.name} status to ${updated.status}.`
             }
         });
 
@@ -265,11 +300,16 @@ router.post('/users/:id/suspend', adminAuth, async (req, res) => {
 });
 
 router.delete('/users/:id', adminAuth, async (req, res) => {
+    // Only SUPER_ADMIN, ADMIN, or MODERATOR can delete users
+    if (!['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied. Insufficient permissions.' });
+    }
+
     try {
         const user = await prisma.user.findUnique({ where: { id: req.params.id } });
         if (!user) return res.status(404).json({ error: 'User not found' });
 
-        // Wipe user cascade manually since Prisma constraints might block
+        // Wipe user cascade manually
         await prisma.activityLog.deleteMany({ where: { userId: req.params.id } });
         await prisma.notification.deleteMany({ where: { userId: req.params.id } });
         await prisma.sale.deleteMany({ where: { userId: req.params.id } });
@@ -282,12 +322,6 @@ router.delete('/users/:id', adminAuth, async (req, res) => {
         res.status(500).json({ error: 'Failed to delete user' });
     }
 });
-
-// Helper for finding/mapping default admin-related activity logs
-function systemUserCheckId(req) {
-    // Return a default system logger ID
-    return req.adminId;
-}
 
 // 7. PRODUCT CATALOG
 router.get('/products', adminAuth, async (req, res) => {
@@ -303,6 +337,10 @@ router.get('/products', adminAuth, async (req, res) => {
 });
 
 router.post('/products', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied. Only Admins can manually register products.' });
+    }
+
     const { name, barcode, brand, category, specifications, image } = req.body;
 
     if (!name || !barcode) {
@@ -310,10 +348,8 @@ router.post('/products', adminAuth, async (req, res) => {
     }
 
     try {
-        // Find default System Merchant user
         let systemUser = await prisma.user.findFirst({ where: { phone: '0000000000' } });
         if (!systemUser) {
-            // Create system user if it doesn't exist
             systemUser = await prisma.user.create({
                 data: {
                     name: 'System Merchant',
@@ -347,6 +383,10 @@ router.post('/products', adminAuth, async (req, res) => {
 });
 
 router.put('/products/:id', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+
     const { name, barcode, brand, category, specifications, image } = req.body;
 
     try {
@@ -369,8 +409,11 @@ router.put('/products/:id', adminAuth, async (req, res) => {
 });
 
 router.delete('/products/:id', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+
     try {
-        // Delete related sales records first
         await prisma.sale.deleteMany({ where: { productId: req.params.id } });
         await prisma.product.delete({ where: { id: req.params.id } });
         res.json({ message: 'Product deleted successfully' });
@@ -382,6 +425,10 @@ router.delete('/products/:id', adminAuth, async (req, res) => {
 
 // 8. BUSINESS MANAGEMENT
 router.get('/businesses', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+
     try {
         const merchants = await prisma.user.findMany({
             where: { storeName: { not: null, not: 'System Catalog' } },
@@ -426,12 +473,15 @@ router.get('/businesses', adminAuth, async (req, res) => {
 
 // 9. INGESTION PIPELINE
 router.get('/ingestion', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+
     try {
         const items = await prisma.ingestionItem.findMany({
             orderBy: { createdAt: 'desc' }
         });
 
-        // Group by status
         const queue = {
             review: items.filter(x => x.status === 'review'),
             imported: items.filter(x => x.status === 'imported'),
@@ -446,11 +496,14 @@ router.get('/ingestion', adminAuth, async (req, res) => {
 });
 
 router.post('/ingestion/:id/approve', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+
     try {
         const item = await prisma.ingestionItem.findUnique({ where: { id: req.params.id } });
         if (!item) return res.status(404).json({ error: 'Ingestion item not found' });
 
-        // Add to global Product catalog
         let systemUser = await prisma.user.findFirst({ where: { phone: '0000000000' } });
         if (!systemUser) {
             systemUser = await prisma.user.create({
@@ -478,7 +531,6 @@ router.post('/ingestion/:id/approve', adminAuth, async (req, res) => {
             }
         });
 
-        // Update Ingestion status to 'imported'
         const updated = await prisma.ingestionItem.update({
             where: { id: req.params.id },
             data: { status: 'imported' }
@@ -492,6 +544,10 @@ router.post('/ingestion/:id/approve', adminAuth, async (req, res) => {
 });
 
 router.post('/ingestion/:id/dismiss', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+
     try {
         const item = await prisma.ingestionItem.findUnique({ where: { id: req.params.id } });
         if (!item) return res.status(404).json({ error: 'Ingestion item not found' });
@@ -505,6 +561,10 @@ router.post('/ingestion/:id/dismiss', adminAuth, async (req, res) => {
 });
 
 router.post('/ingestion/:id/retry', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+
     const { barcode } = req.body;
 
     try {
@@ -516,7 +576,6 @@ router.post('/ingestion/:id/retry', adminAuth, async (req, res) => {
             return res.status(400).json({ error: 'Valid EAN barcode is required for catalog injection' });
         }
 
-        // Add to global Product catalog
         let systemUser = await prisma.user.findFirst({ where: { phone: '0000000000' } });
         if (!systemUser) {
             systemUser = await prisma.user.create({
@@ -544,7 +603,6 @@ router.post('/ingestion/:id/retry', adminAuth, async (req, res) => {
             }
         });
 
-        // Delete from failed ingestion items
         await prisma.ingestionItem.delete({ where: { id: req.params.id } });
 
         res.json({ message: 'Sync retried successfully and item catalogued' });
@@ -566,6 +624,10 @@ router.get('/categories', adminAuth, async (req, res) => {
 });
 
 router.post('/categories', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+
     const { name } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: 'Category name is required' });
 
@@ -584,6 +646,10 @@ router.post('/categories', adminAuth, async (req, res) => {
 });
 
 router.delete('/categories/:name', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+
     try {
         await prisma.category.delete({ where: { name: req.params.name } });
         res.json({ message: 'Category removed successfully' });
@@ -595,6 +661,10 @@ router.delete('/categories/:name', adminAuth, async (req, res) => {
 
 // 11. OPERATIONS FEED (AUDIT LOGS)
 router.get('/activity', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+
     try {
         const logs = await prisma.activityLog.findMany({
             orderBy: { createdAt: 'desc' },
@@ -609,7 +679,6 @@ router.get('/activity', adminAuth, async (req, res) => {
             }
         });
 
-        // Map logs to dashboard expectations
         const mapped = logs.map(log => {
             let badgeType = 'badge-accent';
             let icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
@@ -653,18 +722,19 @@ router.get('/activity', adminAuth, async (req, res) => {
     }
 });
 
-// 12. NOTIFICATIONS ALERTS (Ingestion warnings, support request warnings)
+// 12. NOTIFICATIONS ALERTS
 router.get('/notifications', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+
     try {
-        // Fetch last 10 notifications for all users
         const notifications = await prisma.notification.findMany({
             orderBy: { createdAt: 'desc' },
             take: 10,
             include: {
                 user: {
-                    select: {
-                        name: true
-                    }
+                    select: { name: true }
                 }
             }
         });
@@ -696,6 +766,10 @@ router.get('/notifications', adminAuth, async (req, res) => {
 });
 
 router.post('/notifications/mark-read', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+
     const { id } = req.body;
     try {
         if (id) {
@@ -713,6 +787,196 @@ router.post('/notifications/mark-read', adminAuth, async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to mark notifications' });
+    }
+});
+
+// 13. ADMIN PROFILE PERSISTENCE
+router.put('/profile', adminAuth, async (req, res) => {
+    const { name, email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ error: 'Email address is required.' });
+    }
+
+    try {
+        const existing = await prisma.admin.findFirst({
+            where: {
+                email: email.trim().toLowerCase(),
+                NOT: { id: req.adminId }
+            }
+        });
+
+        if (existing) {
+            return res.status(400).json({ error: 'This email is already in use by another admin.' });
+        }
+
+        const updated = await prisma.admin.update({
+            where: { id: req.adminId },
+            data: {
+                name: name ? name.trim() : null,
+                email: email.trim().toLowerCase()
+            }
+        });
+
+        res.json({
+            message: 'Profile updated successfully',
+            admin: {
+                id: updated.id,
+                name: updated.name || '',
+                email: updated.email,
+                role: updated.role,
+                status: updated.status,
+                profilePhoto: updated.profilePhoto || ''
+            }
+        });
+    } catch (err) {
+        console.error('Admin profile update error:', err);
+        res.status(500).json({ error: 'Failed to save profile changes' });
+    }
+});
+
+// 14. ADMIN ROLE MANAGEMENT (SUPER_ADMIN ONLY)
+router.get('/admins', adminAuth, async (req, res) => {
+    if (req.adminRole !== 'SUPER_ADMIN') {
+        return res.status(403).json({ error: 'Access denied. Super Admin role required.' });
+    }
+
+    try {
+        const admins = await prisma.admin.findMany({
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                status: true,
+                createdAt: true
+            }
+        });
+        res.json({ admins });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to load administrator accounts' });
+    }
+});
+
+router.post('/admins', adminAuth, async (req, res) => {
+    if (req.adminRole !== 'SUPER_ADMIN') {
+        return res.status(403).json({ error: 'Access denied. Super Admin role required.' });
+    }
+
+    const { name, email, password, role } = req.body;
+
+    if (!email || !password || !role) {
+        return res.status(400).json({ error: 'Email, password, and role are required' });
+    }
+
+    try {
+        const existing = await prisma.admin.findUnique({
+            where: { email: email.trim().toLowerCase() }
+        });
+
+        if (existing) {
+            return res.status(400).json({ error: 'An administrator with this email already exists' });
+        }
+
+        const salt = await bcrypt.genSalt(12);
+        const passwordHash = await bcrypt.hash(password, salt);
+
+        const admin = await prisma.admin.create({
+            data: {
+                name: name ? name.trim() : '',
+                email: email.trim().toLowerCase(),
+                passwordHash,
+                role,
+                status: 'Active'
+            }
+        });
+
+        res.status(201).json({
+            message: 'Administrator account created successfully',
+            admin: {
+                id: admin.id,
+                name: admin.name,
+                email: admin.email,
+                role: admin.role,
+                status: admin.status
+            }
+        });
+    } catch (err) {
+        console.error('Create admin error:', err);
+        res.status(500).json({ error: 'Failed to create administrator account' });
+    }
+});
+
+router.put('/admins/:id', adminAuth, async (req, res) => {
+    if (req.adminRole !== 'SUPER_ADMIN') {
+        return res.status(403).json({ error: 'Access denied. Super Admin role required.' });
+    }
+
+    const { name, email, role } = req.body;
+
+    try {
+        const admin = await prisma.admin.findUnique({ where: { id: req.params.id } });
+        if (!admin) return res.status(404).json({ error: 'Admin account not found' });
+
+        const updated = await prisma.admin.update({
+            where: { id: req.params.id },
+            data: {
+                name: name !== undefined ? name.trim() : undefined,
+                email: email !== undefined ? email.trim().toLowerCase() : undefined,
+                role: role !== undefined ? role : undefined
+            }
+        });
+
+        res.json({
+            message: 'Administrator account updated successfully',
+            admin: {
+                id: updated.id,
+                name: updated.name,
+                email: updated.email,
+                role: updated.role,
+                status: updated.status
+            }
+        });
+    } catch (err) {
+        console.error('Edit admin error:', err);
+        res.status(500).json({ error: 'Failed to update administrator account' });
+    }
+});
+
+router.post('/admins/:id/toggle-status', adminAuth, async (req, res) => {
+    if (req.adminRole !== 'SUPER_ADMIN') {
+        return res.status(403).json({ error: 'Access denied. Super Admin role required.' });
+    }
+
+    try {
+        const admin = await prisma.admin.findUnique({ where: { id: req.params.id } });
+        if (!admin) return res.status(404).json({ error: 'Admin account not found' });
+
+        if (admin.id === req.adminId) {
+            return res.status(400).json({ error: 'You cannot disable your own administrator account.' });
+        }
+
+        const nextStatus = admin.status === 'Active' ? 'Disabled' : 'Active';
+
+        const updated = await prisma.admin.update({
+            where: { id: req.params.id },
+            data: { status: nextStatus }
+        });
+
+        res.json({
+            message: `Administrator account status set to ${nextStatus}`,
+            admin: {
+                id: updated.id,
+                name: updated.name,
+                email: updated.email,
+                role: updated.role,
+                status: updated.status
+            }
+        });
+    } catch (err) {
+        console.error('Toggle admin status error:', err);
+        res.status(500).json({ error: 'Failed to toggle administrator status' });
     }
 });
 

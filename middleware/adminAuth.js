@@ -27,16 +27,24 @@ const adminAuth = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if (decoded.role !== 'SUPER_ADMIN') {
+        
+        // Connect to database to check if admin was disabled
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
+        const admin = await prisma.admin.findUnique({ where: { id: decoded.id } });
+
+        if (!admin || admin.status === 'Disabled' || !['SUPER_ADMIN', 'ADMIN', 'SUPPORT', 'MODERATOR'].includes(admin.role)) {
+            res.clearCookie('admin_token');
             if (isApi) {
-                return res.status(403).json({ error: 'Access denied. Administrator privileges required.' });
+                return res.status(403).json({ error: 'Access denied. Account disabled or insufficient privileges.' });
             } else {
                 return res.redirect('/admin/login');
             }
         }
-        req.adminId = decoded.id;
-        req.adminEmail = decoded.email;
-        req.adminRole = decoded.role;
+
+        req.adminId = admin.id;
+        req.adminEmail = admin.email;
+        req.adminRole = admin.role;
         next();
     } catch (err) {
         if (isApi) {

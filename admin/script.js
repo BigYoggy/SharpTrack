@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
         users: [],
         products: [],
         businesses: [],
+        admins: [],
+        currentAdminRole: null,
         ingestion: {
             review: [],
             imported: [],
@@ -36,64 +38,110 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             const authData = await authRes.json();
-            const adminEmail = authData.admin.email;
+            const admin = authData.admin;
+            const adminEmail = admin.email;
+            const adminName = admin.name || adminEmail.split('@')[0];
+            const adminRole = admin.role;
+            state.currentAdminRole = adminRole;
+
+            // Apply role-based UI permissions
+            applyRolePermissions(adminRole);
             
             // Render profile header details
-            document.querySelectorAll('.profile-name').forEach(el => el.textContent = adminEmail.split('@')[0]);
+            document.querySelectorAll('.profile-name').forEach(el => el.textContent = adminName);
             document.querySelectorAll('.profile-email').forEach(el => el.textContent = adminEmail);
             document.querySelectorAll('.profile-avatar, .profile-avatar-btn').forEach(el => el.textContent = adminEmail.substring(0, 2).toUpperCase());
 
-            // Load counts stats card
-            await loadStatsSummary();
+            // Populate settings form with values
+            const adminNameInput = document.getElementById('admin-name');
+            const adminEmailInput = document.getElementById('admin-email');
+            const adminRoleInput = document.getElementById('admin-role');
+            if (adminNameInput) adminNameInput.value = admin.name || '';
+            if (adminEmailInput) adminEmailInput.value = admin.email || '';
+            if (adminRoleInput) adminRoleInput.value = admin.role || '';
 
-            // Load users list
+            // Load counts stats card (Only if permitted)
+            if (['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(adminRole)) {
+                await loadStatsSummary();
+            }
+
+            // Load admins list if SUPER_ADMIN
+            if (adminRole === 'SUPER_ADMIN') {
+                await loadAdmins();
+            }
+
+            // Load users list (All roles can view users)
             const usersRes = await fetch('/api/admin/users');
-            const usersData = await usersRes.json();
-            state.users = usersData.users;
-            filteredUsers = [...state.users];
-            renderUsers();
+            if (usersRes.ok) {
+                const usersData = await usersRes.json();
+                state.users = usersData.users;
+                filteredUsers = [...state.users];
+                renderUsers();
+            }
 
-            // Load products list
+            // Load products list (All roles can view products)
             const productsRes = await fetch('/api/admin/products');
-            const productsData = await productsRes.json();
-            state.products = productsData.products;
-            filteredProducts = [...state.products];
-            renderProducts();
+            if (productsRes.ok) {
+                const productsData = await productsRes.json();
+                state.products = productsData.products;
+                filteredProducts = [...state.products];
+                renderProducts();
+            }
 
-            // Load businesses list
-            const businessesRes = await fetch('/api/admin/businesses');
-            const businessesData = await businessesRes.json();
-            state.businesses = businessesData.businesses;
-            filteredBusinesses = [...state.businesses];
-            renderBusinesses();
+            // Load businesses list (SUPER_ADMIN, ADMIN, SUPPORT)
+            if (['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(adminRole)) {
+                const businessesRes = await fetch('/api/admin/businesses');
+                if (businessesRes.ok) {
+                    const businessesData = await businessesRes.json();
+                    state.businesses = businessesData.businesses;
+                    filteredBusinesses = [...state.businesses];
+                    renderBusinesses();
+                }
+            }
 
-            // Load categories
+            // Load categories (All roles can view categories)
             const categoriesRes = await fetch('/api/admin/categories');
-            const categoriesData = await categoriesRes.json();
-            state.categories = categoriesData.categories;
-            renderCategoriesSettings();
-            populateProductCategoriesFilter();
+            if (categoriesRes.ok) {
+                const categoriesData = await categoriesRes.json();
+                state.categories = categoriesData.categories;
+                renderCategoriesSettings();
+                populateProductCategoriesFilter();
+            }
 
-            // Load ingestion center pipeline
-            const ingestionRes = await fetch('/api/admin/ingestion');
-            const ingestionData = await ingestionRes.json();
-            state.ingestion = ingestionData.ingestion;
-            renderIngestionTable();
+            // Load ingestion center pipeline (SUPER_ADMIN, ADMIN, MODERATOR)
+            if (['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(adminRole)) {
+                const ingestionRes = await fetch('/api/admin/ingestion');
+                if (ingestionRes.ok) {
+                    const ingestionData = await ingestionRes.json();
+                    state.ingestion = ingestionData.ingestion;
+                    renderIngestionTable();
+                }
+            }
 
-            // Load notifications alerts
-            const notificationsRes = await fetch('/api/admin/notifications');
-            const notificationsData = await notificationsRes.json();
-            state.notifications = notificationsData.notifications;
-            renderNotifications();
+            // Load notifications alerts (SUPER_ADMIN, ADMIN, SUPPORT)
+            if (['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(adminRole)) {
+                const notificationsRes = await fetch('/api/admin/notifications');
+                if (notificationsRes.ok) {
+                    const notificationsData = await notificationsRes.json();
+                    state.notifications = notificationsData.notifications;
+                    renderNotifications();
+                }
+            }
 
-            // Load activity feed (audit logs)
-            const activityRes = await fetch('/api/admin/activity');
-            const activityData = await activityRes.json();
-            state.auditLogs = activityData.activityLogs;
-            renderAuditLogs();
+            // Load activity feed (SUPER_ADMIN, ADMIN)
+            if (['SUPER_ADMIN', 'ADMIN'].includes(adminRole)) {
+                const activityRes = await fetch('/api/admin/activity');
+                if (activityRes.ok) {
+                    const activityData = await activityRes.json();
+                    state.auditLogs = activityData.activityLogs;
+                    renderAuditLogs();
+                }
+            }
 
             // Draw charts
-            renderOverviewCharts();
+            if (['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(adminRole)) {
+                renderOverviewCharts();
+            }
 
         } catch (err) {
             console.error('Failed to load admin dashboard data:', err);
@@ -104,16 +152,229 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadStatsSummary() {
         try {
             const statsRes = await fetch('/api/admin/stats');
+            if (!statsRes.ok) throw new Error('Failed to load stats');
             const stats = await statsRes.json();
 
             document.getElementById('stat-total-users').textContent = stats.totalUsers.toLocaleString();
-            document.getElementById('stat-active-businesses').textContent = stats.totalBusinesses.toLocaleString();
+            document.getElementById('stat-active-users').textContent = stats.activeUsers.toLocaleString();
+            document.getElementById('stat-suspended-users').textContent = stats.suspendedUsers.toLocaleString();
             document.getElementById('stat-products-count').textContent = stats.totalProducts.toLocaleString();
+            document.getElementById('stat-total-sales').textContent = stats.totalSales.toLocaleString();
             document.getElementById('stat-revenue-today').textContent = '₦' + stats.revenueToday.toLocaleString('en-NG');
             document.getElementById('stat-revenue-month').textContent = '₦' + stats.revenueMonth.toLocaleString('en-NG');
+            document.getElementById('stat-ai-idents').textContent = stats.totalIngestion.toLocaleString();
+            document.getElementById('stat-pending-reviews').textContent = stats.pendingIngestion.toLocaleString();
+            document.getElementById('stat-failed-imports').textContent = stats.failedIngestion.toLocaleString();
         } catch (err) {
             console.error('Failed to reload stats summary:', err);
         }
+    }
+
+    function applyRolePermissions(role) {
+        // Hide sidebar navigation items based on role permissions
+        const productsNav = document.querySelector('.nav-item[data-target="products"]');
+        if (productsNav) {
+            productsNav.parentElement.style.display = ['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(role) ? 'block' : 'none';
+        }
+        
+        const businessesNav = document.querySelector('.nav-item[data-target="businesses"]');
+        if (businessesNav) {
+            businessesNav.parentElement.style.display = ['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(role) ? 'block' : 'none';
+        }
+        
+        const analyticsNav = document.querySelector('.nav-item[data-target="analytics"]');
+        if (analyticsNav) {
+            analyticsNav.parentElement.style.display = ['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(role) ? 'block' : 'none';
+        }
+        
+        const ingestionNav = document.querySelector('.nav-item[data-target="ingestion"]');
+        if (ingestionNav) {
+            ingestionNav.parentElement.style.display = ['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(role) ? 'block' : 'none';
+        }
+        
+        const adminsNav = document.getElementById('nav-item-admins');
+        if (adminsNav) {
+            adminsNav.style.display = (role === 'SUPER_ADMIN') ? 'block' : 'none';
+        }
+
+        // Hide specific buttons
+        const addProductBtn = document.getElementById('btn-add-product');
+        if (addProductBtn) {
+            addProductBtn.style.display = ['SUPER_ADMIN', 'ADMIN'].includes(role) ? 'inline-flex' : 'none';
+        }
+
+        const addCategoryBtn = document.getElementById('btn-add-category');
+        if (addCategoryBtn) {
+            addCategoryBtn.style.display = ['SUPER_ADMIN', 'ADMIN'].includes(role) ? 'inline-block' : 'none';
+        }
+
+        const categorySettingsTab = document.querySelector('.settings-nav-item[data-subtarget="categories"]');
+        const sourcesSettingsTab = document.querySelector('.settings-nav-item[data-subtarget="sources"]');
+        if (categorySettingsTab) {
+            categorySettingsTab.style.display = ['SUPER_ADMIN', 'ADMIN'].includes(role) ? 'block' : 'none';
+        }
+        if (sourcesSettingsTab) {
+            sourcesSettingsTab.style.display = ['SUPER_ADMIN', 'ADMIN'].includes(role) ? 'block' : 'none';
+        }
+    }
+
+    async function loadAdmins() {
+        if (state.currentAdminRole !== 'SUPER_ADMIN') return;
+        try {
+            const res = await fetch('/api/admin/admins');
+            if (!res.ok) throw new Error('Failed to load administrators');
+            const data = await res.json();
+            state.admins = data.admins;
+            renderAdmins();
+        } catch (err) {
+            console.error('Failed to load admins:', err);
+            showToast('error', 'Error', 'Failed to retrieve administrator list.');
+        }
+    }
+
+    function renderAdmins() {
+        const tbody = document.getElementById('admins-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (!state.admins || state.admins.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">No administrators found</td></tr>';
+            return;
+        }
+
+        state.admins.forEach(adm => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <span class="font-semibold">${adm.name || 'N/A'}</span>
+                </td>
+                <td>
+                    <span>${adm.email}</span>
+                </td>
+                <td>
+                    <span class="badge badge-secondary">${adm.role}</span>
+                </td>
+                <td>
+                    <span class="status-pill ${adm.status === 'Active' ? 'status-active' : 'status-suspended'}">${adm.status === 'Active' ? 'Active' : 'Disabled'}</span>
+                </td>
+                <td>
+                    <span>${new Date(adm.createdAt).toISOString().split('T')[0]}</span>
+                </td>
+                <td class="text-right">
+                    <div class="actions-cell">
+                        <button class="btn btn-secondary btn-sm btn-icon-only btn-edit-admin" data-id="${adm.id}" title="Edit Admin">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                        <button class="btn btn-secondary btn-sm btn-icon-only btn-toggle-admin-status" data-id="${adm.id}" title="${adm.status === 'Active' ? 'Disable Admin' : 'Enable Admin'}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Edit Admin Click Handler
+        tbody.querySelectorAll('.btn-edit-admin').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const adm = state.admins.find(a => a.id === id);
+                if (adm) {
+                    document.getElementById('admin-modal-title').textContent = 'Edit Administrator Details';
+                    document.getElementById('admin-modal-id').value = adm.id;
+                    document.getElementById('admin-modal-name').value = adm.name || '';
+                    document.getElementById('admin-modal-email').value = adm.email;
+                    document.getElementById('admin-modal-role').value = adm.role;
+                    
+                    // Hide password group during editing
+                    document.getElementById('admin-password-group').style.display = 'none';
+                    document.getElementById('admin-modal-password').required = false;
+                    document.getElementById('admin-modal-password').value = '';
+                    
+                    openModal('admin-modal');
+                }
+            });
+        });
+
+        // Toggle Admin Status Handler
+        tbody.querySelectorAll('.btn-toggle-admin-status').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-id');
+                try {
+                    const res = await fetch(`/api/admin/admins/${id}/toggle-status`, {
+                        method: 'POST'
+                    });
+                    if (!res.ok) {
+                        const data = await res.json();
+                        throw new Error(data.error || 'Failed to toggle status');
+                    }
+                    const data = await res.json();
+                    showToast('success', 'Status Toggled', data.message);
+                    loadAllData();
+                } catch (err) {
+                    showToast('error', 'Status Change Error', err.message);
+                }
+            });
+        });
+    }
+
+    // Set up Admin form submission
+    document.getElementById('admin-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('admin-modal-id').value;
+        const name = document.getElementById('admin-modal-name').value.trim();
+        const email = document.getElementById('admin-modal-email').value.trim();
+        const password = document.getElementById('admin-modal-password').value;
+        const role = document.getElementById('admin-modal-role').value;
+
+        try {
+            if (id) {
+                // Update Admin
+                const res = await fetch(`/api/admin/admins/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, role })
+                });
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.error || 'Failed to update admin');
+                }
+                showToast('success', 'Admin Updated', 'Administrator profile updated successfully.');
+            } else {
+                // Create Admin
+                if (!password) {
+                    throw new Error('Password is required for new administrator accounts.');
+                }
+                const res = await fetch('/api/admin/admins', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, role })
+                });
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.error || 'Failed to create admin');
+                }
+                showToast('success', 'Admin Created', 'Administrator account created successfully.');
+            }
+            closeModal('admin-modal');
+            loadAllData();
+        } catch (err) {
+            showToast('error', 'Write Error', err.message);
+        }
+    });
+
+    // Setup clear state for new admin button
+    const addAdminBtn = document.getElementById('btn-add-admin');
+    if (addAdminBtn) {
+        addAdminBtn.addEventListener('click', (e) => {
+            document.getElementById('admin-modal-title').textContent = 'Create Administrator';
+            document.getElementById('admin-modal-id').value = '';
+            document.getElementById('admin-form').reset();
+            
+            // Show password group for creation
+            document.getElementById('admin-password-group').style.display = 'block';
+            document.getElementById('admin-modal-password').required = true;
+        });
     }
 
     function populateProductCategoriesFilter() {
@@ -329,6 +590,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('overview-chart-container');
         const revenueContainer = document.getElementById('analytics-revenue-chart');
         const categoryContainer = document.getElementById('analytics-categories-chart');
+        
+        if (!['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(state.currentAdminRole)) {
+            return;
+        }
         
         // 1. RENDER OVERVIEW LINE CHART (SVG)
         if (container) {
@@ -632,12 +897,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
                 <td class="text-right">
                     <div class="actions-cell">
+                        ${['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(state.currentAdminRole) ? `
                         <button class="btn btn-secondary btn-sm btn-icon-only btn-suspend" data-id="${u.id}" title="${u.status === 'Suspended' ? 'Unsuspend User' : 'Suspend User'}">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                         </button>
                         <button class="btn btn-danger btn-sm btn-icon-only btn-delete-user" data-id="${u.id}" title="Delete User">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
+                        ` : `<span class="text-xs text-muted">Read-Only</span>`}
                     </div>
                 </td>
             `;
@@ -805,6 +1072,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="prod-spec-text">${p.specifications || 'Standard packaging'}</span>
                     <span class="prod-brand-text">Brand: ${p.brand || 'Unbranded'}</span>
                 </div>
+                ${['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(state.currentAdminRole) ? `
                 <div class="prod-action-block">
                     <button class="btn btn-secondary btn-sm btn-icon-only btn-edit-prod" data-id="${p.id}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -813,6 +1081,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
                 </div>
+                ` : ''}
             `;
             grid.appendChild(card);
         });
@@ -1314,16 +1583,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Form profile settings submit (Updates display name/email)
-    document.getElementById('form-profile-settings').addEventListener('submit', (e) => {
+    document.getElementById('form-profile-settings').addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('admin-name').value.trim();
         const email = document.getElementById('admin-email').value.trim();
         
-        document.querySelectorAll('.profile-name').forEach(el => el.textContent = name);
-        document.querySelector('.profile-email').textContent = email;
-        
-        showToast('success', 'Profile Mock Update', 'Profile parameters modified locally.');
+        try {
+            const res = await fetch('/api/admin/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email })
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to update profile');
+            }
+            const data = await res.json();
+            const admin = data.admin;
+
+            document.querySelectorAll('.profile-name').forEach(el => el.textContent = admin.name || admin.email.split('@')[0]);
+            document.querySelectorAll('.profile-email').forEach(el => el.textContent = admin.email);
+            document.querySelectorAll('.profile-avatar, .profile-avatar-btn').forEach(el => el.textContent = admin.email.substring(0, 2).toUpperCase());
+            
+            showToast('success', 'Profile Saved', 'Profile parameters successfully updated in database.');
+        } catch (err) {
+            showToast('error', 'Profile Update Error', err.message);
+        }
     });
 
     // Categories manager render
