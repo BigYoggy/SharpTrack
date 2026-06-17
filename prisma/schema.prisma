@@ -63,8 +63,8 @@ model Sale {
   userId        String
   user          User     @relation(fields: [userId], references: [id])
   soldAt        DateTime @default(now())
-  productName   String
-  unitPrice     Float
+  productName   String   @default("")
+  unitPrice     Float    @default(0.0)
 
   @@index([userId])
   @@index([productId])
