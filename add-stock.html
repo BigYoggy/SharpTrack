@@ -6,7 +6,12 @@
     <title>SharpTrack — Add Stock</title>
     <link rel="icon" type="image/png" href="logo2.png">
     <link rel="stylesheet" href="css/design-system.css">
+    
+    <!-- External Libraries -->
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
     <style>
         body { padding-bottom: 90px; }
 
@@ -113,6 +118,83 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             color: white; font-weight: 600; gap: 16px;
         }
+
+        /* Custom Dropdown Styles */
+        .custom-dropdown {
+            position: relative;
+            width: 100%;
+        }
+        .custom-dropdown-header {
+            width: 100%;
+            height: 48px;
+            padding: 0 16px 0 44px;
+            background: var(--background);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            font-family: var(--font-family);
+            font-size: 14px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .custom-dropdown-header:focus, .custom-dropdown.open .custom-dropdown-header {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+            outline: none;
+        }
+        .custom-dropdown-header.placeholder-text {
+            color: var(--muted);
+        }
+        .custom-dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            margin-top: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 10;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        .custom-dropdown.open .custom-dropdown-list {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+        .custom-dropdown-item {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: var(--text);
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .custom-dropdown-item:hover {
+            background: var(--background);
+            color: var(--primary);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cropper Modal */
+        .cropper-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 10000;
+            display: flex; flex-direction: column;
+        }
+        .cropper-container-wrapper {
+            flex: 1; width: 100%; height: calc(100% - 80px);
+        }
+        .cropper-actions {
+            height: 80px; background: #111; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+        }
     </style>
 </head>
 <body>
@@ -130,11 +212,22 @@
             <p>Add a new product to your inventory</p>
         </div>
 
-        <!-- BARCODE SCANNER OVERLAY (Hidden by default) -->
+        <!-- BARCODE SCANNER OVERLAY -->
         <div id="scannerSection" class="hidden">
             <div id="reader"></div>
             <button class="btn btn-secondary btn-block" onclick="stopBarcodeScanner()">Cancel Scanning</button>
             <div style="height: 24px;"></div>
+        </div>
+
+        <!-- CROPPER MODAL -->
+        <div id="cropperModal" class="cropper-modal hidden">
+            <div class="cropper-container-wrapper">
+                <img id="cropperImage" src="" style="max-width: 100%;">
+            </div>
+            <div class="cropper-actions">
+                <button class="btn btn-outline" style="border-color: #555; color: white;" onclick="cancelCrop()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmCrop()">Crop & Save</button>
+            </div>
         </div>
 
         <!-- MAIN FORM -->
@@ -147,14 +240,14 @@
                 </div>
                 <img id="imagePreview" class="hidden" src="" alt="Product Preview">
             </div>
-            <input type="file" id="manualImageInput" accept="image/*" class="hidden" onchange="handleManualImage(event)">
+            <input type="file" id="manualImageInput" accept="image/*" class="hidden" onchange="initCrop(event, 'manual')">
 
             <!-- Magic Actions -->
             <div class="magic-actions">
                 <button class="magic-btn ai" onclick="document.getElementById('aiCameraInput').click()">
                     <span>✨</span> Auto-fill with AI
                 </button>
-                <input type="file" id="aiCameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleAIImageCapture(event)">
+                <input type="file" id="aiCameraInput" accept="image/*" capture="environment" class="hidden" onchange="initCrop(event, 'ai')">
                 
                 <button class="magic-btn" onclick="startBarcodeScanner()">
                     <span>🔍</span> Scan Barcode
@@ -205,17 +298,20 @@
                     </div>
                 </div>
 
-                <div class="input-group">
-                    <label for="categoryName">Category</label>
-                    <div class="input-wrapper">
-                        <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
-                        <input type="text" id="categoryName" placeholder="e.g. Beverages & Dairy">
-                    </div>
-                </div>
-
                 <div class="input-group mb-0">
-                    <label for="description">Description</label>
-                    <textarea id="description" placeholder="Brief product description..." rows="2" style="width:100%; border-radius:var(--radius-md); border:1px solid var(--border-light); padding:12px; font-family:var(--font-family); font-size:14px; background:var(--background); color:var(--text); resize:none;"></textarea>
+                    <label>Category</label>
+                    <div class="custom-dropdown" id="categoryDropdown" onclick="toggleDropdown()">
+                        <div class="input-wrapper" style="position:relative;">
+                            <span class="icon-left" style="z-index:2;"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
+                            <div class="custom-dropdown-header placeholder-text" id="categorySelected" tabindex="0">
+                                Select or type category...
+                            </div>
+                        </div>
+                        <div class="custom-dropdown-list" id="categoryOptions">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                    <input type="hidden" id="categoryName" value="">
                 </div>
             </div>
 
@@ -288,11 +384,14 @@
         else {
             injectNavbar();
             injectBottomNav('inventory');
+            loadCategories();
         }
 
         let selectedUnit = 'pieces';
-        let html5QrcodeScanner = null;
+        let html5Qrcode = null;
         let aiImageBase64 = null;
+        let cropper = null;
+        let activeCropMode = 'manual'; // 'manual' or 'ai'
 
         function goBack() {
             if (!document.getElementById('scannerSection').classList.contains('hidden')) {
@@ -308,6 +407,95 @@
             el.classList.add('active');
         }
 
+        // --- CUSTOM DROPDOWN LOGIC ---
+        let categoryList = [];
+
+        async function loadCategories() {
+            try {
+                const res = await apiRequest('/api/products/categories');
+                categoryList = res.categories || [];
+                renderCategories(categoryList);
+            } catch (err) {
+                console.error("Failed to load categories:", err);
+            }
+        }
+
+        function renderCategories(list) {
+            const container = document.getElementById('categoryOptions');
+            if (list.length === 0) {
+                container.innerHTML = '<div class="custom-dropdown-item" style="color:var(--muted)">No categories found</div>';
+                return;
+            }
+            container.innerHTML = list.map(c => `<div class="custom-dropdown-item" onclick="selectCategory('${c}', event)">${c}</div>`).join('');
+        }
+
+        function toggleDropdown() {
+            document.getElementById('categoryDropdown').classList.toggle('open');
+        }
+
+        function selectCategory(catName, e) {
+            if(e) e.stopPropagation();
+            document.getElementById('categoryName').value = catName;
+            document.getElementById('categorySelected').innerText = catName;
+            document.getElementById('categorySelected').classList.remove('placeholder-text');
+            document.getElementById('categoryDropdown').classList.remove('open');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('categoryDropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('open');
+            }
+        });
+
+        // --- CROPPER LOGIC ---
+        async function initCrop(event, mode) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            activeCropMode = mode;
+            const base64Str = await convertFileToBase64(file);
+            
+            // Open Cropper Modal
+            document.getElementById('cropperModal').classList.remove('hidden');
+            const image = document.getElementById('cropperImage');
+            image.src = base64Str;
+            
+            if (cropper) cropper.destroy();
+            cropper = new Cropper(image, {
+                aspectRatio: 1, // Square crop for products
+                viewMode: 1,
+                autoCropArea: 0.8,
+                background: false
+            });
+
+            event.target.value = ''; // Reset file input
+        }
+
+        function cancelCrop() {
+            if (cropper) cropper.destroy();
+            document.getElementById('cropperModal').classList.add('hidden');
+        }
+
+        function confirmCrop() {
+            if (!cropper) return;
+            
+            // Get cropped image
+            const canvas = cropper.getCroppedCanvas({
+                width: 500,
+                height: 500,
+            });
+            const croppedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+            
+            cancelCrop();
+            setPreviewImage(croppedBase64);
+
+            if (activeCropMode === 'ai') {
+                processAIImage(croppedBase64);
+            }
+        }
+
         // --- IMAGE HANDLING ---
         function setPreviewImage(base64Str) {
             aiImageBase64 = base64Str;
@@ -319,14 +507,6 @@
             img.classList.remove('hidden');
             placeholder.classList.add('hidden');
             box.classList.add('has-image');
-        }
-
-        async function handleManualImage(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const base64Str = await convertFileToBase64(file);
-            setPreviewImage(base64Str);
-            event.target.value = ''; // reset
         }
 
         function convertFileToBase64(file) {
@@ -343,21 +523,33 @@
             document.getElementById('mainFormContainer').classList.add('hidden');
             document.getElementById('scannerSection').classList.remove('hidden');
             
-            if (html5QrcodeScanner) { html5QrcodeScanner.clear(); }
+            if (!html5Qrcode) {
+                html5Qrcode = new Html5Qrcode("reader");
+            }
             
-            html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 150} }, false);
-            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            html5Qrcode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 150 } },
+                onScanSuccess,
+                onScanFailure
+            ).catch(err => {
+                console.error("Camera error:", err);
+                showToast('error', 'Camera Error', 'Could not access the camera automatically. Please check permissions.');
+                stopBarcodeScanner();
+            });
         }
 
         function stopBarcodeScanner() {
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear().catch(err => console.error(err));
+            if (html5Qrcode && html5Qrcode.isScanning) {
+                html5Qrcode.stop().then(() => {
+                    html5Qrcode.clear();
+                }).catch(err => console.error(err));
             }
             document.getElementById('scannerSection').classList.add('hidden');
             document.getElementById('mainFormContainer').classList.remove('hidden');
         }
 
-        async function onScanSuccess(decodedText, decodedResult) {
+        async function onScanSuccess(decodedText) {
             stopBarcodeScanner();
             document.getElementById('barcode').value = decodedText;
             lookupBarcode(decodedText);
@@ -412,19 +604,13 @@
             text.innerHTML = `<strong>${title}:</strong> ${message}`;
         }
 
-        async function handleAIImageCapture(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
+        async function processAIImage(base64Str) {
             document.getElementById('aiLoadingOverlay').classList.remove('hidden');
 
             try {
-                const base64Str = await convertFileToBase64(file);
-                setPreviewImage(base64Str); // Instantly show the photo they just took
-
                 const response = await apiRequest('/api/ai/scan-product', {
                     method: 'POST',
-                    body: JSON.stringify({ imageBase64: base64Str, mimeType: file.type })
+                    body: JSON.stringify({ imageBase64: base64Str, mimeType: 'image/jpeg' })
                 });
 
                 document.getElementById('aiLoadingOverlay').classList.add('hidden');
@@ -438,8 +624,16 @@
                 fillIfEmpty('brand', response.brand);
                 fillIfEmpty('weight', response.weight);
                 fillIfEmpty('barcode', response.barcode);
-                fillIfEmpty('description', response.description);
-                fillIfEmpty('categoryName', response.suggestedCategory);
+                
+                if (response.suggestedCategory) {
+                    // Pre-fill the dropdown and hidden input
+                    selectCategory(response.suggestedCategory);
+                    // Also make sure it's in the list so it looks native
+                    if (!categoryList.includes(response.suggestedCategory)) {
+                        categoryList.push(response.suggestedCategory);
+                        renderCategories(categoryList);
+                    }
+                }
 
                 // Confidence logic
                 const confScore = Math.round((response.confidence || 0) * 100);
@@ -453,9 +647,6 @@
                 document.getElementById('aiLoadingOverlay').classList.add('hidden');
                 showToast('error', 'AI Scan Failed', err.message);
             }
-            
-            // Reset input
-            event.target.value = '';
         }
 
         // --- SUBMIT FORM ---
@@ -470,7 +661,6 @@
             const brand = document.getElementById('brand').value.trim();
             const weight = document.getElementById('weight').value.trim();
             const categoryName = document.getElementById('categoryName').value.trim();
-            const description = document.getElementById('description').value.trim();
             
             const btn = document.getElementById('submitBtn');
 
@@ -515,7 +705,6 @@
                         brand: brand || null,
                         weight: weight || null,
                         categoryName: categoryName || null,
-                        description: description || null,
                         image: aiImageBase64 || null
                     })
                 });

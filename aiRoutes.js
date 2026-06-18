@@ -21,7 +21,6 @@ router.post('/scan-product', authMiddleware, async (req, res) => {
   "brand": "Brand Name",
   "weight": "Weight/Size",
   "barcode": "Barcode if visible",
-  "description": "Short description",
   "suggestedCategory": "Suggested category",
   "confidence": 0.95
 }

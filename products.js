@@ -94,6 +94,17 @@ router.get('/stats', authMiddleware, async (req, res) => {
     }
 });
 
+// GET CATEGORIES
+router.get('/categories', authMiddleware, async (req, res) => {
+    try {
+        const cats = await prisma.category.findMany({ orderBy: { name: 'asc' } });
+        res.json({ categories: cats.map(x => x.name) });
+    } catch (err) {
+        console.error('Categories load failure:', err);
+        res.status(500).json({ error: 'Failed to retrieve system categories' });
+    }
+});
+
 // UPDATE PRODUCT
 router.put('/:id', authMiddleware, async (req, res) => {
     const { name, sellingPrice, costPrice, quantity, reorderLevel, unit, brand, weight, barcode, description, categoryId, image } = req.body;
