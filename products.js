@@ -7,14 +7,14 @@ const prisma = new PrismaClient();
 
 // ADD PRODUCT
 router.post('/', authMiddleware, async (req, res) => {
-    const { name, sellingPrice, quantity, reorderLevel, unit, brand, weight, barcode, description, categoryId, categoryName, image } = req.body;
+    const { name, sellingPrice, costPrice, quantity, reorderLevel, unit, brand, weight, barcode, description, categoryId, categoryName, image } = req.body;
 
-    if (!name || sellingPrice === undefined || quantity === undefined) {
-        return res.status(400).json({ error: 'Name, price and quantity are required' });
+    if (!name || sellingPrice === undefined || costPrice === undefined || quantity === undefined) {
+        return res.status(400).json({ error: 'Name, selling price, cost price, and quantity are required' });
     }
 
-    if (parseFloat(sellingPrice) <= 0) {
-        return res.status(400).json({ error: 'Price must be greater than 0' });
+    if (parseFloat(sellingPrice) <= 0 || parseFloat(costPrice) < 0) {
+        return res.status(400).json({ error: 'Invalid prices' });
     }
 
     if (parseInt(quantity) < 0) {
@@ -34,6 +34,7 @@ router.post('/', authMiddleware, async (req, res) => {
         const data = {
             name: name.trim(),
             sellingPrice: parseFloat(sellingPrice),
+            costPrice: parseFloat(costPrice),
             quantity: parseInt(quantity),
             reorderLevel: parseInt(reorderLevel) || 5,
             unit: unit || 'pieces',
@@ -95,7 +96,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
 
 // UPDATE PRODUCT
 router.put('/:id', authMiddleware, async (req, res) => {
-    const { name, sellingPrice, quantity, reorderLevel, unit, brand, weight, barcode, description, categoryId, image } = req.body;
+    const { name, sellingPrice, costPrice, quantity, reorderLevel, unit, brand, weight, barcode, description, categoryId, image } = req.body;
 
     try {
         // Verify ownership
@@ -109,6 +110,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
             data: { 
                 name: name ? name.trim() : existing.name, 
                 sellingPrice: sellingPrice !== undefined ? parseFloat(sellingPrice) : existing.sellingPrice, 
+                costPrice: costPrice !== undefined ? parseFloat(costPrice) : existing.costPrice,
                 quantity: quantity !== undefined ? parseInt(quantity) : existing.quantity, 
                 reorderLevel: reorderLevel !== undefined ? parseInt(reorderLevel) : existing.reorderLevel, 
                 unit: unit || existing.unit,

@@ -23,57 +23,46 @@
         .page-title h1 { font-size: 24px; margin-bottom: 4px; }
         .page-title p { font-size: 14px; color: var(--muted); }
 
-        /* Entry Screen Styles */
-        .entry-options {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin-top: 20px;
-        }
-
-        .option-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 24px 20px;
+        /* Image Box Styles */
+        .image-box {
             background: var(--card-bg);
-            border: 2px solid var(--border-light);
+            border: 2px dashed var(--border-light);
             border-radius: var(--radius-lg);
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-            gap: 12px;
-        }
-
-        .option-btn:hover {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-
-        .option-btn.ai-scan {
-            background: linear-gradient(145deg, #10b98111, #3b82f611);
-            border-color: #10b98144;
-        }
-        .option-btn.ai-scan:hover {
-            border-color: #10b981;
-        }
-
-        .option-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
+            height: 160px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: var(--background);
-            color: var(--primary);
+            cursor: pointer;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+            overflow: hidden;
+            position: relative;
         }
-        
-        .ai-scan .option-icon { background: #10b98122; color: #10b981; }
+        .image-box:hover { border-color: var(--primary); background: var(--primary-light); }
+        .image-box.has-image { border: none; background: #000; }
+        .image-box img { width: 100%; height: 100%; object-fit: contain; }
+        .image-box .placeholder {
+            display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted);
+        }
+        .image-box .placeholder svg { color: var(--primary); }
 
-        .option-title { font-size: 18px; font-weight: 700; color: var(--text); }
-        .option-desc { font-size: 13px; color: var(--muted); max-width: 250px; }
+        /* Magic Actions */
+        .magic-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .magic-btn {
+            padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-light);
+            background: var(--card-bg); font-weight: 600; font-size: 13px; color: var(--text);
+            display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+            transition: all 0.2s; font-family: var(--font-family);
+        }
+        .magic-btn:hover { border-color: var(--primary); }
+        .magic-btn.ai { background: linear-gradient(145deg, #10b98111, #3b82f611); border-color: #10b98144; color: #065f46; }
+        .magic-btn.ai:hover { border-color: #10b981; }
 
         /* Form Styles */
         .form-card {
@@ -83,11 +72,7 @@
 
         .form-card h2 {
             font-size: 15px; font-weight: 700; margin-bottom: 16px;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .form-card h2 .badge {
-            background: var(--primary-light); color: var(--primary);
-            font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: 700;
+            display: flex; align-items: center; justify-content: space-between;
         }
 
         .unit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -95,6 +80,13 @@
 
         .input-wrapper input:not([type="number"]),
         .input-wrapper select { padding-left: 44px; }
+        
+        .barcode-row { display: flex; gap: 8px; }
+        .barcode-row .input-wrapper { flex: 1; }
+        .btn-lookup {
+            background: var(--primary-light); color: var(--primary); border: none;
+            border-radius: var(--radius-md); padding: 0 16px; font-weight: 600; cursor: pointer;
+        }
 
         .quick-units { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .unit-tag {
@@ -107,12 +99,13 @@
 
         .hidden { display: none !important; }
 
-        #reader { width: 100%; border-radius: var(--radius-lg); overflow: hidden; border: none; }
+        #reader { width: 100%; border-radius: var(--radius-lg); overflow: hidden; border: none; margin-bottom: 16px; }
         
-        .ai-warning {
-            background: #fff3cd; color: #856404; padding: 12px; border-radius: 8px;
-            font-size: 13px; margin-bottom: 16px; display: flex; gap: 8px; align-items: flex-start;
+        .ai-status-banner {
+            padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: flex; gap: 8px; align-items: flex-start;
         }
+        .ai-status-banner.success { background: #d4edda; color: #155724; }
+        .ai-status-banner.warning { background: #fff3cd; color: #856404; }
         
         .ai-loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -137,79 +130,116 @@
             <p>Add a new product to your inventory</p>
         </div>
 
-        <!-- ENTRY SCREEN -->
-        <div id="entryScreen" class="entry-options">
-            <button class="option-btn" onclick="startBarcodeScanner()">
-                <div class="option-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
-                </div>
-                <div class="option-title">Scan Barcode</div>
-                <div class="option-desc">Fastest way. Scan the product barcode to auto-fill details.</div>
-            </button>
-
-            <button class="option-btn ai-scan" onclick="document.getElementById('aiCameraInput').click()">
-                <div class="option-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                </div>
-                <div class="option-title">Scan Product with AI ✨</div>
-                <div class="option-desc">Take a photo of any product. AI will identify and categorize it.</div>
-            </button>
-            <input type="file" id="aiCameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleAIImageCapture(event)">
-
-            <button class="option-btn" onclick="showManualForm()">
-                <div class="option-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                </div>
-                <div class="option-title">Manual Entry</div>
-                <div class="option-desc">Type in product details manually without scanning.</div>
-            </button>
-        </div>
-
-        <!-- BARCODE SCANNER -->
+        <!-- BARCODE SCANNER OVERLAY (Hidden by default) -->
         <div id="scannerSection" class="hidden">
             <div id="reader"></div>
-            <button class="btn btn-secondary btn-block mt-3" onclick="stopBarcodeScanner()">Cancel Scanning</button>
+            <button class="btn btn-secondary btn-block" onclick="stopBarcodeScanner()">Cancel Scanning</button>
+            <div style="height: 24px;"></div>
         </div>
 
-        <!-- AI LOADING OVERLAY -->
-        <div id="aiLoadingOverlay" class="ai-loading-overlay hidden">
-            <div class="spinner" style="width: 40px; height: 40px; border-width: 4px;"></div>
-            <p>Analyzing Product with AI... ✨</p>
-        </div>
+        <!-- MAIN FORM -->
+        <div id="mainFormContainer">
+            <!-- Image Box -->
+            <div class="image-box" id="imageBox" onclick="document.getElementById('manualImageInput').click()">
+                <div class="placeholder" id="imagePlaceholder">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span>Tap to Add Photo</span>
+                </div>
+                <img id="imagePreview" class="hidden" src="" alt="Product Preview">
+            </div>
+            <input type="file" id="manualImageInput" accept="image/*" class="hidden" onchange="handleManualImage(event)">
 
-        <!-- PRODUCT FORM -->
-        <div id="productForm" class="hidden">
-            <div id="aiWarning" class="ai-warning hidden">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <span>AI confidence is low. Please verify these details carefully before saving.</span>
+            <!-- Magic Actions -->
+            <div class="magic-actions">
+                <button class="magic-btn ai" onclick="document.getElementById('aiCameraInput').click()">
+                    <span>✨</span> Auto-fill with AI
+                </button>
+                <input type="file" id="aiCameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleAIImageCapture(event)">
+                
+                <button class="magic-btn" onclick="startBarcodeScanner()">
+                    <span>🔍</span> Scan Barcode
+                </button>
             </div>
 
-            <!-- Basic Required Fields -->
+            <!-- AI Status Banner -->
+            <div id="aiStatusBanner" class="ai-status-banner hidden">
+                <div id="aiStatusIcon"></div>
+                <span id="aiStatusText"></span>
+            </div>
+
             <div class="form-card">
-                <h2>
-                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                    Required Details <span class="badge">Required</span>
-                </h2>
+                <!-- Barcode with Lookup -->
+                <div class="input-group">
+                    <label for="barcode">Barcode</label>
+                    <div class="barcode-row">
+                        <div class="input-wrapper">
+                            <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></span>
+                            <input type="text" id="barcode" placeholder="e.g. 6151100020126">
+                        </div>
+                        <button class="btn-lookup" onclick="lookupBarcodeManual()">Lookup</button>
+                    </div>
+                </div>
 
                 <div class="input-group">
-                    <label for="productName">Product Name</label>
+                    <label for="productName">Product Name *</label>
                     <div class="input-wrapper">
                         <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>
                         <input type="text" id="productName" placeholder="e.g. Peak Milk Tin">
                     </div>
                 </div>
 
+                <div class="unit-row">
+                    <div class="input-group">
+                        <label for="brand">Brand</label>
+                        <div class="input-wrapper">
+                            <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span>
+                            <input type="text" id="brand" placeholder="e.g. FrieslandCampina">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="weight">Weight/Size</label>
+                        <div class="input-wrapper">
+                            <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg></span>
+                            <input type="text" id="weight" placeholder="e.g. 400g">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="input-group">
-                    <label for="sellingPrice">Selling Price (₦)</label>
+                    <label for="categoryName">Category</label>
                     <div class="input-wrapper">
-                        <span class="icon-left" style="font-size:16px;font-weight:700;color:var(--primary);">₦</span>
-                        <input type="number" id="sellingPrice" placeholder="0.00" min="0" step="0.01" style="padding-left:44px;">
+                        <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
+                        <input type="text" id="categoryName" placeholder="e.g. Beverages & Dairy">
+                    </div>
+                </div>
+
+                <div class="input-group mb-0">
+                    <label for="description">Description</label>
+                    <textarea id="description" placeholder="Brief product description..." rows="2" style="width:100%; border-radius:var(--radius-md); border:1px solid var(--border-light); padding:12px; font-family:var(--font-family); font-size:14px; background:var(--background); color:var(--text); resize:none;"></textarea>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="unit-row">
+                    <div class="input-group">
+                        <label for="costPrice">Cost Price (₦) *</label>
+                        <div class="input-wrapper">
+                            <span class="icon-left" style="font-size:16px;font-weight:700;color:var(--muted);">₦</span>
+                            <input type="number" id="costPrice" placeholder="0.00" min="0" step="0.01" style="padding-left:44px;">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="sellingPrice">Selling Price (₦) *</label>
+                        <div class="input-wrapper">
+                            <span class="icon-left" style="font-size:16px;font-weight:700;color:var(--primary);">₦</span>
+                            <input type="number" id="sellingPrice" placeholder="0.00" min="0" step="0.01" style="padding-left:44px;">
+                        </div>
                     </div>
                 </div>
 
                 <div class="unit-row">
                     <div class="input-group">
-                        <label for="quantity">Quantity</label>
+                        <label for="quantity">Quantity *</label>
                         <div class="input-wrapper">
                             <span class="icon-left" style="font-size:14px;font-weight:700;color:var(--primary);">#</span>
                             <input type="number" id="quantity" placeholder="0" min="0" step="1" style="padding-left:44px;">
@@ -238,57 +268,18 @@
                 </div>
             </div>
 
-            <!-- Optional Details -->
-            <div class="form-card">
-                <h2>
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-                    Extra Details <span class="badge" style="background:var(--border-light);color:var(--text)">Optional</span>
-                </h2>
-
-                <div class="input-group">
-                    <label for="barcode">Barcode</label>
-                    <div class="input-wrapper">
-                        <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></span>
-                        <input type="text" id="barcode" placeholder="e.g. 6151100020126">
-                    </div>
-                </div>
-
-                <div class="unit-row">
-                    <div class="input-group">
-                        <label for="brand">Brand</label>
-                        <div class="input-wrapper">
-                            <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span>
-                            <input type="text" id="brand" placeholder="e.g. Indomie">
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label for="weight">Weight/Size</label>
-                        <div class="input-wrapper">
-                            <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg></span>
-                            <input type="text" id="weight" placeholder="e.g. 70g">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="categoryName">Category</label>
-                    <div class="input-wrapper">
-                        <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
-                        <input type="text" id="categoryName" placeholder="e.g. Packaged Foods">
-                    </div>
-                </div>
-
-                <div class="input-group mb-0">
-                    <label for="description">Description</label>
-                    <textarea id="description" placeholder="Brief product description..." rows="2" style="width:100%; border-radius:var(--radius-md); border:1px solid var(--border-light); padding:12px; font-family:var(--font-family); font-size:14px; background:var(--background); color:var(--text); resize:none;"></textarea>
-                </div>
-            </div>
-
             <button class="btn btn-primary btn-block btn-lg" id="submitBtn" onclick="handleSubmit()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Save Product
             </button>
         </div>
+
+        <!-- AI LOADING OVERLAY -->
+        <div id="aiLoadingOverlay" class="ai-loading-overlay hidden">
+            <div class="spinner" style="width: 40px; height: 40px; border-width: 4px;"></div>
+            <p>Analyzing Product with AI... ✨</p>
+        </div>
+
     </div>
 
     <script src="js/app.js"></script>
@@ -304,21 +295,11 @@
         let aiImageBase64 = null;
 
         function goBack() {
-            if (!document.getElementById('productForm').classList.contains('hidden') || !document.getElementById('scannerSection').classList.contains('hidden')) {
-                // If in form or scanner, go back to entry screen
+            if (!document.getElementById('scannerSection').classList.contains('hidden')) {
                 stopBarcodeScanner();
-                document.getElementById('productForm').classList.add('hidden');
-                document.getElementById('scannerSection').classList.add('hidden');
-                document.getElementById('entryScreen').classList.remove('hidden');
             } else {
                 history.back();
             }
-        }
-
-        function showManualForm() {
-            document.getElementById('entryScreen').classList.add('hidden');
-            document.getElementById('productForm').classList.remove('hidden');
-            document.getElementById('productName').focus();
         }
 
         function selectUnit(el, unit) {
@@ -327,9 +308,39 @@
             el.classList.add('active');
         }
 
-        // --- BARCODE SCANNER LOGIC ---
+        // --- IMAGE HANDLING ---
+        function setPreviewImage(base64Str) {
+            aiImageBase64 = base64Str;
+            const img = document.getElementById('imagePreview');
+            const box = document.getElementById('imageBox');
+            const placeholder = document.getElementById('imagePlaceholder');
+            
+            img.src = base64Str;
+            img.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            box.classList.add('has-image');
+        }
+
+        async function handleManualImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const base64Str = await convertFileToBase64(file);
+            setPreviewImage(base64Str);
+            event.target.value = ''; // reset
+        }
+
+        function convertFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // --- BARCODE SCANNER & LOOKUP LOGIC ---
         function startBarcodeScanner() {
-            document.getElementById('entryScreen').classList.add('hidden');
+            document.getElementById('mainFormContainer').classList.add('hidden');
             document.getElementById('scannerSection').classList.remove('hidden');
             
             if (html5QrcodeScanner) { html5QrcodeScanner.clear(); }
@@ -343,83 +354,103 @@
                 html5QrcodeScanner.clear().catch(err => console.error(err));
             }
             document.getElementById('scannerSection').classList.add('hidden');
-            document.getElementById('entryScreen').classList.remove('hidden');
+            document.getElementById('mainFormContainer').classList.remove('hidden');
         }
 
         async function onScanSuccess(decodedText, decodedResult) {
             stopBarcodeScanner();
-            showToast('info', 'Barcode Detected', 'Looking up product info...');
             document.getElementById('barcode').value = decodedText;
-            
-            try {
-                // Lookup OpenFoodFacts
-                const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${decodedText}.json`);
-                const data = await res.json();
-                
-                showManualForm();
-
-                if (data && data.product) {
-                    const p = data.product;
-                    if (p.product_name) document.getElementById('productName').value = p.product_name;
-                    if (p.brands) document.getElementById('brand').value = p.brands.split(',')[0];
-                    if (p.quantity) document.getElementById('weight').value = p.quantity;
-                    showToast('success', 'Found!', 'Product auto-filled from database.');
-                } else {
-                    showToast('warning', 'Not Found', 'Barcode recognized but no data found. Please enter manually or try AI scan.');
-                }
-            } catch (err) {
-                showManualForm();
-                showToast('error', 'Lookup Failed', 'Could not fetch product data.');
-            }
+            lookupBarcode(decodedText);
         }
 
         function onScanFailure(error) { /* Ignore background scanning errors */ }
 
+        async function lookupBarcodeManual() {
+            const val = document.getElementById('barcode').value.trim();
+            if (!val) {
+                showToast('warning', 'Barcode Missing', 'Please enter a barcode to lookup.');
+                return;
+            }
+            lookupBarcode(val);
+        }
+
+        async function lookupBarcode(barcodeValue) {
+            const lookupBtn = document.querySelector('.btn-lookup');
+            const originalText = lookupBtn.innerText;
+            lookupBtn.innerText = '...';
+            lookupBtn.disabled = true;
+
+            showToast('info', 'Searching Database', 'Looking up product info...');
+            
+            try {
+                const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcodeValue}.json`);
+                const data = await res.json();
+                
+                if (data && data.product) {
+                    const p = data.product;
+                    if (p.product_name && !document.getElementById('productName').value) document.getElementById('productName').value = p.product_name;
+                    if (p.brands && !document.getElementById('brand').value) document.getElementById('brand').value = p.brands.split(',')[0];
+                    if (p.quantity && !document.getElementById('weight').value) document.getElementById('weight').value = p.quantity;
+                    showToast('success', 'Found!', 'Product details auto-filled.');
+                } else {
+                    showToast('warning', 'Not Found', 'Barcode recognized but no data found in global database. Try AI Scan.');
+                }
+            } catch (err) {
+                showToast('error', 'Lookup Failed', 'Could not fetch product data.');
+            } finally {
+                lookupBtn.innerText = originalText;
+                lookupBtn.disabled = false;
+            }
+        }
+
         // --- AI SCANNER LOGIC ---
+        function setAIStatus(type, title, message) {
+            const banner = document.getElementById('aiStatusBanner');
+            const text = document.getElementById('aiStatusText');
+            
+            banner.className = `ai-status-banner ${type}`;
+            text.innerHTML = `<strong>${title}:</strong> ${message}`;
+        }
+
         async function handleAIImageCapture(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             document.getElementById('aiLoadingOverlay').classList.remove('hidden');
-            document.getElementById('entryScreen').classList.add('hidden');
 
             try {
                 const base64Str = await convertFileToBase64(file);
-                aiImageBase64 = base64Str; // Keep a reference to save it to DB later
+                setPreviewImage(base64Str); // Instantly show the photo they just took
 
                 const response = await apiRequest('/api/ai/scan-product', {
                     method: 'POST',
-                    body: JSON.stringify({
-                        imageBase64: base64Str,
-                        mimeType: file.type
-                    })
+                    body: JSON.stringify({ imageBase64: base64Str, mimeType: file.type })
                 });
 
                 document.getElementById('aiLoadingOverlay').classList.add('hidden');
                 
-                // Show form
-                showManualForm();
-                
-                // Auto-fill fields
-                if (response.name) document.getElementById('productName').value = response.name;
-                if (response.brand) document.getElementById('brand').value = response.brand;
-                if (response.weight) document.getElementById('weight').value = response.weight;
-                if (response.barcode) document.getElementById('barcode').value = response.barcode;
-                if (response.description) document.getElementById('description').value = response.description;
-                if (response.suggestedCategory) document.getElementById('categoryName').value = response.suggestedCategory;
+                // Auto-fill fields if they are currently empty
+                const fillIfEmpty = (id, val) => {
+                    if (val && !document.getElementById(id).value) document.getElementById(id).value = val;
+                };
 
-                // Confidence check
-                if (response.confidence && response.confidence < 0.85) {
-                    document.getElementById('aiWarning').classList.remove('hidden');
-                    showToast('warning', 'Low Confidence', 'Please verify the extracted details carefully.');
+                fillIfEmpty('productName', response.name);
+                fillIfEmpty('brand', response.brand);
+                fillIfEmpty('weight', response.weight);
+                fillIfEmpty('barcode', response.barcode);
+                fillIfEmpty('description', response.description);
+                fillIfEmpty('categoryName', response.suggestedCategory);
+
+                // Confidence logic
+                const confScore = Math.round((response.confidence || 0) * 100);
+                if (confScore >= 85) {
+                    setAIStatus('success', `AI Confidence: ${confScore}%`, 'Product successfully analyzed. Review details below.');
                 } else {
-                    document.getElementById('aiWarning').classList.add('hidden');
-                    showToast('success', 'AI Scan Complete ✨', 'Review the details and add a price.');
+                    setAIStatus('warning', `AI Confidence: ${confScore}% (Low)`, 'Please verify these details carefully before saving.');
                 }
 
             } catch (err) {
                 document.getElementById('aiLoadingOverlay').classList.add('hidden');
-                document.getElementById('entryScreen').classList.remove('hidden');
                 showToast('error', 'AI Scan Failed', err.message);
             }
             
@@ -427,19 +458,11 @@
             event.target.value = '';
         }
 
-        function convertFileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
-        }
-
         // --- SUBMIT FORM ---
         async function handleSubmit() {
             const name = document.getElementById('productName').value.trim();
             const sellingPrice = document.getElementById('sellingPrice').value;
+            const costPrice = document.getElementById('costPrice').value;
             const quantity = document.getElementById('quantity').value;
             const reorderLevel = document.getElementById('reorderLevel').value || '5';
             
@@ -457,8 +480,14 @@
                 return;
             }
 
+            if (!costPrice || parseFloat(costPrice) < 0) {
+                showToast('warning', 'Cost Price Required', 'Enter a valid cost price.');
+                document.getElementById('costPrice').focus();
+                return;
+            }
+
             if (!sellingPrice || parseFloat(sellingPrice) <= 0) {
-                showToast('warning', 'Price Required', 'Enter a valid selling price.');
+                showToast('warning', 'Selling Price Required', 'Enter a valid selling price.');
                 document.getElementById('sellingPrice').focus();
                 return;
             }
@@ -478,6 +507,7 @@
                     body: JSON.stringify({
                         name,
                         sellingPrice: parseFloat(sellingPrice),
+                        costPrice: parseFloat(costPrice),
                         quantity: parseInt(quantity),
                         reorderLevel: parseInt(reorderLevel),
                         unit: selectedUnit,
@@ -492,7 +522,7 @@
 
                 showToast('success', 'Product Saved! 📦', `${name} has been added to your inventory.`);
 
-                // Reset and go back to entry screen
+                // Reset and reload
                 setTimeout(() => {
                     location.reload();
                 }, 1500);
