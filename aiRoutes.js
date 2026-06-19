@@ -54,13 +54,51 @@ async function scanProductLogic(req, res) {
             base64Data = Buffer.concat(buffers).toString('base64');
         } else {
             // Read from JSON body
-            const { imageBase64, mimeType: bodyMime } = req.body;
+            const { imageBase64, mimeType: bodyMime } = req.body || {};
             if (!imageBase64) {
-                return res.status(400).json({ success: false, error: 'No image provided' });
+                return res.status(400).json({
+                    success: false,
+                    debug: "No image provided (empty imageBase64)"
+                });
             }
             base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
             if (bodyMime) mimeType = bodyMime;
         }
+
+        const imageData = base64Data;
+
+        // Logging request info
+        console.log("=== Scan Request ===");
+        console.log("Request received");
+        console.log("Image exists:", !!imageData);
+        console.log("Image size:", imageData?.length);
+
+        // 1. Verify: API key exists
+        console.log(
+            "GEMINI key exists:",
+            !!process.env.GEMINI_API_KEY
+        );
+        if (!process.env.GEMINI_API_KEY) {
+            console.error("Gemini failure: GEMINI_API_KEY is not configured");
+            return res.status(500).json({
+                success: false,
+                debug: "GEMINI_API_KEY is not configured"
+            });
+        }
+
+        // 3. Verify request image format
+        const allowedFormats = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowedFormats.includes(mimeType)) {
+            console.error("Gemini failure: Unsupported request image format:", mimeType);
+            return res.status(400).json({
+                success: false,
+                debug: `Unsupported request image format: ${mimeType}`
+            });
+        }
+
+        // 2. Verify model (model option specified in generateContent call)
+        const targetModel = 'gemini-2.5-flash';
+        console.log("Calling Gemini...");
 
         const prompt = `Analyze this product image and return ONLY valid JSON.
 Required fields:
@@ -81,7 +119,7 @@ Rules:
 
         const ai = getAi();
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: targetModel,
             contents: [
                 prompt,
                 {
@@ -96,8 +134,21 @@ Rules:
             }
         });
 
+        console.log("Gemini response:");
+        console.log(response);
+
+        // 4. Verify JSON output
         const text = response.text;
-        const jsonResult = JSON.parse(text);
+        let jsonResult;
+        try {
+            jsonResult = JSON.parse(text);
+        } catch (jsonErr) {
+            console.error("Failed to parse Gemini JSON output:", jsonErr);
+            return res.status(500).json({
+                success: false,
+                debug: "Failed to parse Gemini response as JSON"
+            });
+        }
 
         // Normalize fields for compatibility
         const normalizedData = {
@@ -122,15 +173,19 @@ Rules:
                 data: normalizedData
             });
         }
-    } catch (err) {
-        console.error('Scan Product Error:', err);
+    } catch (error) {
+        console.error(
+            "Gemini failure:",
+            error.stack || error
+        );
         const isLegacy = req.baseUrl === '/api/ai' || req.originalUrl.includes('/api/ai');
         if (isLegacy) {
             res.status(500).json({ error: 'Failed to analyze product image' });
         } else {
             res.status(500).json({
                 success: false,
-                error: err.message
+                error: error.message,
+                debug: error.stack || error.message
             });
         }
     }

@@ -748,14 +748,22 @@
                 el.classList.remove('ai-generated');
             });
 
-            const payload = { imageBase64: base64Str, mimeType: 'image/jpeg' };
-            console.log('AI Request Payload:', { mimeType: payload.mimeType, imageLength: base64Str.length });
+            console.log("=== AI Scan Start ===");
+            console.log("Image length:", base64Str?.length);
+            console.log("API Base:", API_BASE);
+
+            const payload = {
+               imageBase64: base64Str,
+               mimeType: "image/jpeg"
+            };
+
+            console.log("Payload:", payload);
 
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
-                const res = await fetch(`${API_BASE}/api/scan-product`, {
+                const response = await fetch(`${API_BASE}/api/scan-product`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -766,26 +774,42 @@
                 });
 
                 clearTimeout(timeoutId);
-                console.log('AI Response Status:', res.status);
+                console.log("Response status:", response.status);
 
-                if (!res.ok) {
-                    const errData = await res.json().catch(() => ({}));
-                    console.log('AI Error Response:', errData);
+                const rawText = await response.text();
 
-                    if (res.status === 401 || res.status === 403) {
-                        throw new Error('Authentication error — please log in again');
-                    } else if (res.status === 404) {
-                        throw new Error('AI endpoint unavailable — contact support');
-                    } else if (res.status === 500) {
-                        throw new Error('Server error during analysis — try again later');
-                    } else {
-                        throw new Error(errData.error || `Server error (${res.status})`);
-                    }
+                console.log("Raw response:", rawText);
+
+                let result;
+
+                try{
+                   result = JSON.parse(rawText);
+                }catch(err){
+                   console.error("JSON parse failed:", err);
                 }
 
-                const result = await res.json();
-                console.log('AI Response:', result);
-                const data = result.data || result;
+                if (!response.ok) {
+                    let errorMsg = 'Unable to analyze product.';
+                    if (response.status === 400) {
+                        errorMsg = "Invalid image request";
+                    } else if (response.status === 401 || response.status === 403) {
+                        errorMsg = "Authentication problem";
+                    } else if (response.status === 404) {
+                        errorMsg = "AI endpoint not found";
+                    } else if (response.status === 429) {
+                        errorMsg = "Rate limit exceeded";
+                    } else if (response.status === 500) {
+                        errorMsg = "Backend AI processing failed";
+                    } else {
+                        errorMsg = (result && (result.error || result.debug)) || `Server error (${response.status})`;
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                const data = result && (result.data || result);
+                if (!data) {
+                    throw new Error("No data returned from AI scanner");
+                }
                 const confidence = parseFloat(data.confidence) || 0;
 
                 // Field-level validation — confidence alone is not enough
@@ -846,29 +870,17 @@
 
                 } else {
                     // Low confidence or missing key fields — do NOT auto-fill
-                    setAIStatus('error', 'Low Confidence', 'Low confidence \u2014 please fill manually');
+                    setAIStatus('error', 'Low Confidence', 'Low confidence — please fill manually');
                 }
 
                 // Save scan record for training data
                 saveScanRecord(base64Str, data, confidence);
 
-            } catch (err) {
-                console.log('AI Error:', err);
+            } catch (error) {
+                console.error(error);
+                alert(error.message);
 
-                let errorMsg = 'Unable to analyze product.';
-                if (err.name === 'AbortError') {
-                    errorMsg = 'AI request timed out — please try again';
-                } else if (err.message.includes('Authentication')) {
-                    errorMsg = err.message;
-                } else if (err.message.includes('endpoint unavailable')) {
-                    errorMsg = err.message;
-                } else if (err.message.includes('Server error')) {
-                    errorMsg = err.message;
-                } else if (err.message.includes('fetch') || err.message.includes('Failed')) {
-                    errorMsg = 'Network issue — check your connection and try again';
-                }
-
-                showToast('error', 'AI Scan Failed', errorMsg);
+                showToast('error', 'AI Scan Failed', error.message);
                 setAIStatus('hidden');
             } finally {
                 overlay.classList.add('hidden');
