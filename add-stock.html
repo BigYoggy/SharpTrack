@@ -111,6 +111,8 @@
         }
         .ai-status-banner.success { background: #d4edda; color: #155724; }
         .ai-status-banner.warning { background: #fff3cd; color: #856404; }
+        .ai-status-banner.error { background: #f8d7da; color: #721c24; }
+        .ai-generated { border-left: 3px solid #10b981 !important; }
         
         .ai-loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -233,8 +235,8 @@
 
             <!-- Magic Actions -->
             <div class="magic-actions">
-                <button class="magic-btn ai" onclick="document.getElementById('aiCameraInput').click()">
-                    <span>✨</span> Auto-fill with AI
+                <button class="magic-btn ai" id="aiScanBtn" onclick="document.getElementById('aiCameraInput').click()">
+                    <span>📷</span> Scan Product
                 </button>
                 <input type="file" id="aiCameraInput" accept="image/*" capture="environment" class="hidden" onchange="initCrop(event, 'ai')">
                 
@@ -387,11 +389,72 @@
             loadCategories();
         }
 
+        const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? ''
+            : 'https://sharptrack-api.onrender.com';
+
         let selectedUnit = 'pieces';
         let html5Qrcode = null;
         let aiImageBase64 = null;
         let cropper = null;
         let activeCropMode = 'manual'; // 'manual' or 'ai'
+
+        // --- UNIT MAPPING (normalized aliases) ---
+        const CATEGORY_UNIT_MAP = {
+            // Liquids
+            'beverage': 'litres', 'beverages': 'litres', 'soft drink': 'litres',
+            'soda': 'litres', 'carbonated': 'litres', 'juice': 'litres',
+            'water': 'litres', 'wine': 'litres', 'spirit': 'litres',
+            'cooking oil': 'litres', 'oil': 'litres', 'liquid': 'litres',
+            // Crates
+            'drinks': 'crates', 'beer': 'crates', 'malt': 'crates',
+            // Bags
+            'rice': 'bags', 'grains': 'bags', 'flour': 'bags', 'sugar': 'bags',
+            'cement': 'bags', 'building': 'bags', 'feed': 'bags',
+            // Packs
+            'groceries': 'packs', 'grocery': 'packs', 'snacks': 'packs',
+            'snack': 'packs', 'biscuit': 'packs', 'noodles': 'packs',
+            'pasta': 'packs', 'seasoning': 'packs', 'spice': 'packs',
+            'detergent': 'packs', 'cleaning': 'packs', 'toiletries': 'packs',
+            'cosmetics': 'packs', 'soap': 'packs',
+            // Kg
+            'meat': 'kg', 'fish': 'kg', 'produce': 'kg', 'vegetable': 'kg',
+            'fruit': 'kg', 'frozen': 'kg',
+            // Pieces
+            'electronics': 'pieces', 'gadgets': 'pieces', 'phones': 'pieces',
+            'phone': 'pieces', 'accessory': 'pieces', 'accessories': 'pieces',
+            'dairy': 'pieces', 'milk': 'pieces', 'canned': 'pieces',
+            'tin': 'pieces', 'battery': 'pieces', 'bulb': 'pieces',
+            // Cartons
+            'carton': 'cartons', 'wholesale': 'cartons',
+        };
+
+        function getUnitForCategory(category) {
+            if (!category) return null;
+            const normalized = category.toLowerCase().trim();
+
+            // Direct match first
+            if (CATEGORY_UNIT_MAP[normalized]) return CATEGORY_UNIT_MAP[normalized];
+
+            // Partial / substring match
+            for (const [alias, unit] of Object.entries(CATEGORY_UNIT_MAP)) {
+                if (normalized.includes(alias) || alias.includes(normalized)) return unit;
+            }
+            return null;
+        }
+
+        function autoSelectUnit(unitName) {
+            if (!unitName) return;
+            const normalized = unitName.toLowerCase();
+            const unitBtns = document.querySelectorAll('.unit-tag');
+            for (const btn of unitBtns) {
+                if (btn.textContent.trim().toLowerCase() === normalized) {
+                    selectUnit(btn, normalized);
+                    return;
+                }
+            }
+            // No matching button found — ignore safely
+        }
 
         function goBack() {
             if (!document.getElementById('scannerSection').classList.contains('hidden')) {
@@ -599,53 +662,140 @@
         function setAIStatus(type, title, message) {
             const banner = document.getElementById('aiStatusBanner');
             const text = document.getElementById('aiStatusText');
-            
+
+            if (type === 'hidden') {
+                banner.classList.add('hidden');
+                return;
+            }
+
             banner.className = `ai-status-banner ${type}`;
             text.innerHTML = `<strong>${title}:</strong> ${message}`;
+            banner.classList.remove('hidden');
         }
 
         async function processAIImage(base64Str) {
-            document.getElementById('aiLoadingOverlay').classList.remove('hidden');
+            const scanBtn = document.getElementById('aiScanBtn');
+            const overlay = document.getElementById('aiLoadingOverlay');
+
+            // Show loading state
+            overlay.classList.remove('hidden');
+            if (scanBtn) scanBtn.disabled = true;
+
+            // Clear previous AI markers (don't clear field values — preserve user edits)
+            document.querySelectorAll('[data-ai-filled]').forEach(el => {
+                el.removeAttribute('data-ai-filled');
+                el.classList.remove('ai-generated');
+            });
 
             try {
-                const response = await apiRequest('/api/ai/scan-product', {
+                const res = await fetch(`${API_BASE}/api/scan-product`, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(getToken() ? { 'Authorization': `Bearer ${getToken()}` } : {})
+                    },
                     body: JSON.stringify({ imageBase64: base64Str, mimeType: 'image/jpeg' })
                 });
 
-                document.getElementById('aiLoadingOverlay').classList.add('hidden');
-                
-                // Auto-fill fields if they are currently empty
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.error || 'Server returned an error');
+                }
+
+                const result = await res.json();
+                const data = result.data || result;
+                const confidence = parseFloat(data.confidence) || 0;
+
+                // Field-level validation — confidence alone is not enough
+                const hasName = !!data.productName;
+                const hasCategory = !!data.category;
+
+                // Fill only if field is currently empty (preserve user edits)
                 const fillIfEmpty = (id, val) => {
-                    if (val && !document.getElementById(id).value) document.getElementById(id).value = val;
+                    const field = document.getElementById(id);
+                    if (val && field && field.value.trim() === '') {
+                        field.value = val;
+                        field.setAttribute('data-ai-filled', 'true');
+                        field.classList.add('ai-generated');
+                    }
                 };
 
-                fillIfEmpty('productName', response.name);
-                fillIfEmpty('brand', response.brand);
-                fillIfEmpty('weight', response.weight);
-                fillIfEmpty('barcode', response.barcode);
-                
-                if (response.suggestedCategory) {
-                    // Pre-fill the dropdown and hidden input
-                    selectCategory(response.suggestedCategory);
-                    // Also make sure it's in the list so it looks native
-                    if (!categoryList.includes(response.suggestedCategory)) {
-                        categoryList.push(response.suggestedCategory);
-                        renderCategories(categoryList);
+                if (confidence >= 0.8 && hasName) {
+                    // High confidence with valid product name
+                    fillIfEmpty('productName', data.productName);
+                    fillIfEmpty('brand', data.brand);
+                    fillIfEmpty('weight', data.weight);
+                    fillIfEmpty('barcode', data.barcode);
+
+                    if (hasCategory) {
+                        const catField = document.getElementById('categoryName');
+                        if (catField && catField.value.trim() === '') {
+                            selectCategory(data.category);
+                            if (!categoryList.includes(data.category)) {
+                                categoryList.push(data.category);
+                                renderCategories(categoryList);
+                            }
+                            autoSelectUnit(getUnitForCategory(data.category));
+                        }
                     }
+
+                    setAIStatus('success', 'AI Scan Complete', 'AI detected product information');
+
+                } else if (confidence >= 0.5 && hasName) {
+                    // Medium confidence — auto-fill with warning
+                    fillIfEmpty('productName', data.productName);
+                    fillIfEmpty('brand', data.brand);
+                    fillIfEmpty('weight', data.weight);
+                    fillIfEmpty('barcode', data.barcode);
+
+                    if (hasCategory) {
+                        const catField = document.getElementById('categoryName');
+                        if (catField && catField.value.trim() === '') {
+                            selectCategory(data.category);
+                            if (!categoryList.includes(data.category)) {
+                                categoryList.push(data.category);
+                                renderCategories(categoryList);
+                            }
+                            autoSelectUnit(getUnitForCategory(data.category));
+                        }
+                    }
+
+                    setAIStatus('warning', 'AI Scan', 'Please verify this information');
+
+                } else {
+                    // Low confidence or missing key fields — do NOT auto-fill
+                    setAIStatus('error', 'Low Confidence', 'Low confidence \u2014 please fill manually');
                 }
 
-                // Confidence logic
-                const confScore = Math.round((response.confidence || 0) * 100);
-                if (confScore >= 85) {
-                    setAIStatus('success', `AI Confidence: ${confScore}%`, 'Product successfully analyzed. Review details below.');
-                } else {
-                    setAIStatus('warning', `AI Confidence: ${confScore}% (Low)`, 'Please verify these details carefully before saving.');
-                }
+                // Save scan record for training data
+                saveScanRecord(base64Str, data, confidence);
 
             } catch (err) {
-                document.getElementById('aiLoadingOverlay').classList.add('hidden');
-                showToast('error', 'AI Scan Failed', err.message);
+                console.error('AI Scan Error:', err);
+                showToast('error', 'Scan Failed', 'Unable to scan product. Check connection and try again.');
+                setAIStatus('hidden');
+            } finally {
+                overlay.classList.add('hidden');
+                if (scanBtn) scanBtn.disabled = false;
+            }
+        }
+
+        // --- SCAN HISTORY ---
+        function saveScanRecord(imageBase64, aiOutput, confidence) {
+            try {
+                const record = {
+                    aiOutput: aiOutput,
+                    confidence: confidence,
+                    timestamp: Date.now(),
+                    imageSnippet: imageBase64.substring(0, 200) // Truncated — full image is too large for localStorage
+                };
+                const history = JSON.parse(localStorage.getItem('st_scan_history') || '[]');
+                history.push(record);
+                // Keep last 50 scans to prevent storage overflow
+                if (history.length > 50) history.shift();
+                localStorage.setItem('st_scan_history', JSON.stringify(history));
+            } catch (e) {
+                console.warn('Could not save scan record:', e);
             }
         }
 
