@@ -6,7 +6,7 @@
     <title>SharpTrack — Add Stock</title>
     <link rel="icon" type="image/png" href="logo2.png">
     <link rel="stylesheet" href="css/design-system.css">
-    
+
     <!-- External Libraries -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
@@ -15,177 +15,213 @@
     <style>
         body { padding-bottom: 90px; }
 
+        /* ── BACK ROW ── */
         .back-row {
             display: flex; align-items: center; gap: 8px; padding: 16px 0 8px;
         }
         .back-btn {
             display: flex; align-items: center; gap: 4px; color: var(--primary); font-size: 14px;
             font-weight: 600; cursor: pointer; text-decoration: none; background: none; border: none;
-            font-family: var(--font-family);
+            font-family: var(--font-family); transition: opacity var(--transition-fast);
         }
+        .back-btn:active { opacity: 0.7; }
 
+        /* ── PAGE TITLE ── */
         .page-title { margin-bottom: 24px; }
         .page-title h1 { font-size: 24px; margin-bottom: 4px; }
         .page-title p { font-size: 14px; color: var(--muted); }
 
-        /* Image Box Styles */
+        /* ── IMAGE BOX ── */
         .image-box {
             background: var(--card-bg);
-            border: 2px dashed var(--border-light);
-            border-radius: var(--radius-lg);
-            height: 160px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            height: 200px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             margin-bottom: 16px;
-            transition: all 0.2s;
+            transition: all var(--transition-normal);
             overflow: hidden;
             position: relative;
+            box-shadow: 0 0 20px rgba(37, 160, 96, 0.08);
         }
-        .image-box:hover { border-color: var(--primary); background: var(--primary-light); }
-        .image-box.has-image { border: none; background: #000; }
+        .image-box:hover { border-color: var(--primary); }
+        .image-box.has-image {
+            border-color: var(--primary);
+            box-shadow: 0 0 24px rgba(37, 160, 96, 0.15);
+        }
         .image-box img { width: 100%; height: 100%; object-fit: contain; }
         .image-box .placeholder {
-            display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted);
+            display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--muted);
+            font-size: 13px; font-weight: 500;
         }
-        .image-box .placeholder svg { color: var(--primary); }
+        .image-box .placeholder svg { color: var(--primary); opacity: 0.6; }
 
-        /* Magic Actions */
+        /* ── ACTION BUTTONS ── */
         .magic-actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin-bottom: 24px;
+            margin-bottom: 16px;
         }
         .magic-btn {
-            padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-light);
+            padding: 12px 16px; border-radius: var(--radius-md);
+            border: 1.5px solid var(--border);
             background: var(--card-bg); font-weight: 600; font-size: 13px; color: var(--text);
             display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;
-            transition: all 0.2s; font-family: var(--font-family);
+            transition: all var(--transition-fast); font-family: var(--font-family);
         }
-        .magic-btn:hover { border-color: var(--primary); }
-        .magic-btn.ai { background: linear-gradient(145deg, #10b98111, #3b82f611); border-color: #10b98144; color: #065f46; }
-        .magic-btn.ai:hover { border-color: #10b981; }
+        .magic-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .magic-btn:active { transform: scale(0.97); }
+        .magic-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .magic-btn.ai {
+            background: linear-gradient(135deg, var(--primary-light), var(--card-bg));
+            border-color: var(--primary); color: var(--primary);
+        }
+        .magic-btn.ai:hover { box-shadow: var(--shadow-primary); }
 
-        /* Form Styles */
+        /* ── FORM CARDS ── */
         .form-card {
             background: var(--card-bg); border-radius: var(--radius-lg); padding: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 16px; border: 1px solid var(--border);
         }
-
         .form-card h2 {
             font-size: 15px; font-weight: 700; margin-bottom: 16px;
             display: flex; align-items: center; justify-content: space-between;
+            color: var(--text);
         }
 
-        .unit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        @media (max-width: 400px) { .unit-row { grid-template-columns: 1fr; gap: 8px; } }
+        /* ── AI BADGE ── */
+        .ai-badge {
+            font-size: 11px; font-weight: 600; color: var(--primary);
+            background: var(--primary-light); padding: 4px 10px; border-radius: 12px;
+            animation: bannerSlideIn 0.3s ease both;
+        }
+
+        /* ── FIELD ROWS ── */
+        .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 400px) { .field-row { grid-template-columns: 1fr; gap: 8px; } }
+
+        /* ── INPUT OVERRIDES ── */
+        .input-wrapper input,
+        .input-wrapper select {
+            background: var(--bg-secondary) !important;
+            border-color: var(--border) !important;
+            color: var(--text) !important;
+        }
+        .input-wrapper input:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px var(--primary-ghost);
+        }
+        .input-wrapper input::placeholder { color: var(--muted); opacity: 0.6; }
 
         .input-wrapper input:not([type="number"]),
         .input-wrapper select { padding-left: 44px; }
-        
+
+        /* ── BARCODE ROW ── */
         .barcode-row { display: flex; gap: 8px; }
         .barcode-row .input-wrapper { flex: 1; }
         .btn-lookup {
             background: var(--primary-light); color: var(--primary); border: none;
             border-radius: var(--radius-md); padding: 0 16px; font-weight: 600; cursor: pointer;
+            font-family: var(--font-family); transition: all var(--transition-fast);
         }
+        .btn-lookup:hover { background: var(--primary); color: white; }
 
+        /* ── UNIT TAGS ── */
         .quick-units { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .unit-tag {
-            padding: 6px 12px; border-radius: 16px; background: var(--border-light);
-            font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text);
-            border: 1.5px solid transparent; transition: all 0.15s;
+            padding: 6px 14px; border-radius: 16px; background: var(--bg-secondary);
+            font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-secondary);
+            border: 1.5px solid transparent; transition: all var(--transition-fast);
             font-family: var(--font-family);
         }
-        .unit-tag:hover, .unit-tag.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
-
-        .hidden { display: none !important; }
-
-        #reader { width: 100%; border-radius: var(--radius-lg); overflow: hidden; border: none; margin-bottom: 16px; }
-        
-        .ai-status-banner {
-            padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: flex; gap: 8px; align-items: flex-start;
+        .unit-tag:hover, .unit-tag.active {
+            border-color: var(--primary); background: var(--primary-light); color: var(--primary);
         }
-        .ai-status-banner.success { background: #d4edda; color: #155724; }
-        .ai-status-banner.warning { background: #fff3cd; color: #856404; }
-        .ai-status-banner.error { background: #f8d7da; color: #721c24; }
-        .ai-generated { border-left: 3px solid #10b981 !important; }
-        
+
+        /* ── AI STATUS BANNER ── */
+        @keyframes bannerSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .ai-status-banner {
+            padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px;
+            margin-bottom: 16px; display: flex; gap: 8px; align-items: center;
+            animation: bannerSlideIn 0.3s ease both;
+            font-weight: 500;
+        }
+        .ai-status-banner.success {
+            background: rgba(46, 158, 91, 0.15); color: var(--green);
+            border: 1px solid rgba(46, 158, 91, 0.3);
+        }
+        .ai-status-banner.warning {
+            background: rgba(224, 123, 42, 0.15); color: var(--orange);
+            border: 1px solid rgba(224, 123, 42, 0.3);
+        }
+        .ai-status-banner.error {
+            background: rgba(229, 57, 53, 0.15); color: var(--red);
+            border: 1px solid rgba(229, 57, 53, 0.3);
+        }
+
+        /* ── AI GENERATED MARKER ── */
+        .ai-generated { border-left: 3px solid var(--primary) !important; }
+
+        /* ── LOADING OVERLAY ── */
         .ai-loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 9999;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px); z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             color: white; font-weight: 600; gap: 16px;
         }
 
-        /* Custom Dropdown Styles */
-        .custom-dropdown {
-            position: relative;
-            width: 100%;
-        }
+        /* ── SUBMIT BUTTON SPACING ── */
+        #submitBtn { margin-bottom: 24px; }
+
+        /* ── UTILITIES ── */
+        .hidden { display: none !important; }
+        .mb-0 { margin-bottom: 0 !important; }
+
+        /* ── BARCODE SCANNER ── */
+        #reader { width: 100%; border-radius: var(--radius-lg); overflow: hidden; border: none; margin-bottom: 16px; }
+
+        /* ── CUSTOM DROPDOWN ── */
+        .custom-dropdown { position: relative; width: 100%; }
         .custom-dropdown-header {
-            width: 100%;
-            height: 48px;
-            padding: 0 16px 0 44px;
-            background: var(--background);
-            border: 1px solid var(--border-light);
-            border-radius: var(--radius-md);
-            font-family: var(--font-family);
-            font-size: 14px;
-            color: var(--text);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            transition: all 0.2s;
+            width: 100%; height: 48px; padding: 0 16px 0 44px;
+            background: var(--bg-secondary); border: 1.5px solid var(--border);
+            border-radius: var(--radius-md); font-family: var(--font-family);
+            font-size: 14px; color: var(--text);
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; transition: all var(--transition-fast);
         }
         .custom-dropdown-header:focus, .custom-dropdown.open .custom-dropdown-header {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px var(--primary-light);
-            outline: none;
+            border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-ghost); outline: none;
         }
-        .custom-dropdown-header.placeholder-text {
-            color: var(--muted);
-        }
+        .custom-dropdown-header.placeholder-text { color: var(--muted); }
         .custom-dropdown-list {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--card-bg);
-            border: 1px solid var(--border-light);
-            border-radius: var(--radius-md);
-            margin-top: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            z-index: 10;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: var(--radius-md); margin-top: 4px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3); z-index: 10;
+            max-height: 200px; overflow-y: auto; display: none;
         }
         .custom-dropdown.open .custom-dropdown-list {
-            display: block;
-            animation: fadeIn 0.2s ease;
+            display: block; animation: bannerSlideIn 0.2s ease;
         }
         .custom-dropdown-item {
-            padding: 12px 16px;
-            font-size: 14px;
-            color: var(--text);
-            cursor: pointer;
-            transition: background 0.1s;
+            padding: 12px 16px; font-size: 14px; color: var(--text);
+            cursor: pointer; transition: background var(--transition-fast);
         }
         .custom-dropdown-item:hover {
-            background: var(--background);
-            color: var(--primary);
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-4px); }
-            to { opacity: 1; transform: translateY(0); }
+            background: var(--primary-ghost); color: var(--primary);
         }
 
-        /* Cropper Modal */
+        /* ── CROPPER MODAL ── */
         .st-cropper-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 10000;
@@ -195,7 +231,8 @@
             flex: 1; width: 100%; height: calc(100% - 80px);
         }
         .cropper-actions {
-            height: 80px; background: #111; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+            height: 80px; background: #111; display: flex; align-items: center;
+            justify-content: space-between; padding: 0 20px;
         }
     </style>
 </head>
@@ -217,7 +254,7 @@
         <!-- BARCODE SCANNER OVERLAY -->
         <div id="scannerSection" class="hidden">
             <div id="reader"></div>
-            <button class="btn btn-secondary btn-block" onclick="stopBarcodeScanner()">Cancel Scanning</button>
+            <button class="btn btn-outline btn-block" onclick="stopBarcodeScanner()" style="border-color: var(--border); color: var(--text);">Cancel Scanning</button>
             <div style="height: 24px;"></div>
         </div>
 
@@ -226,20 +263,24 @@
             <!-- Image Box -->
             <div class="image-box" id="imageBox" onclick="document.getElementById('manualImageInput').click()">
                 <div class="placeholder" id="imagePlaceholder">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
                     <span>Tap to Add Photo</span>
                 </div>
                 <img id="imagePreview" class="hidden" src="" alt="Product Preview">
             </div>
             <input type="file" id="manualImageInput" accept="image/*" class="hidden" onchange="initCrop(event, 'manual')">
 
-            <!-- Magic Actions -->
+            <!-- Action Buttons -->
             <div class="magic-actions">
                 <button class="magic-btn ai" id="aiScanBtn" onclick="document.getElementById('aiCameraInput').click()">
                     <span>📷</span> Scan Product
                 </button>
                 <input type="file" id="aiCameraInput" accept="image/*" capture="environment" class="hidden" onchange="initCrop(event, 'ai')">
-                
+
                 <button class="magic-btn" onclick="startBarcodeScanner()">
                     <span>🔍</span> Scan Barcode
                 </button>
@@ -251,7 +292,13 @@
                 <span id="aiStatusText"></span>
             </div>
 
+            <!-- PRODUCT INFORMATION -->
             <div class="form-card">
+                <h2>
+                    Product Information
+                    <span class="ai-badge hidden" id="aiBadge">✨ AI Filled</span>
+                </h2>
+
                 <!-- Barcode with Lookup -->
                 <div class="input-group">
                     <label for="barcode">Barcode</label>
@@ -272,7 +319,7 @@
                     </div>
                 </div>
 
-                <div class="unit-row">
+                <div class="field-row">
                     <div class="input-group">
                         <label for="brand">Brand</label>
                         <div class="input-wrapper">
@@ -306,8 +353,11 @@
                 </div>
             </div>
 
+            <!-- PRICING & STOCK -->
             <div class="form-card">
-                <div class="unit-row">
+                <h2>Pricing &amp; Stock</h2>
+
+                <div class="field-row">
                     <div class="input-group">
                         <label for="costPrice">Cost Price (₦) *</label>
                         <div class="input-wrapper">
@@ -324,7 +374,7 @@
                     </div>
                 </div>
 
-                <div class="unit-row">
+                <div class="field-row">
                     <div class="input-group">
                         <label for="quantity">Quantity *</label>
                         <div class="input-wrapper">
@@ -342,7 +392,7 @@
                 </div>
 
                 <div class="input-group mb-0">
-                    <label>Unit</label>
+                    <label>Select Unit</label>
                     <div class="quick-units">
                         <button class="unit-tag active" onclick="selectUnit(this, 'pieces')">Pieces</button>
                         <button class="unit-tag" onclick="selectUnit(this, 'cartons')">Cartons</button>
@@ -369,14 +419,14 @@
 
     </div>
 
-    <!-- CROPPER MODAL (Relocated to root level to avoid stacking context issues) -->
+    <!-- CROPPER MODAL -->
     <div id="cropperModal" class="st-cropper-modal hidden">
         <div class="cropper-container-wrapper">
             <img id="cropperImage" src="" style="max-width: 100%;">
         </div>
         <div class="cropper-actions">
             <button class="btn btn-outline" style="border-color: #555; color: white;" onclick="cancelCrop()">Cancel</button>
-            <button class="btn btn-primary" onclick="confirmCrop()">Crop & Save</button>
+            <button class="btn btn-primary" onclick="confirmCrop()">Crop &amp; Save</button>
         </div>
     </div>
 
@@ -662,15 +712,26 @@
         function setAIStatus(type, title, message) {
             const banner = document.getElementById('aiStatusBanner');
             const text = document.getElementById('aiStatusText');
+            const badge = document.getElementById('aiBadge');
 
             if (type === 'hidden') {
                 banner.classList.add('hidden');
+                if (badge) badge.classList.add('hidden');
                 return;
             }
 
             banner.className = `ai-status-banner ${type}`;
             text.innerHTML = `<strong>${title}:</strong> ${message}`;
             banner.classList.remove('hidden');
+
+            // Show AI badge on success or warning
+            if (badge) {
+                if (type === 'success' || type === 'warning') {
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
         }
 
         async function processAIImage(base64Str) {
@@ -687,22 +748,43 @@
                 el.classList.remove('ai-generated');
             });
 
+            const payload = { imageBase64: base64Str, mimeType: 'image/jpeg' };
+            console.log('AI Request Payload:', { mimeType: payload.mimeType, imageLength: base64Str.length });
+
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
                 const res = await fetch(`${API_BASE}/api/scan-product`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         ...(getToken() ? { 'Authorization': `Bearer ${getToken()}` } : {})
                     },
-                    body: JSON.stringify({ imageBase64: base64Str, mimeType: 'image/jpeg' })
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
                 });
+
+                clearTimeout(timeoutId);
+                console.log('AI Response Status:', res.status);
 
                 if (!res.ok) {
                     const errData = await res.json().catch(() => ({}));
-                    throw new Error(errData.error || 'Server returned an error');
+                    console.log('AI Error Response:', errData);
+
+                    if (res.status === 401 || res.status === 403) {
+                        throw new Error('Authentication error — please log in again');
+                    } else if (res.status === 404) {
+                        throw new Error('AI endpoint unavailable — contact support');
+                    } else if (res.status === 500) {
+                        throw new Error('Server error during analysis — try again later');
+                    } else {
+                        throw new Error(errData.error || `Server error (${res.status})`);
+                    }
                 }
 
                 const result = await res.json();
+                console.log('AI Response:', result);
                 const data = result.data || result;
                 const confidence = parseFloat(data.confidence) || 0;
 
@@ -771,8 +853,22 @@
                 saveScanRecord(base64Str, data, confidence);
 
             } catch (err) {
-                console.error('AI Scan Error:', err);
-                showToast('error', 'Scan Failed', 'Unable to scan product. Check connection and try again.');
+                console.log('AI Error:', err);
+
+                let errorMsg = 'Unable to analyze product.';
+                if (err.name === 'AbortError') {
+                    errorMsg = 'AI request timed out — please try again';
+                } else if (err.message.includes('Authentication')) {
+                    errorMsg = err.message;
+                } else if (err.message.includes('endpoint unavailable')) {
+                    errorMsg = err.message;
+                } else if (err.message.includes('Server error')) {
+                    errorMsg = err.message;
+                } else if (err.message.includes('fetch') || err.message.includes('Failed')) {
+                    errorMsg = 'Network issue — check your connection and try again';
+                }
+
+                showToast('error', 'AI Scan Failed', errorMsg);
                 setAIStatus('hidden');
             } finally {
                 overlay.classList.add('hidden');
