@@ -71,6 +71,8 @@ app.use('/api/activity', activityRoutes);
 
 const aiRoutes = require('./aiRoutes');
 app.use('/api/ai', aiRoutes);
+app.get('/test-ai', aiRoutes.testAi);
+app.post('/api/scan-product', aiRoutes.scanProduct);
 
 // Health check
 app.get('/api/health', (req, res) => {
