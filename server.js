@@ -74,6 +74,9 @@ app.use('/api/ai', aiRoutes);
 app.get('/test-ai', aiRoutes.testAi);
 app.post('/api/scan-product', aiRoutes.scanProduct);
 
+const chatbotRoutes = require('./chatbot');
+app.use('/api/chat', chatbotRoutes);
+
 // Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'SharpTrack API is running', timestamp: new Date().toISOString() });

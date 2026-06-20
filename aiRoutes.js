@@ -192,11 +192,92 @@ Rules:
     }
 }
 
+// 3. POST /api/ai/chat Endpoint Logic
+async function chatLogic(req, res) {
+    try {
+        const { message } = req.body;
+        if (!message) {
+            return res.status(400).json({ success: false, error: 'Message is required' });
+        }
+
+        const ai = getAi();
+        const systemPrompt = `Analyze the user's natural language command for a retail store inventory and sales management system.
+Your job is to identify the intent and extract structured details as JSON.
+
+Available intents and instructions:
+1. "add_stock"
+   - Match: Adding items/stock or adding a product. E.g., "Add 20 Milo at ₦1900", "Add 50 Indomie at ₦650".
+   - Required fields:
+     * "productName": string (e.g. "Milo", "Indomie")
+     * "quantity": number (e.g. 20, 50)
+     * "price": number (selling price, e.g. 1900, 650)
+2. "update_price"
+   - Match: Changing/updating the price of a specific product. E.g., "Update Indomie price to ₦700", "Change Milo price to 1900".
+   - Required fields:
+     * "productName": string (e.g. "Indomie")
+     * "price": number (new selling price, e.g. 700)
+3. "bulk_price_update"
+   - Match: Modifying all product prices by a percentage. E.g., "Update all prices by 10%", "Decrease all prices by -5%", "Increase prices by 15%".
+   - Required fields:
+     * "percentage": number (positive or negative float/integer, e.g. 10, -5)
+4. "check_stock"
+   - Match: Querying quantity or existence of a single product. E.g., "How many Indomie do I have?", "Check stock of Milo".
+   - Required fields:
+     * "productName": string (e.g. "Indomie")
+5. "low_stock"
+   - Match: Listing products running low. E.g., "What products are running low?", "Low stock check".
+6. "record_sale"
+   - Match: Logging a sales transaction. E.g., "I sold 5 Milo", "Record sale of 10 Indomie".
+   - Required fields:
+     * "productName": string (e.g. "Milo")
+     * "quantity": number (e.g. 5)
+7. "daily_summary"
+   - Match: Showing today's sales report. E.g., "Show today's sales", "What are today's sales?".
+8. "unknown"
+   - Match: Any other input that doesn't fit the above commands.
+
+Return ONLY a JSON object of this structure (all non-applicable fields must be null):
+{
+  "command": "add_stock" | "update_price" | "bulk_price_update" | "check_stock" | "low_stock" | "record_sale" | "daily_summary" | "unknown",
+  "productName": string | null,
+  "quantity": number | null,
+  "price": number | null,
+  "percentage": number | null
+}`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: [
+                systemPrompt,
+                `User query: "${message}"`
+            ],
+            config: {
+                responseMimeType: "application/json"
+            }
+        });
+
+        const resultJson = JSON.parse(response.text);
+
+        res.json({
+            success: true,
+            data: resultJson
+        });
+    } catch (err) {
+        console.error('AI Chat Error:', err);
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+    }
+}
+
 // Map the endpoints to the router for the legacy path /api/ai/scan-product (protected by auth)
 router.post('/scan-product', authMiddleware, scanProductLogic);
+router.post('/chat', authMiddleware, chatLogic);
 
 // Attach endpoints to router object for root-level mounting
 router.testAi = testAi;
 router.scanProduct = scanProductLogic;
+router.chat = chatLogic;
 
 module.exports = router;

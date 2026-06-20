@@ -8,7 +8,7 @@ const API_URL = (window.location.hostname === 'localhost' || window.location.hos
 
 /* ── AUTH HELPERS ── */
 function getToken() {
-    return localStorage.getItem('st_token');
+    return localStorage.getItem('token') || localStorage.getItem('st_token');
 }
 
 function getUser() {
@@ -19,11 +19,13 @@ function getUser() {
 
 function setAuth(token, user) {
     localStorage.setItem('st_token', token);
+    localStorage.setItem('token', token);
     localStorage.setItem('st_user', JSON.stringify(user));
 }
 
 function clearAuth() {
     localStorage.removeItem('st_token');
+    localStorage.removeItem('token');
     localStorage.removeItem('st_user');
     localStorage.removeItem('pendingSignup');
 }
@@ -574,4 +576,186 @@ function getUserInitials(name) {
 function getUserFirstName(name) {
     if (!name) return 'there';
     return name.trim().split(' ')[0];
+}
+
+// Token Synchronization on load
+if (localStorage.getItem('st_token') && !localStorage.getItem('token')) {
+    localStorage.setItem('token', localStorage.getItem('st_token'));
+}
+
+// ── AI CHATBOT ASSISTANT CODE ──
+let aiChatInitialized = false;
+
+function initAiChatbot() {
+    if (aiChatInitialized) return;
+    
+    const chatHtml = `
+        <button class="ai-chat-btn" id="ai-chat-btn" onclick="openAiChat()" aria-label="Open AI Assistant">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </button>
+
+        <div id="aiChatModal" class="modal-overlay" onclick="closeAiChat()">
+            <div class="modal ai-chat-modal" onclick="event.stopPropagation()">
+                <div class="modal-handle"></div>
+                <div class="ai-chat-header">
+                    <div class="ai-chat-header-title">
+                        <span class="ai-chat-title-text">SharpTrack Assistant</span>
+                        <span class="ai-chat-status">
+                            <span class="ai-chat-status-dot"></span>
+                            Online
+                        </span>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" onclick="closeAiChat()" style="padding: 4px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <div class="ai-chat-body" id="ai-chat-body"></div>
+                <div class="ai-chat-suggestions" id="ai-chat-suggestions">
+                    <button class="ai-suggestion-pill" onclick="sendAiSuggestion('Show today\\\'s sales')">Show today's sales</button>
+                    <button class="ai-suggestion-pill" onclick="sendAiSuggestion('What products are running low?')">What products are running low?</button>
+                    <button class="ai-suggestion-pill" onclick="sendAiSuggestion('Add 20 Milo at ₦1900')">Add 20 Milo at ₦1900</button>
+                </div>
+                <div class="ai-chat-input-row">
+                    <div class="ai-chat-input-wrapper">
+                        <input type="text" class="ai-chat-input" id="ai-chat-input" placeholder="Ask me to add stock, sell, report..." autocomplete="off">
+                    </div>
+                    <button class="ai-chat-send-btn" id="ai-chat-send-btn" onclick="sendAiMessage()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', chatHtml);
+    aiChatInitialized = true;
+
+    const token = localStorage.getItem('token') || localStorage.getItem('st_token');
+    
+    if (!token) {
+        appendAiMessage('assistant', "Hello! I am your SharpTrack AI assistant. Please sign in to manage your inventory, record sales, and check reports.");
+    } else {
+        const user = getUser();
+        const firstName = user ? getUserFirstName(user.name) : 'merchant';
+        appendAiMessage('assistant', `Hello ${firstName}! I am your SharpTrack AI assistant. How can I help you manage your store today? You can ask me to:\n\n• **Add stock** (e.g., 'Add 20 Milo at ₦1900')\n• **Update price** (e.g., 'Update Indomie price to ₦700')\n• **Bulk price update** (e.g., 'Update all prices by 10%')\n• **Check stock levels** (e.g., 'How many Indomie do I have?')\n• **Low stock check** (e.g., 'What products are running low?')\n• **Record a sale** (e.g., 'I sold 5 Milo')\n• **View today's sales summary** (e.g., 'Show today's sales')`);
+    }
+
+    document.getElementById('ai-chat-input').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            sendAiMessage();
+        }
+    });
+}
+
+function openAiChat() {
+    const modal = document.getElementById('aiChatModal');
+    if (modal) {
+        modal.classList.add('open');
+        document.getElementById('ai-chat-input').focus();
+    }
+}
+
+function closeAiChat() {
+    const modal = document.getElementById('aiChatModal');
+    if (modal) {
+        modal.classList.remove('open');
+    }
+}
+
+function appendAiMessage(sender, text) {
+    const body = document.getElementById('ai-chat-body');
+    if (!body) return;
+
+    const msg = document.createElement('div');
+    msg.className = `ai-msg ${sender}`;
+    
+    let formattedText = text
+        .replace(/\n/g, '<br>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/•\s+/g, '&bull; ');
+        
+    msg.innerHTML = `
+        <div>${formattedText}</div>
+        <div class="ai-msg-time">${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+    `;
+    body.appendChild(msg);
+    body.scrollTop = body.scrollHeight;
+}
+
+function showAiThinking(show) {
+    const body = document.getElementById('ai-chat-body');
+    if (!body) return;
+
+    const existing = document.getElementById('ai-thinking-indicator');
+    if (show) {
+        if (existing) return;
+        const thinking = document.createElement('div');
+        thinking.id = 'ai-thinking-indicator';
+        thinking.className = 'ai-msg thinking';
+        thinking.innerHTML = `
+            <span class="ai-dot"></span>
+            <span class="ai-dot"></span>
+            <span class="ai-dot"></span>
+        `;
+        body.appendChild(thinking);
+        body.scrollTop = body.scrollHeight;
+    } else {
+        if (existing) existing.remove();
+    }
+}
+
+async function sendAiMessage() {
+    const input = document.getElementById('ai-chat-input');
+    const query = input.value.trim();
+    if (!query) return;
+
+    input.value = '';
+    appendAiMessage('user', query);
+
+    const token = localStorage.getItem('token') || localStorage.getItem('st_token');
+    if (!token) {
+        appendAiMessage('assistant', "Please sign in to execute commands.");
+        return;
+    }
+
+    showAiThinking(true);
+
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ message: query })
+        });
+
+        const parseData = await response.json();
+        showAiThinking(false);
+
+        if (!response.ok) {
+            throw new Error(parseData.error || 'AI request failed');
+        }
+
+        if (parseData.success) {
+            appendAiMessage('assistant', parseData.response);
+        } else {
+            throw new Error(parseData.error || 'Server error occurred');
+        }
+    } catch (err) {
+        showAiThinking(false);
+        appendAiMessage('assistant', `Error: ${err.message}`);
+    }
+}
+
+function sendAiSuggestion(text) {
+    document.getElementById('ai-chat-input').value = text;
+    sendAiMessage();
+}
+
+// Automatically initialize chatbot on page load
+if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', initAiChatbot);
+} else {
+    initAiChatbot();
 }
