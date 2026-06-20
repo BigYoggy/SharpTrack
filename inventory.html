@@ -49,6 +49,10 @@
         .inventory-meta .stock.low { color: var(--orange); }
         .inventory-meta .stock.out { color: var(--red); }
         .inventory-meta .stock.in { color: var(--primary); }
+        
+        #restockModal {
+            z-index: 1010 !important;
+        }
     </style>
 </head>
 <body>
@@ -92,6 +96,41 @@
                 <div class="skeleton skeleton-card"></div>
                 <div class="skeleton skeleton-card"></div>
                 <div class="skeleton skeleton-card"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESTOCK MODAL -->
+    <div id="restockModal" class="modal-overlay" onclick="closeRestockModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-handle"></div>
+            <h2 style="margin-bottom: 8px;">Restock Product</h2>
+            <p class="text-muted" style="margin-bottom: 20px; font-size: 14px;">Add stock quantity for this product.</p>
+            
+            <div class="input-group">
+                <label>Product Name</label>
+                <div class="input-wrapper">
+                    <input type="text" id="restock-product-name" readonly style="background: var(--border-light); cursor: not-allowed; padding: 12px 16px;">
+                </div>
+            </div>
+            
+            <div class="input-group" style="margin-top: 16px;">
+                <label>Current Stock</label>
+                <div class="input-wrapper">
+                    <input type="text" id="restock-current-stock" readonly style="background: var(--border-light); cursor: not-allowed; padding: 12px 16px;">
+                </div>
+            </div>
+
+            <div class="input-group" style="margin-top: 16px;">
+                <label>Quantity to Add</label>
+                <div class="input-wrapper">
+                    <input type="number" id="restock-quantity-add" placeholder="e.g. 50" min="1" step="1" required style="padding: 12px 16px;">
+                </div>
+            </div>
+
+            <div style="margin-top: 24px; display: flex; gap: 12px;">
+                <button class="btn btn-outline" style="flex: 1;" onclick="closeRestockModal()">Cancel</button>
+                <button class="btn btn-primary" style="flex: 1;" id="confirm-restock-btn" onclick="submitRestock()">Confirm</button>
             </div>
         </div>
     </div>
@@ -193,9 +232,12 @@
                         <div class="name">${p.name}</div>
                         <div class="category">${p.unit}</div>
                     </div>
-                    <div class="inventory-meta">
+                    <div class="inventory-meta" style="display: flex; flex-direction: column; align-items: flex-end;">
                         <div class="price">${formatCurrency(p.sellingPrice)}</div>
-                        <div class="stock ${stockClass}">${p.quantity === 0 ? 'Out of stock' : p.quantity + ' ' + p.unit}</div>
+                        <div class="stock ${stockClass}" style="margin-bottom: 4px;">${p.quantity === 0 ? 'Out of stock' : p.quantity + ' ' + p.unit}</div>
+                        <button class="btn btn-outline" onclick="openRestockModal('${p.id}', '${p.name.replace(/'/g, "\\'")}', ${p.quantity}, '${p.unit}')" style="padding: 4px 8px; font-size: 11px; height: auto; border-radius: var(--radius-sm); line-height: 1;">
+                            Restock
+                        </button>
                     </div>
                 </div>`;
             }).join('');
@@ -205,6 +247,67 @@
             const query = document.getElementById('searchInput').value.toLowerCase();
             const filtered = allProducts.filter(p => p.name.toLowerCase().includes(query));
             renderProducts(filtered);
+        }
+
+        // Restock Modal Logic
+        let currentRestockProductId = null;
+        let currentRestockCurrentQuantity = 0;
+
+        function openRestockModal(productId, productName, currentQuantity, unit) {
+            currentRestockProductId = productId;
+            currentRestockCurrentQuantity = currentQuantity;
+            
+            document.getElementById('restock-product-name').value = productName;
+            document.getElementById('restock-current-stock').value = `${currentQuantity} ${unit}`;
+            document.getElementById('restock-quantity-add').value = '';
+            
+            const modal = document.getElementById('restockModal');
+            if (modal) {
+                modal.classList.add('open');
+                document.getElementById('restock-quantity-add').focus();
+            }
+        }
+
+        function closeRestockModal() {
+            const modal = document.getElementById('restockModal');
+            if (modal) {
+                modal.classList.remove('open');
+            }
+        }
+
+        async function submitRestock() {
+            const qtyInput = document.getElementById('restock-quantity-add');
+            const qtyAdd = parseInt(qtyInput.value, 10);
+            
+            if (isNaN(qtyAdd) || qtyAdd <= 0) {
+                showToast('error', 'Invalid Quantity', 'Please enter a valid quantity greater than 0.');
+                return;
+            }
+
+            const confirmBtn = document.getElementById('confirm-restock-btn');
+            confirmBtn.disabled = true;
+            const originalBtnText = confirmBtn.textContent;
+            confirmBtn.textContent = 'Updating...';
+
+            try {
+                const newQuantity = currentRestockCurrentQuantity + qtyAdd;
+                
+                await apiRequest(`/api/products/${currentRestockProductId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        quantity: newQuantity
+                    })
+                });
+
+                showToast('success', 'Restock Success', `Successfully updated stock level to ${newQuantity}.`);
+                closeRestockModal();
+                loadInventory();
+            } catch (err) {
+                showToast('error', 'Error', err.message || 'Failed to update stock quantity.');
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = originalBtnText;
+            }
         }
     </script>
 </body>

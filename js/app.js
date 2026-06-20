@@ -585,6 +585,8 @@ if (localStorage.getItem('st_token') && !localStorage.getItem('token')) {
 
 // ── AI CHATBOT ASSISTANT CODE ──
 let aiChatInitialized = false;
+let lastAssistantMessage = '';
+let fallbackIndex = 0;
 
 function initAiChatbot() {
     if (aiChatInitialized) return;
@@ -672,6 +674,7 @@ function appendAiMessage(sender, text) {
     let formattedText = text
         .replace(/\n/g, '<br>')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
         .replace(/•\s+/g, '&bull; ');
         
     msg.innerHTML = `
@@ -712,6 +715,27 @@ async function sendAiMessage() {
     input.value = '';
     appendAiMessage('user', query);
 
+    // 1. Frontend Greeting Check
+    const greetingWords = ["sup", "hey", "hi", "hello", "how far", "wassup", "good morning", "good afternoon", "good evening", "morning", "evening", "yo", "hiya"];
+    const lowerQuery = query.toLowerCase().trim();
+    const isGreeting = greetingWords.some(word => {
+        if (word.includes(' ')) {
+            return lowerQuery.includes(word);
+        }
+        const words = lowerQuery.split(/\s+/).map(w => w.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?[\]]/g, ''));
+        return words.includes(word);
+    });
+
+    if (isGreeting) {
+        let greetingReply = "Hey! Welcome to SharpTrack Assistant 👋 I can help you add stock, record sales, check inventory levels, and more. What can I do for you today?";
+        if (greetingReply === lastAssistantMessage) {
+            greetingReply = "I dey here o! How I fit help you manage your store inventory today?";
+        }
+        lastAssistantMessage = greetingReply;
+        appendAiMessage('assistant', greetingReply);
+        return;
+    }
+
     const token = localStorage.getItem('token') || localStorage.getItem('st_token');
     if (!token) {
         appendAiMessage('assistant', "Please sign in to execute commands.");
@@ -721,13 +745,39 @@ async function sendAiMessage() {
     showAiThinking(true);
 
     try {
+        const customPrompt = `You are SharpTrack AI, a friendly and smart inventory assistant for Nigerian provision store owners.
+
+Understand natural language flexibly. Users may say things casually like:
+- "abeg put 50 Bournvita" 
+- "I don buy 100 indomie at 300 naira"
+- "how many peak milk I get"
+- "wetin dey run low"
+- "I don sell 5 fanta"
+
+Extract intent and return ONLY valid JSON:
+{
+  "intent": "add_product|update_price|check_stock|low_stock|record_sale|daily_summary|greeting|unknown",
+  "product": "product name or null",
+  "quantity": number or null,
+  "price": number or null,
+  "confidence": 0.0 to 1.0,
+  "reply": "friendly response if intent is greeting or unknown"
+}
+
+For greetings like "hey", "hello", "how far" — return intent "greeting" with a friendly reply.
+For unclear messages — ask ONE clarifying question instead of repeating the same error.
+Never return the same error message twice in a row.
+Be conversational and friendly like a Nigerian assistant.
+
+User query: "${query}"`;
+
         const response = await fetch(`${API_URL}/api/chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ message: query })
+            body: JSON.stringify({ message: customPrompt })
         });
 
         const parseData = await response.json();
@@ -738,13 +788,44 @@ async function sendAiMessage() {
         }
 
         if (parseData.success) {
-            appendAiMessage('assistant', parseData.response);
+            let replyText = parseData.response;
+            
+            // Handle new intelligence logic if rich parser data is returned
+            if (parseData.data) {
+                if (parseData.data.intent === 'greeting' && parseData.data.reply) {
+                    replyText = parseData.data.reply;
+                } else if (parseData.data.intent === 'unknown' && parseData.data.reply) {
+                    replyText = parseData.data.reply;
+                } else if (parseData.data.confidence !== undefined && parseData.data.confidence < 0.5 && parseData.data.reply) {
+                    replyText = parseData.data.reply;
+                }
+            }
+
+            // Ensure we never show the exact same error message twice in a row
+            if (replyText === lastAssistantMessage) {
+                const fallbackQuestions = [
+                    "Abeg, I no catch that one. You fit say 'Add 20 Milo at ₦1900' or 'I sold 5 Milo'.",
+                    "Amina, abeg talk am another way. You want check stock or record sale? Tell me.",
+                    "Wetin you want make I do? Say 'What products are running low?' to check alerts.",
+                    "Hmm, I no understand. Abeg tell me wetin you want manage for your shop."
+                ];
+                replyText = fallbackQuestions[fallbackIndex % fallbackQuestions.length];
+                fallbackIndex++;
+            }
+
+            lastAssistantMessage = replyText;
+            appendAiMessage('assistant', replyText);
         } else {
             throw new Error(parseData.error || 'Server error occurred');
         }
     } catch (err) {
         showAiThinking(false);
-        appendAiMessage('assistant', `Error: ${err.message}`);
+        let errorReply = `Error: ${err.message}`;
+        if (errorReply === lastAssistantMessage) {
+            errorReply = "Connection no dey build fine now, abeg try again.";
+        }
+        lastAssistantMessage = errorReply;
+        appendAiMessage('assistant', errorReply);
     }
 }
 
