@@ -42,7 +42,7 @@ Format:
         if (process.env.GEMINI_API_KEY) {
             const ai = getAi();
             const response = await ai.models.generateContent({
-                model: 'gemini-1.5-flash',
+                model: 'gemini-3.5-flash',
                 contents: [
                     systemPrompt,
                     `User query: "${message}"`

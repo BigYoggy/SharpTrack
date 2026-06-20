@@ -21,7 +21,7 @@ async function testAi(req, res) {
     try {
         const ai = getAi();
         const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-3.5-flash',
             contents: 'Say hello and confirm AI connection'
         });
         
@@ -97,7 +97,7 @@ async function scanProductLogic(req, res) {
         }
 
         // 2. Verify model (model option specified in generateContent call)
-        const targetModel = 'gemini-1.5-flash';
+        const targetModel = 'gemini-3.5-flash';
         console.log("Calling Gemini...");
 
         const prompt = `Analyze this product image and return ONLY valid JSON.
@@ -246,7 +246,7 @@ Return ONLY a JSON object of this structure (all non-applicable fields must be n
 }`;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-3.5-flash',
             contents: [
                 systemPrompt,
                 `User query: "${message}"`
