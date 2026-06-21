@@ -13,7 +13,7 @@ function getModel() {
             throw new Error('GEMINI_API_KEY environment variable is not configured');
         }
         const genAI = new GoogleGenerativeAI(apiKey);
-        modelInstance = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+        modelInstance = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
     }
     return modelInstance;
 }
