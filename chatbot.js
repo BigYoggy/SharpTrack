@@ -55,11 +55,19 @@ Format:
         let geminiJson;
 
         if (process.env.GLM_API_KEY) {
-            const rawText = await callAI(systemPrompt, `User query: "${message}"`);
-            // Strip markdown code fences if GLM wraps the JSON in them
-            const cleaned = rawText.replace(/```(?:json)?\n?/gi, '').replace(/```/g, '').trim();
-            geminiJson = JSON.parse(cleaned);
-        } else {
+            try {
+                const rawText = await callAI(systemPrompt, `User query: "${message}"`);
+                // Strip markdown code fences if GLM wraps the JSON in them
+                const cleaned = rawText.replace(/```(?:json)?\n?/gi, '').replace(/```/g, '').trim();
+                geminiJson = JSON.parse(cleaned);
+            } catch (glmErr) {
+                console.error('GLM API call failed, falling back to local parser:', glmErr.message);
+                // If GLM_API_KEY is invalid or GLM is unreachable, fall through to local parser
+                geminiJson = null;
+            }
+        }
+
+        if (!geminiJson) {
             console.warn("GLM_API_KEY not configured. Using local fallback parser for testing.");
             
             // Helper functions for fallback parsing
