@@ -158,34 +158,34 @@ function getGreeting(name) {
     const greetings = {
         morning: [
             { text: `Time to open shop, ${firstName}!`, emoji: "☀️" },
-            { text: `Morning blessings, ${firstName}!`, emoji: "⚡" },
-            { text: `Make we clear stock today, ${firstName}!`, emoji: "📦" },
-            { text: `Sales go make sense today, ${firstName}!`, emoji: "🚀" },
+            { text: `Welcome back, ${firstName}! Wishing you a productive day.`, emoji: "⚡" },
+            { text: `Ready to manage your inventory, ${firstName}?`, emoji: "📦" },
+            { text: `Let's drive some sales today, ${firstName}!`, emoji: "🚀" },
             { text: `Good morning, ${firstName}!`, emoji: "👋" },
-            { text: `A brand new day of profits, ${firstName}!`, emoji: "💼" }
+            { text: `A brand new day of business, ${firstName}!`, emoji: "💼" }
         ],
         afternoon: [
-            { text: `How market dey go, ${firstName}?`, emoji: "📈" },
-            { text: `No dulling this afternoon, ${firstName}!`, emoji: "💪" },
+            { text: `How is business going this afternoon, ${firstName}?`, emoji: "📈" },
+            { text: `Welcome back, ${firstName}! Keep up the great work.`, emoji: "💪" },
             { text: `Good afternoon, ${firstName}!`, emoji: "👋" },
-            { text: `Customer first, ${firstName}!`, emoji: "🤝" },
-            { text: `Time to log some sales, ${firstName}!`, emoji: "💸" },
-            { text: `Work session active, ${firstName}!`, emoji: "🏬" }
+            { text: `Ready to log your afternoon sales, ${firstName}?`, emoji: "💸" },
+            { text: `Active session monitoring, ${firstName}.`, emoji: "🏬" },
+            { text: `Have a successful afternoon, ${firstName}!`, emoji: "🌟" }
         ],
         evening: [
-            { text: `Hope today's sales sweet, ${firstName}?`, emoji: "🌟" },
-            { text: `Evening cash-out time, ${firstName}!`, emoji: "💰" },
+            { text: `How was your sales day, ${firstName}?`, emoji: "📊" },
+            { text: `Time to review your daily summary, ${firstName}.`, emoji: "💰" },
             { text: `Good evening, ${firstName}!`, emoji: "👋" },
-            { text: `How e go today, ${firstName}?`, emoji: "🚀" },
-            { text: `What's the final count today, ${firstName}?`, emoji: "📦" },
-            { text: `Closing hours vibes, ${firstName}!`, emoji: "🌜" }
+            { text: `Hope it was a successful business day, ${firstName}!`, emoji: "🚀" },
+            { text: `Ready to review today's final count, ${firstName}?`, emoji: "📦" },
+            { text: `Closing hours review, ${firstName}.`, emoji: "🌜" }
         ],
         night: [
-            { text: `Late night sales check, ${firstName}!`, emoji: "🌙" },
-            { text: `Late night counting, ${firstName}!`, emoji: "💸" },
-            { text: `Still awake checking inventory, ${firstName}?`, emoji: "🔍" },
-            { text: `Business never sleeps, ${firstName}!`, emoji: "🚀" },
-            { text: `Night shift cashier active, ${firstName}!`, emoji: "🏬" }
+            { text: `Checking night shift logs, ${firstName}?`, emoji: "🌙" },
+            { text: `Reviewing store analytics, ${firstName}.`, emoji: "📊" },
+            { text: `Still working hard, ${firstName}? Rest up soon.`, emoji: "🔍" },
+            { text: `Late night summary check, ${firstName}.`, emoji: "💸" },
+            { text: `Active inventory review, ${firstName}.`, emoji: "🏬" }
         ]
     };
 
