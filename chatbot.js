@@ -1002,15 +1002,12 @@ Return this exact shape:
         // than 50% confident), hand the raw message back to GLM-4 for a
         // friendly, context-aware conversational reply.
         if (intent === 'unknown' || (typeof confidence === 'number' && confidence < 0.5)) {
-            if (process.env.GLM_API_KEY) {
+            const hasGemini = !!process.env.GEMINI_API_KEY;
+            const hasGLM = process.env.GLM_API_KEY && process.env.GLM_API_KEY !== 'your_key_here';
+
+            if (hasGemini || hasGLM) {
                 try {
-                    const glm = getGLMClient();
-                    const generalResponse = await glm.chat.completions.create({
-                        model: 'glm-4-flash',
-                        messages: [
-                            {
-                                role: 'system',
-                                content: IDENTITY + `
+                    const systemPrompt = IDENTITY + `
 
 # CONVERSATIONAL MODE
 The user's message did not match a clear inventory command.
@@ -1018,21 +1015,15 @@ Respond naturally and helpfully in plain conversational text — do NOT return J
 Remember to respond ONLY in proper, professional, and friendly standard English. Do NOT use Pidgin or local slang.
 If it looks like an inventory action with missing details, ask ONE targeted question in standard English.
 If the user is asking how to use SharpTrack, explain with short examples.
-Never say you don't understand. Always guide, teach, or ask a follow-up.`
-                            },
-                            { role: 'user', content: message }
-                        ]
-                    });
-                    responseMessage = generalResponse.choices[0].message.content;
-                } catch (glmErr) {
-                    console.error('GLM general-conversation fallback failed:', glmErr.message);
-                    // Graceful degradation: use a warm static reply
-                    responseMessage = geminiJson.reply ||
+Never say you don't understand. Always guide, teach, or ask a follow-up.`;
+                    responseMessage = await callAI(systemPrompt, message);
+                } catch (aiErr) {
+                    console.error('AI general-conversation fallback failed:', aiErr.message);
+                    responseMessage = (geminiJson && geminiJson.reply) ||
                         "I am here to help! 😊 Let me know what you need—I can help you manage your stock, record sales, or check prices.";
                 }
             } else {
-                // No GLM key: friendly static fallback
-                responseMessage = geminiJson.reply ||
+                responseMessage = (geminiJson && geminiJson.reply) ||
                     "I am here to help! 😊 Let me know what you need—I can help you manage your stock, record sales, or check prices.";
             }
 
