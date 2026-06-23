@@ -146,11 +146,52 @@ function formatNumber(num) {
     return Number(num || 0).toLocaleString();
 }
 
-function getGreeting() {
+function getGreeting(name) {
+    const firstName = name ? name.split(' ')[0] : 'Merchant';
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+    
+    let timeOfDay = 'morning';
+    if (hour >= 12 && hour < 16) timeOfDay = 'afternoon';
+    else if (hour >= 16 && hour < 22) timeOfDay = 'evening';
+    else if (hour >= 22 || hour < 4) timeOfDay = 'night';
+
+    const greetings = {
+        morning: [
+            { text: `Time to open shop, ${firstName}!`, emoji: "☀️" },
+            { text: `Morning blessings, ${firstName}!`, emoji: "⚡" },
+            { text: `Make we clear stock today, ${firstName}!`, emoji: "📦" },
+            { text: `Sales go make sense today, ${firstName}!`, emoji: "🚀" },
+            { text: `Good morning, ${firstName}!`, emoji: "👋" },
+            { text: `A brand new day of profits, ${firstName}!`, emoji: "💼" }
+        ],
+        afternoon: [
+            { text: `How market dey go, ${firstName}?`, emoji: "📈" },
+            { text: `No dulling this afternoon, ${firstName}!`, emoji: "💪" },
+            { text: `Good afternoon, ${firstName}!`, emoji: "👋" },
+            { text: `Customer first, ${firstName}!`, emoji: "🤝" },
+            { text: `Time to log some sales, ${firstName}!`, emoji: "💸" },
+            { text: `Work session active, ${firstName}!`, emoji: "🏬" }
+        ],
+        evening: [
+            { text: `Hope today's sales sweet, ${firstName}?`, emoji: "🌟" },
+            { text: `Evening cash-out time, ${firstName}!`, emoji: "💰" },
+            { text: `Good evening, ${firstName}!`, emoji: "👋" },
+            { text: `How e go today, ${firstName}?`, emoji: "🚀" },
+            { text: `What's the final count today, ${firstName}?`, emoji: "📦" },
+            { text: `Closing hours vibes, ${firstName}!`, emoji: "🌜" }
+        ],
+        night: [
+            { text: `Late night sales check, ${firstName}!`, emoji: "🌙" },
+            { text: `Late night counting, ${firstName}!`, emoji: "💸" },
+            { text: `Still awake checking inventory, ${firstName}?`, emoji: "🔍" },
+            { text: `Business never sleeps, ${firstName}!`, emoji: "🚀" },
+            { text: `Night shift cashier active, ${firstName}!`, emoji: "🏬" }
+        ]
+    };
+
+    const options = greetings[timeOfDay];
+    const randomIndex = Math.floor(Math.random() * options.length);
+    return options[randomIndex];
 }
 
 function timeAgo(dateString) {

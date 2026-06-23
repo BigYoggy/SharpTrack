@@ -258,7 +258,9 @@
 
             // Set greeting immediately from cached data
             if (user) {
-                document.getElementById('greeting-text').textContent = `${getGreeting()}, ${getUserFirstName(user.name)}!`;
+                const greeting = getGreeting(user.name);
+                document.getElementById('greeting-text').textContent = greeting.text;
+                document.getElementById('greeting-wave').textContent = greeting.emoji;
                 document.getElementById('greeting-sub').textContent = "Here's what's happening with your business today.";
                 document.getElementById('user-avatar').textContent = getUserInitials(user.name);
             }
@@ -280,7 +282,9 @@
                 if (userData.status === 'fulfilled') {
                     const u = userData.value.user;
                     localStorage.setItem('st_user', JSON.stringify(u));
-                    document.getElementById('greeting-text').textContent = `${getGreeting()}, ${getUserFirstName(u.name)}!`;
+                    const greeting = getGreeting(u.name);
+                    document.getElementById('greeting-text').textContent = greeting.text;
+                    document.getElementById('greeting-wave').textContent = greeting.emoji;
                     document.getElementById('user-avatar').textContent = getUserInitials(u.name);
                 }
 
