@@ -591,6 +591,14 @@ let fallbackIndex = 0;
 function initAiChatbot() {
     if (aiChatInitialized) return;
     
+    // Do not show the chatbot on the landing/login page or signup page
+    const path = window.location.pathname.toLowerCase();
+    const isLoginOrHome = path === '/' || path.endsWith('/') || path.endsWith('index.html');
+    const isSignup = path.includes('signup.html') || path.endsWith('/signup');
+    if (isLoginOrHome || isSignup) {
+        return;
+    }
+    
     const chatHtml = `
         <button class="ai-chat-btn" id="ai-chat-btn" onclick="openAiChat()" aria-label="Open AI Assistant">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>

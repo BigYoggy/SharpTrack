@@ -1882,7 +1882,7 @@ svg.icon-lg { width: 28px; height: 28px; }
     }
     
     /* Stack dashboard stats cards */
-    .stat-cards, .dashboard-stats-grid {
+    .stat-cards {
         grid-template-columns: 1fr !important;
     }
     

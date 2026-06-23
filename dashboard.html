@@ -120,11 +120,12 @@
     <div class="content" id="main-content">
 
         <!-- WELCOME -->
-        <div class="welcome-row">
-            <div class="avatar" id="user-avatar">?</div>
-            <div class="greeting">
-                <h1 id="greeting-text">Loading...</h1>
-                <p id="greeting-sub">Loading your business data...</p>
+        <div class="welcome-section" style="margin-bottom: 24px;">
+            <h1 id="greeting-text" style="font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px;">Loading...</h1>
+            <div id="greeting-wave" style="font-size: 24px; margin-bottom: 12px; line-height: 1;">👋</div>
+            <div class="welcome-row" style="display: flex; align-items: center; gap: 12px; margin-top: 12px;">
+                <div class="avatar" id="user-avatar" style="width: 44px; height: 44px; font-size: 16px; font-weight: 800; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">?</div>
+                <p id="greeting-sub" style="font-size: 13.5px; color: var(--muted); margin: 0; line-height: 1.45;">Loading your business data...</p>
             </div>
         </div>
 
@@ -257,7 +258,7 @@
 
             // Set greeting immediately from cached data
             if (user) {
-                document.getElementById('greeting-text').textContent = `${getGreeting()}, ${getUserFirstName(user.name)}! 👋`;
+                document.getElementById('greeting-text').textContent = `${getGreeting()}, ${getUserFirstName(user.name)}!`;
                 document.getElementById('greeting-sub').textContent = "Here's what's happening with your business today.";
                 document.getElementById('user-avatar').textContent = getUserInitials(user.name);
             }
@@ -279,7 +280,7 @@
                 if (userData.status === 'fulfilled') {
                     const u = userData.value.user;
                     localStorage.setItem('st_user', JSON.stringify(u));
-                    document.getElementById('greeting-text').textContent = `${getGreeting()}, ${getUserFirstName(u.name)}! 👋`;
+                    document.getElementById('greeting-text').textContent = `${getGreeting()}, ${getUserFirstName(u.name)}!`;
                     document.getElementById('user-avatar').textContent = getUserInitials(u.name);
                 }
 
