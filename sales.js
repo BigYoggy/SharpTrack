@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('./lib/prisma');
 const authMiddleware = require('./middleware/auth');
+const { isValidId } = require('./lib/validation');
 
 // RECORD A SALE
 router.post('/', authMiddleware, async (req, res) => {
@@ -11,49 +12,80 @@ router.post('/', authMiddleware, async (req, res) => {
         return res.status(400).json({ error: 'Product and quantity are required' });
     }
 
-    if (parseInt(quantitySold) <= 0) {
+    if (!isValidId(productId)) {
+        return res.status(400).json({ error: 'Invalid product ID format' });
+    }
+
+    const qtyToSold = parseInt(quantitySold);
+    if (isNaN(qtyToSold) || qtyToSold <= 0) {
         return res.status(400).json({ error: 'Quantity must be at least 1' });
     }
 
     try {
-        const product = await prisma.product.findUnique({ where: { id: productId } });
-        if (!product) return res.status(404).json({ error: 'Product not found' });
-        if (product.userId !== req.userId) return res.status(403).json({ error: 'Access denied' });
-        if (product.quantity < quantitySold) return res.status(400).json({ error: 'Not enough stock. Available: ' + product.quantity });
-
-        const totalAmount = product.sellingPrice * parseInt(quantitySold);
-
-        const sale = await prisma.sale.create({
-            data: {
-                productId,
-                quantitySold: parseInt(quantitySold),
-                totalAmount,
-                paymentMethod: paymentMethod || 'cash',
+        // Double-click / Spam prevention: Check if identical sale recorded in last 5 seconds
+        const recentSale = await prisma.sale.findFirst({
+            where: {
                 userId: req.userId,
-                productName: product.name,
-                unitPrice: product.sellingPrice
+                productId,
+                quantitySold: qtyToSold,
+                soldAt: { gte: new Date(Date.now() - 5000) }
             }
         });
+        if (recentSale) {
+            return res.status(409).json({ error: 'Duplicate sale detected. Please wait a moment.' });
+        }
 
-        // Update stock
-        const newQuantity = product.quantity - parseInt(quantitySold);
-        await prisma.product.update({
-            where: { id: productId },
-            data: { quantity: newQuantity }
+        // Perform stock validation and record sale atomically within a transaction
+        const result = await prisma.$transaction(async (tx) => {
+            const product = await tx.product.findUnique({ where: { id: productId } });
+            if (!product) throw new Error('NOT_FOUND');
+            if (product.userId !== req.userId) throw new Error('FORBIDDEN');
+            if (product.quantity < qtyToSold) {
+                throw new Error('OUT_OF_STOCK');
+            }
+
+            const totalAmount = product.sellingPrice * qtyToSold;
+
+            // Decr stock atomically
+            const updatedProduct = await tx.product.update({
+                where: { id: productId },
+                data: { quantity: { decrement: qtyToSold } }
+            });
+
+            // Double check stock bounds
+            if (updatedProduct.quantity < 0) {
+                throw new Error('OUT_OF_STOCK');
+            }
+
+            const sale = await tx.sale.create({
+                data: {
+                    productId,
+                    quantitySold: qtyToSold,
+                    totalAmount,
+                    paymentMethod: paymentMethod || 'cash',
+                    userId: req.userId,
+                    productName: product.name,
+                    unitPrice: product.sellingPrice
+                }
+            });
+
+            return { sale, newQuantity: updatedProduct.quantity, productName: product.name, reorderLevel: product.reorderLevel, unit: product.unit };
         });
 
+        const { sale, newQuantity, productName, reorderLevel, unit } = result;
+
         // Check for low stock and create notification
-        if (newQuantity <= product.reorderLevel && newQuantity > 0) {
+        if (newQuantity <= reorderLevel && newQuantity > 0) {
             try {
                 await prisma.notification.create({
                     data: {
                         userId: req.userId,
-                        type: 'warning',
+                        type: 'WARNING',
                         title: 'Low Stock Alert',
-                        message: `${product.name} is running low (${newQuantity} ${product.unit} remaining). Consider restocking soon.`
+                        message: `${productName} is running low (${newQuantity} ${unit} remaining). Consider restocking soon.`
                     }
                 });
-            } catch (e) { /* notification creation is non-critical */ }
+            } catch (e) { /* non-critical */ }
         }
 
         if (newQuantity === 0) {
@@ -61,9 +93,9 @@ router.post('/', authMiddleware, async (req, res) => {
                 await prisma.notification.create({
                     data: {
                         userId: req.userId,
-                        type: 'error',
+                        type: 'SYSTEM',
                         title: 'Out of Stock!',
-                        message: `${product.name} is now out of stock. Restock immediately to avoid missed sales.`
+                        message: `${productName} is now out of stock. Restock immediately to avoid missed sales.`
                     }
                 });
             } catch (e) { /* non-critical */ }
@@ -71,6 +103,15 @@ router.post('/', authMiddleware, async (req, res) => {
 
         res.status(201).json({ message: 'Sale recorded', sale });
     } catch (err) {
+        if (err.message === 'NOT_FOUND') {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        if (err.message === 'FORBIDDEN') {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+        if (err.message === 'OUT_OF_STOCK') {
+            return res.status(400).json({ error: 'Not enough stock available.' });
+        }
         console.error('Record sale error:', err.message);
         res.status(500).json({ error: 'Failed to record sale' });
     }
@@ -316,6 +357,7 @@ router.get('/top-products', authMiddleware, async (req, res) => {
 });
 
 // GET DETAILED ANALYTICS (Revenue, Cost, profit/gains)
+// GET DETAILED ANALYTICS (Revenue, Cost, profit/gains)
 router.get('/analytics', authMiddleware, async (req, res) => {
     let timezoneOffset = -60; // Default to Nigeria (UTC+1)
     if (req.query.timezoneOffset !== undefined) {
@@ -328,16 +370,49 @@ router.get('/analytics', authMiddleware, async (req, res) => {
     // Convert current time to local time in merchant's timezone
     const localNow = new Date(now.getTime() - (timezoneOffset * 60 * 1000));
     
+    // Current boundaries in local time
+    const todayStr = localNow.toISOString().split('T')[0];
+
+    // Last 24 hours start
+    const last24hStart = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+    
+    // Last 7 days start (including today)
+    const last7dStart = new Date(localNow.getTime() - (6 * 24 * 60 * 60 * 1000));
+    last7dStart.setUTCHours(0, 0, 0, 0);
+    const last7dStartUtc = new Date(last7dStart.getTime() + (timezoneOffset * 60 * 1000));
+
+    // Last 30 days start (including today)
+    const last30dStart = new Date(localNow.getTime() - (29 * 24 * 60 * 60 * 1000));
+    last30dStart.setUTCHours(0, 0, 0, 0);
+    const last30dStartUtc = new Date(last30dStart.getTime() + (timezoneOffset * 60 * 1000));
+
+    // Previous periods for comparison
+    const prevLast24hStart = new Date(now.getTime() - (48 * 60 * 60 * 1000));
+    
+    const prevLast7dStart = new Date(last7dStart.getTime() - (7 * 24 * 60 * 60 * 1000));
+    const prevLast7dStartUtc = new Date(prevLast7dStart.getTime() + (timezoneOffset * 60 * 1000));
+    
+    const prevLast30dStart = new Date(last30dStart.getTime() - (30 * 24 * 60 * 60 * 1000));
+    const prevLast30dStartUtc = new Date(prevLast30dStart.getTime() + (timezoneOffset * 60 * 1000));
+
+    // Oldest date to fetch from the database to satisfy the summaries and comparison period
+    // If the active range is month, we need to go back 60 days (previous month range)
+    // Otherwise, we need at least 30 days to populate the monthly summary card correctly
+    const dbStartDateUtc = range === 'month' ? prevLast30dStartUtc : last30dStartUtc;
+
     try {
-        // Fetch all sales for this user with their product details to calculate cost
+        // Fetch only recent sales for this user, and EXCLUDE the image field to prevent P6009 payload limits (since products can have large base64 images)
         const sales = await prisma.sale.findMany({
-            where: { userId: req.userId },
+            where: { 
+                userId: req.userId,
+                soldAt: { gte: dbStartDateUtc }
+            },
             include: {
                 product: {
                     select: {
                         costPrice: true,
                         sellingPrice: true,
-                        image: true,
+                        // image: true, <-- Excluded to keep payload size tiny and fast
                         unit: true
                     }
                 }
@@ -368,31 +443,6 @@ router.get('/analytics', authMiddleware, async (req, res) => {
             const hour = localTime.getUTCHours().toString().padStart(2, '0');
             return `${datePart} ${hour}:00`;
         };
-
-        // Current boundaries in local time
-        const todayStr = localNow.toISOString().split('T')[0];
-
-        // Last 24 hours start
-        const last24hStart = new Date(now.getTime() - (24 * 60 * 60 * 1000));
-        
-        // Last 7 days start (including today)
-        const last7dStart = new Date(localNow.getTime() - (6 * 24 * 60 * 60 * 1000));
-        last7dStart.setUTCHours(0, 0, 0, 0);
-        const last7dStartUtc = new Date(last7dStart.getTime() + (timezoneOffset * 60 * 1000));
-
-        // Last 30 days start (including today)
-        const last30dStart = new Date(localNow.getTime() - (29 * 24 * 60 * 60 * 1000));
-        last30dStart.setUTCHours(0, 0, 0, 0);
-        const last30dStartUtc = new Date(last30dStart.getTime() + (timezoneOffset * 60 * 1000));
-
-        // Previous periods for comparison
-        const prevLast24hStart = new Date(now.getTime() - (48 * 60 * 60 * 1000));
-        
-        const prevLast7dStart = new Date(last7dStart.getTime() - (7 * 24 * 60 * 60 * 1000));
-        const prevLast7dStartUtc = new Date(prevLast7dStart.getTime() + (timezoneOffset * 60 * 1000));
-        
-        const prevLast30dStart = new Date(last30dStart.getTime() - (30 * 24 * 60 * 60 * 1000));
-        const prevLast30dStartUtc = new Date(prevLast30dStart.getTime() + (timezoneOffset * 60 * 1000));
 
         // Compute metrics
         let todayRevenue = 0, todayCost = 0, todayCount = 0;
