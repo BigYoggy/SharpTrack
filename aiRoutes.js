@@ -21,14 +21,10 @@ function getAi() {
 async function testAi(req, res) {
     try {
         const ai = getAi();
-        const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
-            contents: 'Say hello and confirm AI connection'
-        });
-        
+        const response = await ai.models.list();
         res.json({
             success: true,
-            result: response.text
+            models: response
         });
     } catch (err) {
         console.error('Test AI Error:', err);
