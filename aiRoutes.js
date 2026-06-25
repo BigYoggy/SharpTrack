@@ -83,7 +83,7 @@ async function scanProductLogic(req, res) {
                     debug: "No image provided (empty imageBase64)"
                 });
             }
-            base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+            base64Data = imageBase64.replace(/^data:image\/\w+;base64,/i, "");
             if (bodyMime) mimeType = bodyMime;
         }
 
@@ -116,6 +116,9 @@ async function scanProductLogic(req, res) {
                 success: false,
                 debug: `Image validation failed: ${imgVal.error}`
             });
+        }
+        if (imgVal.mimeType) {
+            mimeType = imgVal.mimeType;
         }
 
         console.log("Calling Gemini with fallbacks...");
@@ -153,6 +156,14 @@ Rules:
         console.log(response);
 
         // 4. Verify JSON output
+        const candidate = response.candidates?.[0];
+        if (!candidate) {
+            throw new Error("No response candidates returned by Gemini");
+        }
+        if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+            throw new Error(`Gemini generation finished with unexpected reason: ${candidate.finishReason}`);
+        }
+
         const text = response.text;
         let jsonResult;
         try {

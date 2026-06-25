@@ -829,7 +829,10 @@
 
                 if (!response.ok) {
                     let errorMsg = 'Unable to analyze product.';
-                    if (response.status === 400) {
+                    const serverError = result && (result.error || result.debug);
+                    if (serverError) {
+                        errorMsg = serverError;
+                    } else if (response.status === 400) {
                         errorMsg = "Invalid image request";
                     } else if (response.status === 401 || response.status === 403) {
                         errorMsg = "Authentication problem";
@@ -840,7 +843,7 @@
                     } else if (response.status === 500) {
                         errorMsg = "Backend AI processing failed";
                     } else {
-                        errorMsg = (result && (result.error || result.debug)) || `Server error (${response.status})`;
+                        errorMsg = `Server error (${response.status})`;
                     }
                     throw new Error(errorMsg);
                 }
