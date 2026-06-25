@@ -2,6 +2,16 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('./lib/prisma');
 const authMiddleware = require('./middleware/auth');
+const { isValidId, isValidBarcode, validateImageContent } = require('./lib/validation');
+const { logActivity } = require('./lib/monitoring');
+
+// Centralized ID parameter validator middleware
+router.param('id', (req, res, next, id) => {
+    if (!isValidId(id)) {
+        return res.status(400).json({ error: 'Invalid ID format' });
+    }
+    next();
+});
 
 // ADD PRODUCT
 router.post('/', authMiddleware, async (req, res) => {
@@ -12,11 +22,26 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 
     if (parseFloat(sellingPrice) <= 0 || parseFloat(costPrice) < 0) {
-        return res.status(400).json({ error: 'Invalid prices' });
+        return res.status(400).json({ error: 'Invalid prices: Selling price must be > 0 and Cost price >= 0' });
     }
 
     if (parseInt(quantity) < 0) {
         return res.status(400).json({ error: 'Quantity cannot be negative' });
+    }
+
+    if (categoryId && !isValidId(categoryId)) {
+        return res.status(400).json({ error: 'Invalid category ID format' });
+    }
+
+    if (barcode && !isValidBarcode(barcode)) {
+        return res.status(400).json({ error: 'Invalid barcode format' });
+    }
+
+    if (image) {
+        const imgVal = validateImageContent(image);
+        if (!imgVal.valid) {
+            return res.status(400).json({ error: `Image validation failed: ${imgVal.error}` });
+        }
     }
 
     try {
@@ -46,6 +71,10 @@ router.post('/', authMiddleware, async (req, res) => {
         };
 
         const product = await prisma.product.create({ data });
+
+        // Log activity
+        await logActivity(req.userId, 'product_created', `Created product: ${product.name} (Qty: ${product.quantity})`);
+
         res.status(201).json({ message: 'Product added', product });
     } catch (err) {
         console.error('Add product error:', err.message);
@@ -110,6 +139,10 @@ router.get('/barcode/:code', authMiddleware, async (req, res) => {
         return res.status(400).json({ error: 'Barcode parameter is required' });
     }
 
+    if (!isValidBarcode(code)) {
+        return res.status(400).json({ error: 'Invalid barcode format' });
+    }
+
     try {
         // Find match in current user's products first
         let product = await prisma.product.findFirst({
@@ -135,7 +168,8 @@ router.get('/barcode/:code', authMiddleware, async (req, res) => {
                     brand: product.brand,
                     weight: product.weight,
                     category: product.category ? product.category.name : null,
-                    costPrice: product.costPrice,
+                    // Security check: Only reveal cost price if they own the product record
+                    costPrice: product.userId === req.userId ? product.costPrice : null,
                     sellingPrice: product.sellingPrice,
                     unit: product.unit,
                     description: product.description
@@ -152,7 +186,38 @@ router.get('/barcode/:code', authMiddleware, async (req, res) => {
 
 // UPDATE PRODUCT
 router.put('/:id', authMiddleware, async (req, res) => {
+    if (!isValidId(req.params.id)) {
+        return res.status(400).json({ error: 'Invalid product ID format' });
+    }
+
     const { name, sellingPrice, costPrice, quantity, reorderLevel, unit, brand, weight, barcode, description, categoryId, image } = req.body;
+
+    if (sellingPrice !== undefined && parseFloat(sellingPrice) <= 0) {
+        return res.status(400).json({ error: 'Selling price must be greater than zero' });
+    }
+
+    if (costPrice !== undefined && costPrice !== null && parseFloat(costPrice) < 0) {
+        return res.status(400).json({ error: 'Cost price cannot be negative' });
+    }
+
+    if (quantity !== undefined && parseInt(quantity) < 0) {
+        return res.status(400).json({ error: 'Quantity cannot be negative' });
+    }
+
+    if (categoryId && !isValidId(categoryId)) {
+        return res.status(400).json({ error: 'Invalid category ID format' });
+    }
+
+    if (barcode && !isValidBarcode(barcode)) {
+        return res.status(400).json({ error: 'Invalid barcode format' });
+    }
+
+    if (image) {
+        const imgVal = validateImageContent(image);
+        if (!imgVal.valid) {
+            return res.status(400).json({ error: `Image validation failed: ${imgVal.error}` });
+        }
+    }
 
     try {
         // Verify ownership
@@ -166,7 +231,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
             data: { 
                 name: name ? name.trim() : existing.name, 
                 sellingPrice: sellingPrice !== undefined ? parseFloat(sellingPrice) : existing.sellingPrice, 
-                costPrice: costPrice !== undefined ? parseFloat(costPrice) : existing.costPrice,
+                costPrice: costPrice !== undefined && costPrice !== null ? parseFloat(costPrice) : (costPrice === null ? null : existing.costPrice),
                 quantity: quantity !== undefined ? parseInt(quantity) : existing.quantity, 
                 reorderLevel: reorderLevel !== undefined ? parseInt(reorderLevel) : existing.reorderLevel, 
                 unit: unit || existing.unit,
@@ -187,6 +252,10 @@ router.put('/:id', authMiddleware, async (req, res) => {
 
 // DELETE PRODUCT
 router.delete('/:id', authMiddleware, async (req, res) => {
+    if (!isValidId(req.params.id)) {
+        return res.status(400).json({ error: 'Invalid product ID format' });
+    }
+
     try {
         // Verify ownership
         const existing = await prisma.product.findUnique({ where: { id: req.params.id } });
@@ -197,6 +266,10 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         // Delete related sales first
         await prisma.sale.deleteMany({ where: { productId: req.params.id } });
         await prisma.product.delete({ where: { id: req.params.id } });
+
+        // Log activity
+        await logActivity(req.userId, 'product_deleted', `Deleted product: ${existing.name}`);
+
         res.json({ message: 'Product deleted' });
     } catch (err) {
         console.error('Delete product error:', err.message);

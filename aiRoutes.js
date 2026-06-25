@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('./middleware/auth');
 const { GoogleGenAI } = require('@google/genai');
+const { validateImageContent } = require('./lib/validation');
 
 let aiInstance = null;
 
@@ -86,13 +87,13 @@ async function scanProductLogic(req, res) {
             });
         }
 
-        // 3. Verify request image format
-        const allowedFormats = ['image/jpeg', 'image/png', 'image/webp'];
-        if (!allowedFormats.includes(mimeType)) {
-            console.error("Gemini failure: Unsupported request image format:", mimeType);
+        // 3. Verify request image format and magic bytes signature
+        const imgVal = validateImageContent(base64Data);
+        if (!imgVal.valid) {
+            console.error("Gemini failure: Invalid image content:", imgVal.error);
             return res.status(400).json({
                 success: false,
-                debug: `Unsupported request image format: ${mimeType}`
+                debug: `Image validation failed: ${imgVal.error}`
             });
         }
 

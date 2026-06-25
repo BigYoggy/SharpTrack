@@ -2,6 +2,15 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('./lib/prisma');
 const authMiddleware = require('./middleware/auth');
+const { isValidId } = require('./lib/validation');
+
+// Centralized ID parameter validator middleware
+router.param('id', (req, res, next, id) => {
+    if (!isValidId(id)) {
+        return res.status(400).json({ error: 'Invalid ID format' });
+    }
+    next();
+});
 
 // GET ALL NOTIFICATIONS
 router.get('/', authMiddleware, async (req, res) => {
@@ -37,13 +46,23 @@ router.get('/count', authMiddleware, async (req, res) => {
 
 // MARK ONE AS READ
 router.put('/:id/read', authMiddleware, async (req, res) => {
+    if (!isValidId(req.params.id)) {
+        return res.status(400).json({ error: 'Invalid notification ID format' });
+    }
+
     try {
+        const existing = await prisma.notification.findUnique({ where: { id: req.params.id } });
+        if (!existing || existing.userId !== req.userId) {
+            return res.status(404).json({ error: 'Notification not found' });
+        }
+
         await prisma.notification.update({
             where: { id: req.params.id },
             data: { read: true }
         });
         res.json({ message: 'Notification marked as read' });
     } catch (err) {
+        console.error('Update notification error:', err.message);
         res.status(500).json({ error: 'Failed to update notification' });
     }
 });
@@ -63,12 +82,22 @@ router.put('/read-all', authMiddleware, async (req, res) => {
 
 // DELETE NOTIFICATION
 router.delete('/:id', authMiddleware, async (req, res) => {
+    if (!isValidId(req.params.id)) {
+        return res.status(400).json({ error: 'Invalid notification ID format' });
+    }
+
     try {
+        const existing = await prisma.notification.findUnique({ where: { id: req.params.id } });
+        if (!existing || existing.userId !== req.userId) {
+            return res.status(404).json({ error: 'Notification not found' });
+        }
+
         await prisma.notification.delete({
             where: { id: req.params.id }
         });
         res.json({ message: 'Notification deleted' });
     } catch (err) {
+        console.error('Delete notification error:', err.message);
         res.status(500).json({ error: 'Failed to delete notification' });
     }
 });

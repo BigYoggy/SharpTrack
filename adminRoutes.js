@@ -4,6 +4,15 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('./lib/prisma');
 const adminAuth = require('./middleware/adminAuth');
+const { isValidId } = require('./lib/validation');
+
+// Centralized ID parameter validator middleware
+router.param('id', (req, res, next, id) => {
+    if (!isValidId(id)) {
+        return res.status(400).json({ error: 'Invalid ID format' });
+    }
+    next();
+});
 
 // In-memory rate limiting & temporary lockout store
 const loginAttempts = {};

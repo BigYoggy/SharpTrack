@@ -9,17 +9,88 @@ const app = express();
 // Trust proxy settings (required for accurate client IP detection behind Netlify/Render proxies)
 app.set('trust proxy', 1);
 
+// Custom HTTP Security Headers
+app.use((req, res, next) => {
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Content-Security-Policy', "default-src 'self' https:; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https:;");
+    next();
+});
+
 // Security & parsing middleware
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5000',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5000'
+];
+if (process.env.FRONTEND_URL) {
+    allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow all origins dynamically
-        callback(null, true);
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json({ limit: '10mb' }));
+
+// Rate limiters configuration
+const authLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 5,
+    message: { error: 'Too many requests. Please try again in a minute.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const otpLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 3,
+    message: { error: 'Too many OTP requests. Please try again in a minute.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const aiLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 20,
+    message: { error: 'Too many requests. Please try again in a minute.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const productCreateLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 10,
+    message: { error: 'Too many products created. Please try again in a minute.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Apply rate limiters to matching routes
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/otp/send', otpLimiter);
+app.use('/api/ai/', aiLimiter);
+app.use('/api/chat', aiLimiter);
+app.use('/api/products', (req, res, next) => {
+    if (req.method === 'POST') {
+        return productCreateLimiter(req, res, next);
+    }
+    next();
+});
 
 const jwt = require('jsonwebtoken');
 

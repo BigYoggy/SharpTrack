@@ -6,27 +6,41 @@ const prisma = require('./lib/prisma');
 const authMiddleware = require('./middleware/auth');
 
 const { otpStore } = require('./store');
+const { logActivity, createNotification } = require('./lib/monitoring');
 
-// Helper: log activity
-async function logActivity(userId, action, details) {
-    try {
-        await prisma.activityLog.create({
-            data: { userId, action, details }
-        });
-    } catch (err) {
-        console.error('Failed to log activity:', err.message);
+// Lockout state for merchant login attempts
+const merchantLoginAttempts = {};
+const MERCH_LIMIT_MAX = 5;
+const MERCH_LOCKOUT_MINUTES = 15;
+
+function checkMerchantLockout(phone) {
+    const record = merchantLoginAttempts[phone];
+    if (record) {
+        const now = Date.now();
+        if (record.lockUntil && record.lockUntil > now) {
+            const remaining = Math.ceil((record.lockUntil - now) / 60000);
+            return { locked: true, remaining };
+        }
+        if (record.lockUntil && record.lockUntil <= now) {
+            delete merchantLoginAttempts[phone];
+        }
+    }
+    return { locked: false };
+}
+
+function recordMerchantFailedAttempt(phone) {
+    if (!merchantLoginAttempts[phone]) {
+        merchantLoginAttempts[phone] = { count: 1, lockUntil: null };
+    } else {
+        merchantLoginAttempts[phone].count += 1;
+        if (merchantLoginAttempts[phone].count >= MERCH_LIMIT_MAX) {
+            merchantLoginAttempts[phone].lockUntil = Date.now() + MERCH_LOCKOUT_MINUTES * 60 * 1000;
+        }
     }
 }
 
-// Helper: create notification
-async function createNotification(userId, type, title, message) {
-    try {
-        await prisma.notification.create({
-            data: { userId, type, title, message }
-        });
-    } catch (err) {
-        console.error('Failed to create notification:', err.message);
-    }
+function resetMerchantFailedAttempts(phone) {
+    delete merchantLoginAttempts[phone];
 }
 
 // REGISTER
@@ -51,6 +65,13 @@ router.post('/register', async (req, res) => {
 
     try {
         const cleanPhone = phone.replace(/[^0-9]/g, '');
+
+        // Enforce OTP verification check
+        const otpRecord = otpStore[cleanPhone];
+        if (!otpRecord || !otpRecord.verified || Date.now() > otpRecord.verificationExpires) {
+            return res.status(400).json({ error: 'Phone number has not been verified via OTP or verification has expired.' });
+        }
+
         const existingUser = await prisma.user.findUnique({ where: { phone: cleanPhone } });
         if (existingUser) {
             return res.status(400).json({ error: 'This phone number is already registered. Please sign in instead.' });
@@ -66,10 +87,13 @@ router.post('/register', async (req, res) => {
             }
         });
 
+        // Consume the OTP verification session
+        delete otpStore[cleanPhone];
+
         // Create welcome notification
         await createNotification(
             user.id, 
-            'success', 
+            'info', 
             'Welcome to SharpTrack! 🎉', 
             'Your account has been created successfully. Start by adding your first product to inventory.'
         );
@@ -109,10 +133,20 @@ router.post('/login', async (req, res) => {
         return res.status(400).json({ error: 'Phone number and PIN are required' });
     }
 
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+
+    // Check account lockout
+    const lockout = checkMerchantLockout(cleanPhone);
+    if (lockout.locked) {
+        return res.status(429).json({ 
+            error: `Too many failed login attempts. This account is temporarily locked. Please try again in ${lockout.remaining} minute(s).` 
+        });
+    }
+
     try {
-        const cleanPhone = phone.replace(/[^0-9]/g, '');
         const user = await prisma.user.findUnique({ where: { phone: cleanPhone } });
         if (!user) {
+            recordMerchantFailedAttempt(cleanPhone);
             return res.status(400).json({ error: 'Invalid phone number or PIN' });
         }
 
@@ -122,8 +156,12 @@ router.post('/login', async (req, res) => {
 
         const pinMatch = await bcrypt.compare(pin, user.password);
         if (!pinMatch) {
+            recordMerchantFailedAttempt(cleanPhone);
             return res.status(400).json({ error: 'Invalid phone number or PIN' });
         }
+
+        // Reset lockout attempts on success
+        resetMerchantFailedAttempts(cleanPhone);
 
         const token = jwt.sign(
             { userId: user.id, phone: user.phone },
@@ -325,6 +363,109 @@ router.get('/achievements', authMiddleware, async (req, res) => {
     } catch (err) {
         console.error('Get achievements error:', err.message);
         res.status(500).json({ error: 'Failed to load achievements' });
+    }
+});
+
+// REQUEST PASSWORD (PIN) RESET (via OTP)
+router.post('/reset-pin/request', async (req, res) => {
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ error: 'Phone number is required' });
+    
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    try {
+        const user = await prisma.user.findUnique({ where: { phone: cleanPhone } });
+        if (!user) {
+            // To prevent username enumeration, we can return a generic success message or standard error.
+            // But since this is a merchant helper, return user-not-found so they know their input is wrong.
+            return res.status(404).json({ error: 'This phone number is not registered.' });
+        }
+        
+        // Generate reset OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const hashed = crypto.createHash('sha256').update(otp).digest('hex');
+        
+        const now = Date.now();
+        otpStore[cleanPhone] = {
+            hashedOtp: hashed,
+            expires: now + 5 * 60 * 1000,
+            attempts: 0,
+            verified: false,
+            purpose: 'reset_pin'
+        };
+        
+        console.log(`[OTP Reset Pin] OTP for ${cleanPhone}: ${otp}`);
+        
+        const { sendSMS } = require('./services/termii');
+        await sendSMS(cleanPhone, `Your SharpTrack security code to reset your PIN is: ${otp}. It expires in 5 minutes.`);
+        
+        res.json({ message: 'Reset code sent successfully' });
+    } catch (err) {
+        console.error('Reset PIN request error:', err.message);
+        res.status(500).json({ error: 'Failed to send reset code' });
+    }
+});
+
+// VERIFY PASSWORD (PIN) RESET
+router.post('/reset-pin/verify', async (req, res) => {
+    const { phone, otp, newPin } = req.body;
+    if (!phone || !otp || !newPin) {
+        return res.status(400).json({ error: 'Phone, OTP, and new PIN are required' });
+    }
+    
+    if (newPin.length !== 6 || !/^\d+$/.test(newPin)) {
+        return res.status(400).json({ error: 'PIN must be exactly 6 digits' });
+    }
+    
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    const record = otpStore[cleanPhone];
+    const now = Date.now();
+    
+    if (!record || record.purpose !== 'reset_pin' || !record.hashedOtp) {
+        return res.status(400).json({ error: 'OTP request not found. Please request a new one.' });
+    }
+    
+    if (now > record.expires) {
+        delete otpStore[cleanPhone];
+        return res.status(400).json({ error: 'OTP expired. Please request a new one.' });
+    }
+    
+    if (record.attempts >= 3) {
+        delete otpStore[cleanPhone];
+        return res.status(400).json({ error: 'Too many failed attempts. Please request a new OTP.' });
+    }
+    
+    const inputHash = crypto.createHash('sha256').update(otp).digest('hex');
+    
+    if (record.hashedOtp !== inputHash) {
+        record.attempts += 1;
+        if (record.attempts >= 3) {
+            delete otpStore[cleanPhone];
+            return res.status(400).json({ error: 'Too many failed attempts. Please request a new OTP.' });
+        }
+        return res.status(400).json({ error: `Invalid OTP. Attempts remaining: ${3 - record.attempts}` });
+    }
+    
+    try {
+        const hashedPin = await bcrypt.hash(newPin, 12);
+        await prisma.user.update({
+            where: { phone: cleanPhone },
+            data: { password: hashedPin }
+        });
+        
+        // Clear OTP session
+        delete otpStore[cleanPhone];
+        
+        // Fetch user to log activity and create welcome notifications
+        const user = await prisma.user.findUnique({ where: { phone: cleanPhone } });
+        if (user) {
+            await logActivity(user.id, 'pin_reset', 'PIN was reset successfully via OTP');
+            await createNotification(user.id, 'info', 'PIN Reset Successful', 'Your account login PIN was reset successfully.');
+        }
+        
+        res.json({ message: 'PIN reset successful. You can now log in.' });
+    } catch (err) {
+        console.error('Reset PIN verify error:', err.message);
+        res.status(500).json({ error: 'Failed to reset PIN' });
     }
 });
 

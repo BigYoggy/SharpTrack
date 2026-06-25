@@ -725,7 +725,16 @@ function appendAiMessage(sender, text) {
     const msg = document.createElement('div');
     msg.className = `ai-msg ${sender}`;
     
-    let formattedText = text
+    const escapeHtml = (str) => {
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
+    
+    let formattedText = escapeHtml(text)
         .replace(/\n/g, '<br>')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
