@@ -17,14 +17,39 @@ function getAi() {
     return aiInstance;
 }
 
+async function generateContentWithFallback(ai, contents, responseMimeType = null) {
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest', 'gemini-1.5-flash'];
+    let lastError = null;
+
+    for (const model of modelsToTry) {
+        try {
+            console.log(`Trying Gemini model: ${model}...`);
+            const config = responseMimeType ? { responseMimeType } : undefined;
+            const response = await ai.models.generateContent({
+                model,
+                contents,
+                config
+            });
+            console.log(`✔ SUCCESS with model: ${model}`);
+            return response;
+        } catch (err) {
+            console.warn(`Model ${model} failed: ${err.message}`);
+            lastError = err;
+        }
+    }
+
+    throw new Error(`All Gemini models failed. Last error: ${lastError ? lastError.message : 'Unknown error'}`);
+}
+
 // 1. GET /test-ai Endpoint Logic
 async function testAi(req, res) {
     try {
         const ai = getAi();
-        const response = await ai.models.list();
+        const response = await generateContentWithFallback(ai, 'Say hello and confirm AI connection');
+        
         res.json({
             success: true,
-            models: response
+            result: response.text
         });
     } catch (err) {
         console.error('Test AI Error:', err);
@@ -93,9 +118,7 @@ async function scanProductLogic(req, res) {
             });
         }
 
-        // 2. Verify model (model option specified in generateContent call)
-        const targetModel = 'gemini-1.5-flash';
-        console.log("Calling Gemini...");
+        console.log("Calling Gemini with fallbacks...");
 
         const prompt = `Analyze this product image and return ONLY valid JSON.
 Required fields:
@@ -116,21 +139,15 @@ Rules:
 * No extra text outside JSON`;
 
         const ai = getAi();
-        const response = await ai.models.generateContent({
-            model: targetModel,
-            contents: [
-                prompt,
-                {
-                    inlineData: {
-                        data: base64Data,
-                        mimeType: mimeType
-                    }
+        const response = await generateContentWithFallback(ai, [
+            prompt,
+            {
+                inlineData: {
+                    data: base64Data,
+                    mimeType: mimeType
                 }
-            ],
-            config: {
-                responseMimeType: "application/json"
             }
-        });
+        ], "application/json");
 
         console.log("Gemini response:");
         console.log(response);
@@ -242,16 +259,10 @@ Return ONLY a JSON object of this structure (all non-applicable fields must be n
   "percentage": number | null
 }`;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
-            contents: [
-                systemPrompt,
-                `User query: "${message}"`
-            ],
-            config: {
-                responseMimeType: "application/json"
-            }
-        });
+        const response = await generateContentWithFallback(ai, [
+            systemPrompt,
+            `User query: "${message}"`
+        ], "application/json");
 
         const resultJson = JSON.parse(response.text);
 
