@@ -808,40 +808,13 @@ async function sendAiMessage() {
     showAiThinking(true);
 
     try {
-        const customPrompt = `You are SharpTrack AI, a friendly and smart inventory assistant for Nigerian provision store owners.
-
-Understand natural language flexibly. Users may say things casually like:
-- "abeg put 50 Bournvita" 
-- "I don buy 100 indomie at 300 naira"
-- "how many peak milk I get"
-- "wetin dey run low"
-- "I don sell 5 fanta"
-
-Extract intent and return ONLY valid JSON:
-{
-  "intent": "add_product|update_price|check_stock|low_stock|record_sale|daily_summary|greeting|unknown",
-  "product": "product name or null",
-  "quantity": number or null,
-  "price": number or null,
-  "confidence": 0.0 to 1.0,
-  "reply": "friendly standard English response if intent is greeting or unknown"
-}
-
-For greetings like "hey", "hello", "how far" — return intent "greeting" with a friendly reply.
-For unclear messages — ask ONE clarifying question instead of repeating the same error.
-Never return the same error message twice in a row.
-Be conversational, helpful, and friendly.
-CRITICAL: Always respond in standard professional English. Never respond in Pidgin or slang.
-
-User query: "${query}"`;
-
         const response = await fetch(`${API_URL}/api/chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ message: customPrompt })
+            body: JSON.stringify({ message: query })
         });
 
         const parseData = await response.json();
