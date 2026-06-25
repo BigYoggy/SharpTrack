@@ -57,8 +57,8 @@ router.post('/', authMiddleware, async (req, res) => {
         return res.status(400).json({ error: 'Message is required' });
     }
 
-    if (message.length > 500) {
-        return res.status(400).json({ error: 'Message is too long. Maximum length is 500 characters.' });
+    if (message.length > 2000) {
+        return res.status(400).json({ error: 'Message is too long. Maximum length is 2000 characters.' });
     }
 
     try {
