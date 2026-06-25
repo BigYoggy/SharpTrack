@@ -20,6 +20,8 @@ app.use((req, res, next) => {
 
 // Security & parsing middleware
 const allowedOrigins = [
+    'https://sharptrack.space',
+    'https://sharptrack.vercel.app',
     'http://localhost:3000',
     'http://localhost:5000',
     'http://localhost:5173',
