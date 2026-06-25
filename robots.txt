@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /signup.html
+Allow: /help.html
+Allow: /verify.html
+
+# Block search engines from crawling private admin and dashboard pages
+Disallow: /dashboard.html
+Disallow: /add-stock.html
+Disallow: /analytics.html
+Disallow: /inventory.html
+Disallow: /record-sale.html
+Disallow: /more.html
+Disallow: /onboarding.html
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://sharptrack.space/sitemap.xml
