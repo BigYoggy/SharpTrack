@@ -1,53 +1,41 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('./middleware/auth');
-const OpenAI = require('openai');
+const { GoogleGenAI } = require('@google/genai');
 const axios = require('axios');
 const { logActivity } = require('./lib/monitoring');
 
-let glmClient = null;
-
-function getGLMClient() {
-    if (!glmClient) {
-        const apiKey = process.env.GLM_API_KEY;
-        if (!apiKey) {
-            throw new Error('GLM_API_KEY environment variable is not configured');
-        }
-        glmClient = new OpenAI({
-            apiKey: apiKey,
-            baseURL: 'https://open.bigmodel.cn/api/paas/v4/',
-            timeout: 15000
-        });
+async function callAI(systemPrompt, message) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        throw new Error('GEMINI_API_KEY environment variable is not configured');
     }
-    return glmClient;
-}
+    const ai = new GoogleGenAI({ apiKey });
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest', 'gemini-1.5-flash'];
+    let lastError = null;
 
-async function callAI(systemPrompt, message, retries = 3, initialDelay = 2000) {
-    const client = getGLMClient();
-    let delay = initialDelay;
-    
-    for (let i = 0; i < retries; i++) {
+    for (const model of modelsToTry) {
         try {
-            const response = await client.chat.completions.create({
-                model: 'glm-4.7-flash',
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: message }
-                ]
+            console.log(`Trying Gemini model for chat: ${model}...`);
+            const response = await ai.models.generateContent({
+                model,
+                contents: [
+                    systemPrompt,
+                    message
+                ],
+                config: {
+                    responseMimeType: 'application/json'
+                }
             });
-            return response.choices[0].message.content;
+            console.log(`✔ Chat SUCCESS with model: ${model}`);
+            return response.text;
         } catch (err) {
-            const isRateLimit = err.message.includes('429') || err.message.includes('访问量过大') || err.message.includes('rate limit') || err.message.includes('Limit') || err.status === 429;
-            const isTimeout = err.message.includes('timeout') || err.status === 408;
-            if ((isRateLimit || isTimeout) && i < retries - 1) {
-                console.warn(`[AI Error] Attempt ${i + 1} failed. Retrying in ${delay}ms... Error: ${err.message}`);
-                await new Promise(resolve => setTimeout(resolve, delay));
-                delay *= 2; // Exponential backoff
-                continue;
-            }
-            throw err;
+            console.warn(`Chat model ${model} failed: ${err.message}`);
+            lastError = err;
         }
     }
+
+    throw new Error(`All Gemini models failed for chat. Last error: ${lastError ? lastError.message : 'Unknown error'}`);
 }
 
 // POST /api/chat
