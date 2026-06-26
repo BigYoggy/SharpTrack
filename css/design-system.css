@@ -342,7 +342,7 @@ input[inputmode="numeric"]::placeholder { letter-spacing: normal; font-weight: 4
 }
 
 .nav-logo { display: flex; align-items: center; gap: 8px; }
-.nav-logo img { height: 48px; width: auto; object-fit: contain; mix-blend-mode: normal; filter: brightness(1.5); }
+.nav-logo img { height: 48px; width: auto; object-fit: contain; mix-blend-mode: normal; filter: brightness(0) invert(1); }
 
 
 .hamburger {
@@ -2389,9 +2389,7 @@ svg.icon-lg { width: 28px; height: 28px; }
         padding-bottom: 40px !important; /* No bottom nav on desktop */
         background: var(--bg);
         min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center; /* Center the .content inside */
+        display: block !important; /* Block prevents flex sticky overlap issues */
     }
 
     body.has-sidebar {
@@ -2415,6 +2413,8 @@ svg.icon-lg { width: 28px; height: 28px; }
         padding: 14px 40px !important;
         border-radius: 0 !important;
         background: var(--bg) !important;
+        position: relative !important;
+        z-index: 10;
     }
 
     .app-header {
