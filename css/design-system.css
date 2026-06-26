@@ -2475,7 +2475,9 @@ svg.icon-lg { width: 28px; height: 28px; }
     }
 
     .fab-col {
-        margin-top: 32px !important;
+        order: -1 !important; /* Move to top of sidebar */
+        margin-bottom: 32px !important;
+        margin-top: 0 !important;
         width: 100% !important;
     }
 
@@ -2528,5 +2530,11 @@ svg.icon-lg { width: 28px; height: 28px; }
         max-width: 600px !important;
         margin-left: auto;
         margin-right: auto;
+    }
+
+    /* AI Chat Floating Button on Desktop */
+    .ai-chat-btn {
+        right: 40px !important;
+        bottom: 40px !important;
     }
 }
