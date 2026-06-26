@@ -684,7 +684,7 @@ function initAiChatbot() {
                 <div class="ai-chat-suggestions" id="ai-chat-suggestions">
                     <button class="ai-suggestion-pill" onclick="sendAiSuggestion('What products are running low?')">Low stock</button>
                     <button class="ai-suggestion-pill" onclick="sendAiSuggestion('Show today\\\'s sales')">Today's sales</button>
-                    <button class="ai-suggestion-pill" onclick="sendAiSuggestion('Add 20 Milo at ₦1900')">Add stock</button>
+                    <button class="ai-suggestion-pill" onclick="prefillAiSuggestion('Add 10 [Product] at ₦[Price]')">Add stock</button>
                 </div>
                 <div class="ai-chat-input-row">
                     <div class="ai-chat-input-wrapper">
@@ -908,6 +908,20 @@ async function sendAiMessage() {
 function sendAiSuggestion(text) {
     document.getElementById('ai-chat-input').value = text;
     sendAiMessage();
+}
+
+function prefillAiSuggestion(text) {
+    const input = document.getElementById('ai-chat-input');
+    if (!input) return;
+    input.value = text;
+    input.focus();
+    
+    // Select '[Product]' placeholder so user can easily type over it
+    const productPlaceholder = '[Product]';
+    const index = text.indexOf(productPlaceholder);
+    if (index !== -1) {
+        input.setSelectionRange(index, index + productPlaceholder.length);
+    }
 }
 
 // Automatically initialize chatbot on page load
