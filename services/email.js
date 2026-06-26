@@ -6,7 +6,7 @@ const FROM_EMAIL = process.env.EMAIL_FROM || 'SharpTrack <onboarding@resend.dev>
 
 async function sendEmailOTP(email, otp) {
     try {
-        const data = await resend.emails.send({
+        const response = await resend.emails.send({
             from: FROM_EMAIL,
             to: email,
             subject: 'Your SharpTrack Verification Code',
@@ -21,7 +21,12 @@ async function sendEmailOTP(email, otp) {
                 </div>
             `
         });
-        return { success: true, data };
+        
+        if (response.error) {
+            throw new Error(response.error.message || 'Resend API Error');
+        }
+        
+        return { success: true, data: response.data };
     } catch (error) {
         console.error('[Resend OTP Error]:', error);
         throw error;
@@ -30,7 +35,7 @@ async function sendEmailOTP(email, otp) {
 
 async function sendCongratulationMail(email, name, storeName) {
     try {
-        const data = await resend.emails.send({
+        const response = await resend.emails.send({
             from: FROM_EMAIL,
             to: email,
             subject: 'Welcome to SharpTrack! 🎉',
@@ -54,7 +59,12 @@ async function sendCongratulationMail(email, name, storeName) {
                 </div>
             `
         });
-        return { success: true, data };
+        
+        if (response.error) {
+            throw new Error(response.error.message || 'Resend API Error');
+        }
+        
+        return { success: true, data: response.data };
     } catch (error) {
         console.error('[Resend Congratulation Error]:', error);
         throw error;

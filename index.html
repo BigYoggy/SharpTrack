@@ -2,24 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <script>
-        // Immediate theme initialization to prevent flash
-        (function() {
-            const localTheme = localStorage.getItem('st_theme');
-            let themeToApply = 'light';
-            try {
-                const user = JSON.parse(localStorage.getItem('st_user'));
-                if (user && user.darkMode !== undefined) {
-                    themeToApply = user.darkMode ? 'dark' : 'light';
-                } else if (localTheme) {
-                    themeToApply = localTheme;
-                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    themeToApply = 'dark';
-                }
-            } catch(e) {}
-            document.documentElement.setAttribute('data-theme', themeToApply);
-        })();
-    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SharpTrack — Inventory Software for Nigerian Retail Stores & Merchants</title>
     <meta name="description" content="Zero leakages. Perfect inventory. Complete control. SharpTrack is the mobile-first inventory and sales tracker built for fast-moving Nigerian retail and pharmacies.">
@@ -31,28 +13,6 @@
     <style>
         /* ── LANDING PAGE DESIGN SYSTEM ── */
         :root {
-            --lp-bg: #f0ebe0;
-            --lp-surface: #ffffff;
-            --lp-surface-2: #e8e3d8;
-            --lp-border: #e8e3d8;
-            --lp-border-light: #f0ebe0;
-            --lp-text: #1a2e26;
-            --lp-text-secondary: #3d5a4e;
-            --lp-text-muted: #7a8880;
-            --lp-accent: #0a4d33;
-            --lp-accent-dark: #083b27;
-            --lp-accent-glow: rgba(10, 77, 51, 0.08);
-            --lp-accent-glow-strong: rgba(10, 77, 51, 0.16);
-            --lp-nav-bg: rgba(240, 235, 224, 0.8);
-            --lp-danger: #e53935;
-            --lp-warning: #e07b2a;
-            --lp-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            --lp-radius: 12px;
-            --lp-radius-lg: 16px;
-            --lp-radius-xl: 24px;
-        }
-
-        [data-theme="dark"] {
             --lp-bg: #0f1410;
             --lp-surface: #1e2a24;
             --lp-surface-2: #1a201c;
@@ -66,6 +26,12 @@
             --lp-accent-glow: rgba(37, 160, 96, 0.15);
             --lp-accent-glow-strong: rgba(37, 160, 96, 0.25);
             --lp-nav-bg: rgba(15, 20, 16, 0.8);
+            --lp-danger: #e53935;
+            --lp-warning: #e07b2a;
+            --lp-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            --lp-radius: 12px;
+            --lp-radius-lg: 16px;
+            --lp-radius-xl: 24px;
         }
 
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }

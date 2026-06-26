@@ -14,25 +14,6 @@
     <!-- Shared Design System CSS for variables & global resets -->
     <link rel="stylesheet" href="css/design-system.css">
     
-    <!-- Immediate theme initialization to prevent flash -->
-    <script>
-        (function() {
-            const localTheme = localStorage.getItem('st_theme');
-            let themeToApply = 'light';
-            try {
-                const user = JSON.parse(localStorage.getItem('st_user'));
-                if (user && user.darkMode !== undefined) {
-                    themeToApply = user.darkMode ? 'dark' : 'light';
-                } else if (localTheme) {
-                    themeToApply = localTheme;
-                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    themeToApply = 'dark';
-                }
-            } catch(e) {}
-            document.documentElement.setAttribute('data-theme', themeToApply);
-        })();
-    </script>
-    
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -119,23 +100,21 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
                     </span>
-                    <select id="businessSector" 
-                            class="w-full bg-bg border border-border rounded-xl py-3 pl-10 pr-10 text-sm focus:outline-none focus:border-brand appearance-none text-text transition-colors duration-200" required>
-                        <option value="" disabled selected class="text-text-muted">Select business category...</option>
-                        <option value="Pharmacy">Pharmacy / Healthcare</option>
-                        <option value="Supermarket">Supermarket / Grocery</option>
-                        <option value="Boutique">Boutique / Apparel</option>
-                        <option value="Restaurant">Restaurant / Food Services</option>
-                        <option value="Electronics">Electronics / Gadgets</option>
-                        <option value="General Retail">General Retail / Provision Store</option>
-                        <option value="Other">Other Retail Business</option>
-                    </select>
-                    <!-- Custom Arrow Icon -->
-                    <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-text-muted pointer-events-none">
-                        <svg class="h-5 width-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </span>
+                    <input type="text" id="businessSector" list="industries" placeholder="Search or select industry..." 
+                           class="w-full bg-bg border border-border rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-brand text-text transition-colors duration-200" required>
+                    <datalist id="industries">
+                        <option value="Pharmacy / Healthcare">
+                        <option value="Supermarket / Grocery">
+                        <option value="Boutique / Fashion & Apparel">
+                        <option value="Restaurant / Food Services">
+                        <option value="Electronics / Gadgets">
+                        <option value="Hardware / Construction">
+                        <option value="Cosmetics / Beauty">
+                        <option value="General Retail / Provision Store">
+                        <option value="Wholesale / Distribution">
+                        <option value="Services">
+                        <option value="Other Retail Business">
+                    </datalist>
                 </div>
             </div>
 
@@ -158,8 +137,6 @@
                 window.location.href = 'dashboard.html';
             }
         }
-
-        initTheme();
 
         async function handleOnboarding(event) {
             event.preventDefault();

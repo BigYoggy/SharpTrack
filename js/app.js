@@ -216,46 +216,6 @@ function formatTime(dateString) {
 }
 
 /* ── THEME MANAGEMENT ── */
-function getTheme() {
-    const local = localStorage.getItem('st_theme');
-    if (local) return local;
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
-    }
-    return 'light';
-}
-
-function setTheme(mode) {
-    localStorage.setItem('st_theme', mode);
-    document.documentElement.setAttribute('data-theme', mode);
-}
-
-function initTheme() {
-    const user = getUser();
-    let savedTheme;
-    if (user && user.darkMode !== undefined) {
-        savedTheme = user.darkMode ? 'dark' : 'light';
-    } else {
-        savedTheme = getTheme();
-    }
-    setTheme(savedTheme);
-}
-
-function toggleTheme() {
-    const current = getTheme();
-    const next = current === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    // Dispatch custom event for charts to update colors
-    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: next } }));
-    // Persist to server
-    const token = getToken();
-    if (token) {
-        apiRequest('/api/auth/profile', {
-            method: 'PUT',
-            body: JSON.stringify({ darkMode: next === 'dark' })
-        }).catch(() => {});
-    }
-}
 
 /* ── NOTIFICATION BELL ── */
 async function loadNotificationCount() {
@@ -594,7 +554,11 @@ function initPage(activePage, requireAuth = true) {
             initAvatarMenu();
             // Automatically trigger changelog check on dashboard load
             if (activePage === 'dashboard') {
-                checkWhatsNew();
+                const user = getUser();
+                const needsTour = localStorage.getItem('onboardingComplete') !== 'true' || (user && user.onboardingCompleted === false);
+                if (!needsTour) {
+                    checkWhatsNew();
+                }
             }
         }).catch(err => console.error('Failed to load extensions', err));
 

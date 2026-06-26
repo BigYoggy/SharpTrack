@@ -284,6 +284,11 @@ async function finishOnboardingTour(completeAndClose) {
         localStorage.setItem('onboardingComplete', 'true');
         showToast('success', 'Setup Completed! 🎉', 'Welcome to SharpTrack inventory.');
         
+        // Trigger welcome/news modal after a short delay so they don't clash
+        if (typeof checkWhatsNew === 'function') {
+            setTimeout(checkWhatsNew, 1500);
+        }
+        
         // Sync with backend database
         try {
             await apiRequest('/api/auth/profile', {
