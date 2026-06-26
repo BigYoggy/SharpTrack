@@ -3,7 +3,7 @@ const router = express.Router();
 const prisma = require('./lib/prisma');
 const authMiddleware = require('./middleware/auth');
 const { isValidId, isValidBarcode, validateImageContent } = require('./lib/validation');
-const { logActivity } = require('./lib/monitoring');
+const { logActivity, createNotification } = require('./lib/monitoring');
 
 // Centralized ID parameter validator middleware
 router.param('id', (req, res, next, id) => {
@@ -74,6 +74,7 @@ router.post('/', authMiddleware, async (req, res) => {
 
         // Log activity
         await logActivity(req.userId, 'product_created', `Created product: ${product.name} (Qty: ${product.quantity})`);
+        await createNotification(req.userId, 'info', 'Product Added', `Added product: ${product.name} (${product.quantity} ${product.unit || 'pieces'}).`);
 
         res.status(201).json({ message: 'Product added', product });
     } catch (err) {
@@ -243,6 +244,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
                 image: image !== undefined ? image : existing.image
             }
         });
+        await createNotification(req.userId, 'info', 'Product Updated', `Updated product: ${product.name} (Price: ₦${product.sellingPrice.toLocaleString()}, Stock: ${product.quantity}).`);
         res.json({ message: 'Product updated', product });
     } catch (err) {
         console.error('Update product error:', err.message);
@@ -269,6 +271,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
         // Log activity
         await logActivity(req.userId, 'product_deleted', `Deleted product: ${existing.name}`);
+        await createNotification(req.userId, 'info', 'Product Deleted', `Deleted product: ${existing.name} from inventory.`);
 
         res.json({ message: 'Product deleted' });
     } catch (err) {

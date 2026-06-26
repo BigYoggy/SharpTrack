@@ -3,6 +3,7 @@ const router = express.Router();
 const prisma = require('./lib/prisma');
 const authMiddleware = require('./middleware/auth');
 const { isValidId } = require('./lib/validation');
+const { createNotification } = require('./lib/monitoring');
 
 // RECORD A SALE
 router.post('/', authMiddleware, async (req, res) => {
@@ -100,6 +101,9 @@ router.post('/', authMiddleware, async (req, res) => {
                 });
             } catch (e) { /* non-critical */ }
         }
+
+        // Create transaction notification
+        await createNotification(req.userId, 'info', 'Sale Recorded', `Sold ${sale.quantitySold}x ${productName} for ₦${sale.totalAmount.toLocaleString()}.`);
 
         res.status(201).json({ message: 'Sale recorded', sale });
     } catch (err) {

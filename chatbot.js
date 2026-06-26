@@ -3,7 +3,7 @@ const router = express.Router();
 const authMiddleware = require('./middleware/auth');
 const { GoogleGenAI } = require('@google/genai');
 const axios = require('axios');
-const { logActivity } = require('./lib/monitoring');
+const { logActivity, createNotification } = require('./lib/monitoring');
 const prisma = require('./lib/prisma');
 
 async function callAI(systemPrompt, message, history) {
@@ -216,6 +216,7 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
 
                     // Log activity
                     await logActivity(req.userId, 'product_updated', `Updated product: ${existing.name} (Added Qty: ${quantity}, New Qty: ${newQuantity})`);
+                    await createNotification(req.userId, 'info', 'Stock Restocked', `Restocked product: ${existing.name} (+${quantity} units).`);
 
                     responseMessage = `I have updated *${existing.name}*. Added ${quantity} unit(s). The new stock level is ${newQuantity}, and the selling price is set to ₦${price.toLocaleString()}.`;
                 } else {
@@ -235,6 +236,7 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
 
                     // Log activity
                     await logActivity(req.userId, 'product_created', `Created product: ${newProd.name} (Qty: ${newProd.quantity})`);
+                    await createNotification(req.userId, 'info', 'Product Added', `Added product: ${newProd.name} (${newProd.quantity} pieces).`);
 
                     responseMessage = `Success! I have added *${product}* as a new product in your inventory with ${quantity} unit(s) at ₦${price.toLocaleString()} each.`;
                 }
@@ -265,6 +267,8 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
                         sellingPrice: parseFloat(price)
                     }
                 });
+
+                await createNotification(req.userId, 'info', 'Price Updated', `Price of ${existing.name} updated to ₦${price.toLocaleString()}.`);
 
                 responseMessage = `Done! I have updated the price of *${existing.name}* to ₦${price.toLocaleString()}.`;
                 break;
@@ -374,6 +378,8 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
                     return { sale, newQuantity: updatedProduct.quantity };
                 });
 
+                await createNotification(req.userId, 'info', 'Sale Recorded', `Sold ${qtyToSold}x ${existing.name} for ₦${totalAmount.toLocaleString()}.`);
+
                 // Create low/out of stock notifications
                 if (result.newQuantity <= existing.reorderLevel && result.newQuantity > 0) {
                     try {
@@ -428,6 +434,8 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
                     }
                 });
 
+                await createNotification(req.userId, 'info', 'Stock Adjusted', `Stock of ${existing.name} adjusted to ${quantity} pieces.`);
+
                 responseMessage = `Done! I have manually adjusted the stock of *${existing.name}* to exactly **${quantity}** ${existing.unit || 'pieces'}.`;
                 break;
             }
@@ -455,6 +463,7 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
 
                 // Log activity
                 await logActivity(req.userId, 'product_deleted', `Deleted product: ${existing.name}`);
+                await createNotification(req.userId, 'info', 'Product Deleted', `Deleted product: ${existing.name} from inventory.`);
 
                 responseMessage = `Successfully removed *${existing.name}* from your inventory.`;
                 break;

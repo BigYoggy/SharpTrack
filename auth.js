@@ -255,6 +255,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
         });
 
         await logActivity(req.userId, 'profile_updated', 'Profile information updated');
+        await createNotification(req.userId, 'info', 'Store Profile Updated', 'Your store profile settings have been updated successfully.');
 
         res.json({ message: 'Profile updated successfully', user });
     } catch (err) {
