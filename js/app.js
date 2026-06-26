@@ -817,27 +817,6 @@ async function sendAiMessage() {
     input.value = '';
     appendAiMessage('user', query);
 
-    // 1. Frontend Greeting Check
-    const greetingWords = ["sup", "hey", "hi", "hello", "how far", "wassup", "good morning", "good afternoon", "good evening", "morning", "evening", "yo", "hiya"];
-    const lowerQuery = query.toLowerCase().trim();
-    const isGreeting = greetingWords.some(word => {
-        if (word.includes(' ')) {
-            return lowerQuery.includes(word);
-        }
-        const words = lowerQuery.split(/\s+/).map(w => w.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?[\]]/g, ''));
-        return words.includes(word);
-    });
-
-    if (isGreeting) {
-        let greetingReply = "Hey! Welcome to SharpTrack Assistant 👋 I can help you add stock, record sales, check inventory levels, and more. What can I do for you today?";
-        if (greetingReply === lastAssistantMessage) {
-            greetingReply = "I dey here o! How I fit help you manage your store inventory today?";
-        }
-        lastAssistantMessage = greetingReply;
-        appendAiMessage('assistant', greetingReply);
-        return;
-    }
-
     const token = localStorage.getItem('token') || localStorage.getItem('st_token');
     if (!token) {
         appendAiMessage('assistant', "Please sign in to execute commands.");
@@ -877,13 +856,13 @@ async function sendAiMessage() {
                 }
             }
 
-            // Ensure we never show the exact same error message twice in a row
+            // Ensure we never show the exact same message twice in a row
             if (replyText === lastAssistantMessage) {
                 const fallbackQuestions = [
-                    "Abeg, I no catch that one. You fit say 'Add 20 Milo at ₦1900' or 'I sold 5 Milo'.",
-                    "Amina, abeg talk am another way. You want check stock or record sale? Tell me.",
-                    "Wetin you want make I do? Say 'What products are running low?' to check alerts.",
-                    "Hmm, I no understand. Abeg tell me wetin you want manage for your shop."
+                    "I didn't quite catch that. You can say 'Add 10 Milo at ₦1900' or 'I sold 5 Milo'.",
+                    "Could you rephrase that? Let me know if you want to check stock or record a sale.",
+                    "What would you like me to do? Say 'What products are running low?' to check alerts.",
+                    "I'm not sure I understand. Please let me know how I can help manage your shop."
                 ];
                 replyText = fallbackQuestions[fallbackIndex % fallbackQuestions.length];
                 fallbackIndex++;
@@ -898,7 +877,7 @@ async function sendAiMessage() {
         showAiThinking(false);
         let errorReply = `Error: ${err.message}`;
         if (errorReply === lastAssistantMessage) {
-            errorReply = "Connection no dey build fine now, abeg try again.";
+            errorReply = "Sorry, I'm having trouble connecting right now. Please try again in a moment.";
         }
         lastAssistantMessage = errorReply;
         appendAiMessage('assistant', errorReply);
