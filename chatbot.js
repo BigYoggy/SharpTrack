@@ -4,6 +4,7 @@ const authMiddleware = require('./middleware/auth');
 const { GoogleGenAI } = require('@google/genai');
 const axios = require('axios');
 const { logActivity } = require('./lib/monitoring');
+const prisma = require('./lib/prisma');
 
 async function callAI(systemPrompt, message) {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -146,12 +147,7 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
 
         const { intent, product, quantity, unit, price, costPrice, brand, category, date, supplier, customer, negative_intent, confidence } = geminiJson;
 
-        const PORT = process.env.PORT || 3000;
-        const apiBase = `http://localhost:${PORT}`;
-        const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': req.headers.authorization // Forward the user's JWT token
-        };
+        let responseMessage;
 
         // ── Dynamic Conversational & Fallback Short-circuit ─────────────────
         // If the AI generated a conversational reply directly in the first call (greetings,
@@ -182,29 +178,47 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
                 }
 
                 // Check if product already exists
-                const getRes = await axios.get(`${apiBase}/api/products`, { headers });
-                const products = getRes.data.products || [];
-                const existing = products.find(p => p.name.toLowerCase() === product.toLowerCase());
+                const existing = await prisma.product.findFirst({
+                    where: {
+                        userId: req.userId,
+                        name: { equals: product, mode: 'insensitive' }
+                    }
+                });
 
                 if (existing) {
                     // Update existing
                     const newQuantity = existing.quantity + quantity;
-                    await axios.put(`${apiBase}/api/products/${existing.id}`, {
-                        quantity: newQuantity,
-                        sellingPrice: price
-                    }, { headers });
+                    const finalCost = costPrice !== null && costPrice !== undefined ? costPrice : existing.costPrice;
+                    await prisma.product.update({
+                        where: { id: existing.id },
+                        data: {
+                            quantity: newQuantity,
+                            sellingPrice: parseFloat(price),
+                            costPrice: finalCost !== null ? parseFloat(finalCost) : null
+                        }
+                    });
+
+                    // Log activity
+                    await logActivity(req.userId, 'product_updated', `Updated product: ${existing.name} (Added Qty: ${quantity}, New Qty: ${newQuantity})`);
 
                     responseMessage = `I have updated *${existing.name}*. Added ${quantity} unit(s). The new stock level is ${newQuantity}, and the selling price is set to ₦${price.toLocaleString()}.`;
                 } else {
                     // Create new
-                    await axios.post(`${apiBase}/api/products`, {
-                        name: product,
-                        sellingPrice: price,
-                        costPrice: price * 0.75, // Default cost price (75% of selling price)
-                        quantity: quantity,
-                        reorderLevel: 5,
-                        unit: 'pieces'
-                    }, { headers });
+                    const finalCost = costPrice !== null && costPrice !== undefined ? costPrice : (price * 0.75);
+                    const newProd = await prisma.product.create({
+                        data: {
+                            name: product.trim(),
+                            sellingPrice: parseFloat(price),
+                            costPrice: parseFloat(finalCost),
+                            quantity: parseInt(quantity),
+                            reorderLevel: 5,
+                            unit: 'pieces',
+                            userId: req.userId
+                        }
+                    });
+
+                    // Log activity
+                    await logActivity(req.userId, 'product_created', `Created product: ${newProd.name} (Qty: ${newProd.quantity})`);
 
                     responseMessage = `Success! I have added *${product}* as a new product in your inventory with ${quantity} unit(s) at ₦${price.toLocaleString()} each.`;
                 }
@@ -217,18 +231,24 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
                     break;
                 }
 
-                const getRes = await axios.get(`${apiBase}/api/products`, { headers });
-                const products = getRes.data.products || [];
-                const existing = products.find(p => p.name.toLowerCase() === product.toLowerCase());
+                const existing = await prisma.product.findFirst({
+                    where: {
+                        userId: req.userId,
+                        name: { equals: product, mode: 'insensitive' }
+                    }
+                });
 
                 if (!existing) {
                     responseMessage = `I could not find *${product}* in your inventory. Please confirm the name and try again.`;
                     break;
                 }
 
-                await axios.put(`${apiBase}/api/products/${existing.id}`, {
-                    sellingPrice: price
-                }, { headers });
+                await prisma.product.update({
+                    where: { id: existing.id },
+                    data: {
+                        sellingPrice: parseFloat(price)
+                    }
+                });
 
                 responseMessage = `Done! I have updated the price of *${existing.name}* to ₦${price.toLocaleString()}.`;
                 break;
@@ -240,9 +260,12 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
                     break;
                 }
 
-                const getRes = await axios.get(`${apiBase}/api/products`, { headers });
-                const products = getRes.data.products || [];
-                const existing = products.find(p => p.name.toLowerCase() === product.toLowerCase());
+                const existing = await prisma.product.findFirst({
+                    where: {
+                        userId: req.userId,
+                        name: { equals: product, mode: 'insensitive' }
+                    }
+                });
 
                 if (existing) {
                     responseMessage = `You have **${existing.quantity}** ${existing.unit || 'pieces'} of *${existing.name}* remaining in your inventory.`;
@@ -253,8 +276,9 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
             }
 
             case 'low_stock': {
-                const getRes = await axios.get(`${apiBase}/api/products`, { headers });
-                const products = getRes.data.products || [];
+                const products = await prisma.product.findMany({
+                    where: { userId: req.userId }
+                });
                 const lowStock = products.filter(p => p.quantity <= p.reorderLevel);
 
                 if (lowStock.length === 0) {
@@ -272,9 +296,12 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
                     break;
                 }
 
-                const getRes = await axios.get(`${apiBase}/api/products`, { headers });
-                const products = getRes.data.products || [];
-                const existing = products.find(p => p.name.toLowerCase() === product.toLowerCase());
+                const existing = await prisma.product.findFirst({
+                    where: {
+                        userId: req.userId,
+                        name: { equals: product, mode: 'insensitive' }
+                    }
+                });
 
                 if (!existing) {
                     responseMessage = `It seems *${product}* is not in your inventory. You must add the product before recording a sale.`;
@@ -286,14 +313,77 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
                     break;
                 }
 
-                await axios.post(`${apiBase}/api/sales`, {
-                    productId: existing.id,
-                    quantitySold: quantity,
-                    paymentMethod: 'cash'
-                }, { headers });
+                const qtyToSold = parseInt(quantity);
 
-                const totalAmount = existing.sellingPrice * quantity;
-                responseMessage = `Recorded! You sold ${quantity} *${existing.name}* for a total of ₦${totalAmount.toLocaleString()}. Remaining stock: **${existing.quantity - quantity}**.`;
+                // Duplicate check
+                const recentSale = await prisma.sale.findFirst({
+                    where: {
+                        userId: req.userId,
+                        productId: existing.id,
+                        quantitySold: qtyToSold,
+                        soldAt: { gte: new Date(Date.now() - 5000) }
+                    }
+                });
+
+                if (recentSale) {
+                    responseMessage = `Duplicate sale detected. Please wait a moment before trying again.`;
+                    break;
+                }
+
+                const totalAmount = existing.sellingPrice * qtyToSold;
+
+                const result = await prisma.$transaction(async (tx) => {
+                    const productObj = await tx.product.findUnique({ where: { id: existing.id } });
+                    if (!productObj || productObj.quantity < qtyToSold) {
+                        throw new Error('OUT_OF_STOCK');
+                    }
+
+                    const updatedProduct = await tx.product.update({
+                        where: { id: existing.id },
+                        data: { quantity: { decrement: qtyToSold } }
+                    });
+
+                    const sale = await tx.sale.create({
+                        data: {
+                            productId: existing.id,
+                            quantitySold: qtyToSold,
+                            totalAmount,
+                            paymentMethod: 'cash',
+                            userId: req.userId,
+                            productName: existing.name,
+                            unitPrice: existing.sellingPrice
+                        }
+                    });
+
+                    return { sale, newQuantity: updatedProduct.quantity };
+                });
+
+                // Create low/out of stock notifications
+                if (result.newQuantity <= existing.reorderLevel && result.newQuantity > 0) {
+                    try {
+                        await prisma.notification.create({
+                            data: {
+                                userId: req.userId,
+                                type: 'WARNING',
+                                title: 'Low Stock Alert',
+                                message: `${existing.name} is running low (${result.newQuantity} ${existing.unit || 'pieces'} remaining). Consider restocking soon.`
+                            }
+                        });
+                    } catch (e) {}
+                } else if (result.newQuantity === 0) {
+                    try {
+                        await prisma.notification.create({
+                            data: {
+                                userId: req.userId,
+                                type: 'SYSTEM',
+                                title: 'Out of Stock!',
+                                message: `${existing.name} is now out of stock. Restock immediately to avoid missed sales.`
+                            }
+                        });
+                    } catch (e) {}
+                }
+
+                responseMessage = `Recorded! You sold ${quantity} *${existing.name}* for a total of ₦${totalAmount.toLocaleString()}. Remaining stock: **${result.newQuantity}**.`;
                 break;
             }
 
@@ -303,18 +393,24 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
                     break;
                 }
 
-                const getRes = await axios.get(`${apiBase}/api/products`, { headers });
-                const products = getRes.data.products || [];
-                const existing = products.find(p => p.name.toLowerCase() === product.toLowerCase());
+                const existing = await prisma.product.findFirst({
+                    where: {
+                        userId: req.userId,
+                        name: { equals: product, mode: 'insensitive' }
+                    }
+                });
 
                 if (!existing) {
                     responseMessage = `I could not find *${product}* in your inventory. Please confirm the name and try again.`;
                     break;
                 }
 
-                await axios.put(`${apiBase}/api/products/${existing.id}`, {
-                    quantity: quantity
-                }, { headers });
+                await prisma.product.update({
+                    where: { id: existing.id },
+                    data: {
+                        quantity: parseInt(quantity)
+                    }
+                });
 
                 responseMessage = `Done! I have manually adjusted the stock of *${existing.name}* to exactly **${quantity}** ${existing.unit || 'pieces'}.`;
                 break;
@@ -326,16 +422,23 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
                     break;
                 }
 
-                const getRes = await axios.get(`${apiBase}/api/products`, { headers });
-                const products = getRes.data.products || [];
-                const existing = products.find(p => p.name.toLowerCase() === product.toLowerCase());
+                const existing = await prisma.product.findFirst({
+                    where: {
+                        userId: req.userId,
+                        name: { equals: product, mode: 'insensitive' }
+                    }
+                });
 
                 if (!existing) {
                     responseMessage = `I could not find *${product}* in your inventory. Please confirm the name.`;
                     break;
                 }
 
-                await axios.delete(`${apiBase}/api/products/${existing.id}`, { headers });
+                await prisma.sale.deleteMany({ where: { productId: existing.id } });
+                await prisma.product.delete({ where: { id: existing.id } });
+
+                // Log activity
+                await logActivity(req.userId, 'product_deleted', `Deleted product: ${existing.name}`);
 
                 responseMessage = `Successfully removed *${existing.name}* from your inventory.`;
                 break;
@@ -347,9 +450,12 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
                     break;
                 }
 
-                const getRes = await axios.get(`${apiBase}/api/products`, { headers });
-                const products = getRes.data.products || [];
-                const matches = products.filter(p => p.name.toLowerCase().includes(product.toLowerCase()));
+                const matches = await prisma.product.findMany({
+                    where: {
+                        userId: req.userId,
+                        name: { contains: product, mode: 'insensitive' }
+                    }
+                });
 
                 if (matches.length === 0) {
                     responseMessage = `I could not find any products matching *${product}* in your inventory.`;
@@ -364,8 +470,10 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
             }
 
             case 'inventory_summary': {
-                const getRes = await axios.get(`${apiBase}/api/products`, { headers });
-                const products = getRes.data.products || [];
+                const products = await prisma.product.findMany({
+                    where: { userId: req.userId },
+                    orderBy: { createdAt: 'desc' }
+                });
 
                 if (products.length === 0) {
                     responseMessage = "Your inventory is currently empty. Start by adding a product!";
@@ -378,25 +486,78 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
             }
 
             case 'daily_summary': {
-                const getRes = await axios.get(`${apiBase}/api/sales/today`, { headers });
-                const data = getRes.data;
+                const timezoneOffset = -60; // Nigeria UTC+1 default
+                const now = new Date();
+                const localNow = new Date(now.getTime() - (timezoneOffset * 60 * 1000));
+                localNow.setUTCHours(0, 0, 0, 0);
+                const start = new Date(localNow.getTime() + (timezoneOffset * 60 * 1000));
 
-                if (!data.sales || data.sales.length === 0) {
+                const sales = await prisma.sale.findMany({
+                    where: { userId: req.userId, soldAt: { gte: start } },
+                    orderBy: { soldAt: 'desc' }
+                });
+
+                if (sales.length === 0) {
                     responseMessage = "No sales have been recorded today yet.";
                 } else {
-                    const list = data.sales.map(s => `• ${s.quantitySold}x **${s.productName || 'Product'}** (₦${s.totalAmount.toLocaleString()})`).join('\n');
-                    responseMessage = `Here is today's sales summary:\n\n• **Total Revenue**: ₦${data.total.toLocaleString()}\n• **Total Sales Logged**: ${data.salesCount}\n\nTransactions:\n${list}`;
+                    const total = sales.reduce((sum, s) => sum + s.totalAmount, 0);
+                    const list = sales.map(s => `• ${s.quantitySold}x **${s.productName || 'Product'}** (₦${s.totalAmount.toLocaleString()})`).join('\n');
+                    responseMessage = `Here is today's sales summary:\n\n• **Total Revenue**: ₦${total.toLocaleString()}\n• **Total Sales Logged**: ${sales.length}\n\nTransactions:\n${list}`;
                 }
                 break;
             }
 
             case 'weekly_summary': {
-                const getRes = await axios.get(`${apiBase}/api/sales/weekly`, { headers });
-                const weekly = getRes.data.weekly || [];
+                const timezoneOffset = -60; // Default to Nigeria (UTC+1)
+                const now = new Date();
+                const localNow = new Date(now.getTime() - (timezoneOffset * 60 * 1000));
+                localNow.setUTCHours(0, 0, 0, 0);
+                
+                // 7 days including today starts at: localNow - 6 days
+                const start = new Date(localNow.getTime() - (6 * 24 * 60 * 60 * 1000) + (timezoneOffset * 60 * 1000));
+
+                const sales = await prisma.sale.findMany({
+                    where: {
+                        userId: req.userId,
+                        soldAt: { gte: start }
+                    },
+                    orderBy: { soldAt: 'asc' }
+                });
+
+                // Initialize last 7 days mapping
+                const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const weeklyData = [];
+                
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date(localNow.getTime() - (i * 24 * 60 * 60 * 1000));
+                    const dateStr = d.toISOString().split('T')[0];
+                    weeklyData.push({
+                        dayName: days[d.getUTCDay()],
+                        dateString: dateStr,
+                        amount: 0,
+                        count: 0
+                    });
+                }
+
+                // Helper to convert date to local date string
+                const getLocalDateString = (date, offset) => {
+                    const localTime = new Date(date.getTime() - (offset * 60 * 1000));
+                    return localTime.toISOString().split('T')[0];
+                };
+
+                // Aggregate sales by date
+                sales.forEach(sale => {
+                    const saleDate = getLocalDateString(sale.soldAt, timezoneOffset);
+                    const target = weeklyData.find(item => item.dateString === saleDate);
+                    if (target) {
+                        target.amount += sale.totalAmount;
+                        target.count += 1;
+                    }
+                });
 
                 let totalSales = 0;
                 let totalAmount = 0;
-                const list = weekly.map(w => {
+                const list = weeklyData.map(w => {
                     totalSales += w.count;
                     totalAmount += w.amount;
                     return `• **${w.dayName}** (${w.dateString}): ${w.count} sale(s), ₦${w.amount.toLocaleString()}`;
@@ -407,8 +568,10 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
             }
 
             case 'monthly_summary': {
-                const getRes = await axios.get(`${apiBase}/api/sales`, { headers });
-                const sales = getRes.data.sales || [];
+                const sales = await prisma.sale.findMany({
+                    where: { userId: req.userId },
+                    orderBy: { soldAt: 'desc' }
+                });
 
                 const now = new Date();
                 const currentMonth = now.getUTCMonth();
@@ -426,10 +589,12 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
             }
 
             case 'profit_summary': {
-                const productsRes = await axios.get(`${apiBase}/api/products`, { headers });
-                const products = productsRes.data.products || [];
-                const salesRes = await axios.get(`${apiBase}/api/sales`, { headers });
-                const sales = salesRes.data.sales || [];
+                const products = await prisma.product.findMany({
+                    where: { userId: req.userId }
+                });
+                const sales = await prisma.sale.findMany({
+                    where: { userId: req.userId }
+                });
 
                 let totalProfit = 0;
                 let todayProfit = 0;
@@ -438,8 +603,8 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
 
                 sales.forEach(sale => {
                     const prod = products.find(p => p.id === sale.productId);
-                    const costPrice = prod ? (prod.costPrice || prod.sellingPrice * 0.75) : (sale.unitPrice * 0.75);
-                    const profit = sale.totalAmount - (costPrice * sale.quantitySold);
+                    const costPriceVal = prod ? (prod.costPrice !== null && prod.costPrice !== undefined ? prod.costPrice : prod.sellingPrice * 0.75) : (sale.unitPrice * 0.75);
+                    const profit = sale.totalAmount - (costPriceVal * sale.quantitySold);
                     totalProfit += profit;
 
                     const saleDate = new Date(sale.soldAt).toISOString().split('T')[0];
@@ -489,16 +654,12 @@ Please let me know what you would like to do!`;
             }
 
             case 'greeting': {
-                // Use GLM's reply if available, otherwise the fallback reply from geminiJson
                 responseMessage = geminiJson.reply || "Hello! 👋 I'm SharpTrack AI. How can I help you today? I can help you add stock, record sales, check prices, or show today's summary.";
                 break;
             }
 
             case 'unknown':
             default:
-                // The general-conversation block above already handles true unknowns.
-                // This branch only fires if intent is explicitly 'unknown' but GLM_API_KEY
-                // is absent AND the fallback guard above somehow didn't short-circuit.
                 responseMessage = geminiJson.reply ||
                     "I am here to help! 😊 Let me know what you need—I can help you manage your stock, record sales, or check prices.";
                 break;
