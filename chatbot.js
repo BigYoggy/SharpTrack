@@ -6,7 +6,7 @@ const axios = require('axios');
 const { logActivity } = require('./lib/monitoring');
 const prisma = require('./lib/prisma');
 
-async function callAI(systemPrompt, message) {
+async function callAI(systemPrompt, message, history) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
         throw new Error('GEMINI_API_KEY environment variable is not configured');
@@ -15,16 +15,31 @@ async function callAI(systemPrompt, message) {
     const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest', 'gemini-1.5-flash'];
     let lastError = null;
 
+    // Convert history to Gemini format
+    const contents = [];
+    if (history && Array.isArray(history)) {
+        history.forEach(msg => {
+            contents.push({
+                role: msg.role === 'assistant' ? 'model' : 'user',
+                parts: [{ text: msg.content }]
+            });
+        });
+    }
+
+    // Append the latest user query
+    contents.push({
+        role: 'user',
+        parts: [{ text: `User query: "${message}"` }]
+    });
+
     for (const model of modelsToTry) {
         try {
             console.log(`Trying Gemini model for chat: ${model}...`);
             const response = await ai.models.generateContent({
                 model,
-                contents: [
-                    systemPrompt,
-                    message
-                ],
+                contents,
                 config: {
+                    systemInstruction: systemPrompt,
                     responseMimeType: 'application/json'
                 }
             });
@@ -41,7 +56,7 @@ async function callAI(systemPrompt, message) {
 
 // POST /api/chat
 router.post('/', authMiddleware, async (req, res) => {
-    const { message } = req.body;
+    const { message, history } = req.body;
     if (!message) {
         return res.status(400).json({ error: 'Message is required' });
     }
@@ -119,6 +134,7 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
    - Extract "product" (normalize to Title Case, e.g. "milo" -> "Milo", "peak milk" -> "Peak Milk").
    - Normalize quantities (e.g., "five" -> 5, "one dozen" -> 12).
    - Normalize monetary values (e.g., "2.5k" -> 2500, "10k" -> 10000, "₦500" -> 500).
+   - **Product Name vs Quantity**: If a product name contains a number (e.g. "5 Alive", "Seven Up", "7Up", "33 Export"), treat that number as part of the product name, not the quantity. The quantity is the actual count of units being added or sold (e.g. in "5 Alive 200 cans", the product is "5 Alive" and the quantity is 200).
    - If the user explicitly says they did NOT do something, set negative_intent to true.
 
 3. **Dynamic Clarification & Conversational Replies (the "reply" field)**:
@@ -134,7 +150,7 @@ You must analyze the user message and return ONLY a valid, single JSON object. D
 
         let geminiJson;
         try {
-            const rawText = await callAI(systemPrompt, `User query: "${message}"`);
+            const rawText = await callAI(systemPrompt, message, history);
             const cleaned = rawText.replace(/```(?:json)?\n?/gi, '').replace(/```/g, '').trim();
             geminiJson = JSON.parse(cleaned);
         } catch (err) {

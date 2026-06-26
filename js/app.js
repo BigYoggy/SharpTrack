@@ -809,6 +809,8 @@ function showAiThinking(show) {
     }
 }
 
+let aiChatHistory = [];
+
 async function sendAiMessage() {
     const input = document.getElementById('ai-chat-input');
     const query = input.value.trim();
@@ -832,7 +834,7 @@ async function sendAiMessage() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ message: query })
+            body: JSON.stringify({ message: query, history: aiChatHistory })
         });
 
         const parseData = await response.json();
@@ -870,6 +872,13 @@ async function sendAiMessage() {
 
             lastAssistantMessage = replyText;
             appendAiMessage('assistant', replyText);
+
+            // Record conversation history
+            aiChatHistory.push({ role: 'user', content: query });
+            aiChatHistory.push({ role: 'assistant', content: replyText });
+            if (aiChatHistory.length > 10) {
+                aiChatHistory = aiChatHistory.slice(-10);
+            }
         } else {
             throw new Error(parseData.error || 'Server error occurred');
         }
