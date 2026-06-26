@@ -646,34 +646,49 @@ function initAiChatbot() {
     }
     
     const chatHtml = `
-        <button class="ai-chat-btn" id="ai-chat-btn" onclick="openAiChat()" aria-label="Open AI Assistant">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <button class="ai-chat-btn" id="ai-chat-btn" onclick="openAiChat()" aria-label="Open Shappi Chat">
+            <!-- Shappi Sparkle/Robot Icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>
+            </svg>
         </button>
 
         <div id="aiChatModal" class="modal-overlay" onclick="closeAiChat()">
             <div class="modal ai-chat-modal" onclick="event.stopPropagation()">
                 <div class="modal-handle"></div>
                 <div class="ai-chat-header">
-                    <div class="ai-chat-header-title">
-                        <span class="ai-chat-title-text">SharpTrack Assistant</span>
-                        <span class="ai-chat-status">
+                    <div class="ai-chat-header-left">
+                        <div class="shappi-avatar-container">
+                            <div class="shappi-avatar">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                                    <circle cx="12" cy="5" r="2"></circle>
+                                    <path d="M12 7v4"></path>
+                                    <line x1="8" y1="15" x2="8" y2="15"></line>
+                                    <line x1="16" y1="15" x2="16" y2="15"></line>
+                                </svg>
+                            </div>
                             <span class="ai-chat-status-dot"></span>
-                            Online
-                        </span>
+                        </div>
+                        <div class="ai-chat-header-info">
+                            <span class="ai-chat-title-text">Shappi</span>
+                            <span class="ai-chat-subtitle">Online</span>
+                        </div>
                     </div>
-                    <button class="btn btn-ghost btn-sm" onclick="closeAiChat()" style="padding: 4px; display: flex; align-items: center; justify-content: center;">
+                    <button class="ai-chat-close-btn" onclick="closeAiChat()" aria-label="Close Chat">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                 </div>
                 <div class="ai-chat-body" id="ai-chat-body"></div>
                 <div class="ai-chat-suggestions" id="ai-chat-suggestions">
-                    <button class="ai-suggestion-pill" onclick="sendAiSuggestion('Show today\\\'s sales')">Show today's sales</button>
-                    <button class="ai-suggestion-pill" onclick="sendAiSuggestion('What products are running low?')">What products are running low?</button>
-                    <button class="ai-suggestion-pill" onclick="sendAiSuggestion('Add 20 Milo at ₦1900')">Add 20 Milo at ₦1900</button>
+                    <button class="ai-suggestion-pill" onclick="sendAiSuggestion('What products are running low?')">Low stock</button>
+                    <button class="ai-suggestion-pill" onclick="sendAiSuggestion('Show today\\\'s sales')">Today's sales</button>
+                    <button class="ai-suggestion-pill" onclick="sendAiSuggestion('Add 20 Milo at ₦1900')">Add stock</button>
                 </div>
                 <div class="ai-chat-input-row">
                     <div class="ai-chat-input-wrapper">
-                        <input type="text" class="ai-chat-input" id="ai-chat-input" placeholder="Ask me to add stock, sell, report..." autocomplete="off">
+                        <input type="text" class="ai-chat-input" id="ai-chat-input" placeholder="Message Shappi..." autocomplete="off">
                     </div>
                     <button class="ai-chat-send-btn" id="ai-chat-send-btn" onclick="sendAiMessage()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -686,15 +701,8 @@ function initAiChatbot() {
     document.body.insertAdjacentHTML('beforeend', chatHtml);
     aiChatInitialized = true;
 
-    const token = localStorage.getItem('token') || localStorage.getItem('st_token');
-    
-    if (!token) {
-        appendAiMessage('assistant', "Hello! I am your SharpTrack AI assistant. Please sign in to manage your inventory, record sales, and check reports.");
-    } else {
-        const user = getUser();
-        const firstName = user ? getUserFirstName(user.name) : 'merchant';
-        appendAiMessage('assistant', `Hello ${firstName}! I am your SharpTrack AI assistant. How can I help you manage your store today? You can ask me to:\n\n• **Add stock** (e.g., 'Add 20 Milo at ₦1900')\n• **Update price** (e.g., 'Update Indomie price to ₦700')\n• **Bulk price update** (e.g., 'Update all prices by 10%')\n• **Check stock levels** (e.g., 'How many Indomie do I have?')\n• **Low stock check** (e.g., 'What products are running low?')\n• **Record a sale** (e.g., 'I sold 5 Milo')\n• **View today's sales summary** (e.g., 'Show today's sales')`);
-    }
+    // First message from Shappi: short, clean, no long list of features
+    appendAiMessage('assistant', "Hi! I'm Shappi 👋\\nI can help you add stock, record sales, check inventory and update prices.");
 
     document.getElementById('ai-chat-input').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
@@ -722,8 +730,8 @@ function appendAiMessage(sender, text) {
     const body = document.getElementById('ai-chat-body');
     if (!body) return;
 
-    const msg = document.createElement('div');
-    msg.className = `ai-msg ${sender}`;
+    const msgRow = document.createElement('div');
+    msgRow.className = `ai-msg-row ${sender}`;
     
     const escapeHtml = (str) => {
         return str
@@ -734,17 +742,37 @@ function appendAiMessage(sender, text) {
             .replace(/'/g, '&#39;');
     };
     
-    let formattedText = escapeHtml(text)
+    // Parse \\n or \n for newlines safely
+    const cleanText = text.replace(/\\n/g, '\n');
+    let formattedText = escapeHtml(cleanText)
         .replace(/\n/g, '<br>')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
         .replace(/•\s+/g, '&bull; ');
         
-    msg.innerHTML = `
-        <div>${formattedText}</div>
-        <div class="ai-msg-time">${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+    let avatarHtml = '';
+    if (sender === 'assistant') {
+        avatarHtml = `
+            <div class="shappi-msg-avatar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                    <circle cx="12" cy="5" r="2"></circle>
+                    <path d="M12 7v4"></path>
+                    <line x1="8" y1="15" x2="8" y2="15"></line>
+                    <line x1="16" y1="15" x2="16" y2="15"></line>
+                </svg>
+            </div>
+        `;
+    }
+        
+    msgRow.innerHTML = `
+        ${avatarHtml}
+        <div class="ai-msg-bubble">
+            <div class="ai-msg-text">${formattedText}</div>
+            <div class="ai-msg-time">${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+        </div>
     `;
-    body.appendChild(msg);
+    body.appendChild(msgRow);
     body.scrollTop = body.scrollHeight;
 }
 
@@ -752,18 +780,29 @@ function showAiThinking(show) {
     const body = document.getElementById('ai-chat-body');
     if (!body) return;
 
-    const existing = document.getElementById('ai-thinking-indicator');
+    const existing = document.getElementById('ai-thinking-row');
     if (show) {
         if (existing) return;
-        const thinking = document.createElement('div');
-        thinking.id = 'ai-thinking-indicator';
-        thinking.className = 'ai-msg thinking';
-        thinking.innerHTML = `
-            <span class="ai-dot"></span>
-            <span class="ai-dot"></span>
-            <span class="ai-dot"></span>
+        const thinkingRow = document.createElement('div');
+        thinkingRow.id = 'ai-thinking-row';
+        thinkingRow.className = 'ai-msg-row assistant thinking-row';
+        thinkingRow.innerHTML = `
+            <div class="shappi-msg-avatar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                    <circle cx="12" cy="5" r="2"></circle>
+                    <path d="M12 7v4"></path>
+                    <line x1="8" y1="15" x2="8" y2="15"></line>
+                    <line x1="16" y1="15" x2="16" y2="15"></line>
+                </svg>
+            </div>
+            <div class="ai-msg-bubble thinking-bubble">
+                <span class="ai-dot"></span>
+                <span class="ai-dot"></span>
+                <span class="ai-dot"></span>
+            </div>
         `;
-        body.appendChild(thinking);
+        body.appendChild(thinkingRow);
         body.scrollTop = body.scrollHeight;
     } else {
         if (existing) existing.remove();
