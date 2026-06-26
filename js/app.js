@@ -486,12 +486,7 @@ function handleGlobalShortcuts(e) {
     const key = e.key.toLowerCase();
     const now = Date.now();
 
-    if (key === 't') {
-        e.preventDefault();
-        toggleTheme();
-        showToast('success', 'Theme toggled', `Switched to ${getTheme()} mode`);
-        return;
-    }
+    // Theme toggle removed
 
     if (key === 'n') {
         e.preventDefault();
