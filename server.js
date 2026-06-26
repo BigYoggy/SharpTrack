@@ -174,6 +174,9 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'An unexpected error occurred. Please try again.' });
 });
 
+const { initCron } = require('./services/cron');
+initCron();
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`SharpTrack server running on port ${PORT}`);
