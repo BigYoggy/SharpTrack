@@ -342,9 +342,9 @@
                     throw new Error(data.error || 'Login failed. Please check your credentials.');
                 }
 
-                // Store token in localStorage for the dashboard to use
+                // Store token in sessionStorage for the dashboard to use
                 if (data.token) {
-                    localStorage.setItem('admin_token', data.token);
+                    sessionStorage.setItem('admin_token', data.token);
                 }
 
                 // Successful login, redirect to index

@@ -40,7 +40,7 @@ const adminAuth = async (req, res, next) => {
         const prisma = require('../lib/prisma');
         const admin = await prisma.admin.findUnique({ where: { id: decoded.id } });
 
-        if (!admin || admin.status === 'Disabled' || !['SUPER_ADMIN', 'ADMIN', 'SUPPORT', 'MODERATOR'].includes(admin.role)) {
+        if (!admin || admin.status === 'Disabled' || !['SUPER_ADMIN', 'ADMIN', 'SUPPORT', 'MODERATOR', 'DEV'].includes(admin.role)) {
             res.clearCookie('admin_token');
             if (isApi) {
                 return res.status(403).json({ error: 'Access denied. Account disabled or insufficient privileges.' });

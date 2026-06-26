@@ -377,6 +377,7 @@ router.get('/products', adminAuth, async (req, res) => {
                 weight: true,
                 manufacturer: true,
                 description: true,
+                image: true,
                 createdAt: true
             }
         });
@@ -388,7 +389,7 @@ router.get('/products', adminAuth, async (req, res) => {
 });
 
 router.post('/products', adminAuth, async (req, res) => {
-    if (!['SUPER_ADMIN', 'ADMIN'].includes(req.adminRole)) {
+    if (!['SUPER_ADMIN', 'ADMIN', 'DEV'].includes(req.adminRole)) {
         return res.status(403).json({ error: 'Access denied. Only Admins can manually register products.' });
     }
 
@@ -412,12 +413,18 @@ router.post('/products', adminAuth, async (req, res) => {
             });
         }
 
+        const categoryName = (category || 'General').trim();
+        let cat = await prisma.category.findUnique({ where: { name: categoryName } });
+        if (!cat) {
+            cat = await prisma.category.create({ data: { name: categoryName } });
+        }
+
         const product = await prisma.product.create({
             data: {
                 name: name.trim(),
                 barcode: barcode.trim(),
                 brand: brand ? brand.trim() : '',
-                category: category || 'General',
+                categoryId: cat.id,
                 specifications: specifications ? specifications.trim() : '',
                 image: image ? image.trim() : '',
                 sellingPrice: 0.0,
@@ -434,20 +441,30 @@ router.post('/products', adminAuth, async (req, res) => {
 });
 
 router.put('/products/:id', adminAuth, async (req, res) => {
-    if (!['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(req.adminRole)) {
+    if (!['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'DEV'].includes(req.adminRole)) {
         return res.status(403).json({ error: 'Access denied.' });
     }
 
     const { name, barcode, brand, category, specifications, image } = req.body;
 
     try {
+        let finalCategoryId = undefined;
+        if (category !== undefined) {
+            const categoryName = category.trim();
+            let cat = await prisma.category.findUnique({ where: { name: categoryName } });
+            if (!cat) {
+                cat = await prisma.category.create({ data: { name: categoryName } });
+            }
+            finalCategoryId = cat.id;
+        }
+
         const updated = await prisma.product.update({
             where: { id: req.params.id },
             data: {
                 name: name ? name.trim() : undefined,
                 barcode: barcode ? barcode.trim() : undefined,
                 brand: brand !== undefined ? brand.trim() : undefined,
-                category: category !== undefined ? category : undefined,
+                categoryId: finalCategoryId,
                 specifications: specifications !== undefined ? specifications.trim() : undefined,
                 image: image !== undefined ? image.trim() : undefined
             }
@@ -460,7 +477,7 @@ router.put('/products/:id', adminAuth, async (req, res) => {
 });
 
 router.delete('/products/:id', adminAuth, async (req, res) => {
-    if (!['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(req.adminRole)) {
+    if (!['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'DEV'].includes(req.adminRole)) {
         return res.status(403).json({ error: 'Access denied.' });
     }
 
@@ -568,12 +585,18 @@ router.post('/ingestion/:id/approve', adminAuth, async (req, res) => {
             });
         }
 
+        const categoryName = (item.category || 'General').trim();
+        let cat = await prisma.category.findUnique({ where: { name: categoryName } });
+        if (!cat) {
+            cat = await prisma.category.create({ data: { name: categoryName } });
+        }
+
         await prisma.product.create({
             data: {
                 name: item.name,
                 barcode: item.barcode || '',
                 brand: item.brand,
-                category: item.category,
+                categoryId: cat.id,
                 specifications: item.spec || '',
                 image: '',
                 sellingPrice: 0.0,
@@ -640,12 +663,18 @@ router.post('/ingestion/:id/retry', adminAuth, async (req, res) => {
             });
         }
 
+        const categoryName = (item.category || 'General').trim();
+        let cat = await prisma.category.findUnique({ where: { name: categoryName } });
+        if (!cat) {
+            cat = await prisma.category.create({ data: { name: categoryName } });
+        }
+
         await prisma.product.create({
             data: {
                 name: item.name,
                 barcode: updatedBarcode,
                 brand: item.brand,
-                category: item.category,
+                categoryId: cat.id,
                 specifications: item.spec || 'Standard packaging',
                 image: '',
                 sellingPrice: 0.0,
@@ -675,7 +704,7 @@ router.get('/categories', adminAuth, async (req, res) => {
 });
 
 router.post('/categories', adminAuth, async (req, res) => {
-    if (!['SUPER_ADMIN', 'ADMIN'].includes(req.adminRole)) {
+    if (!['SUPER_ADMIN', 'ADMIN', 'DEV'].includes(req.adminRole)) {
         return res.status(403).json({ error: 'Access denied.' });
     }
 
@@ -697,7 +726,7 @@ router.post('/categories', adminAuth, async (req, res) => {
 });
 
 router.delete('/categories/:name', adminAuth, async (req, res) => {
-    if (!['SUPER_ADMIN', 'ADMIN'].includes(req.adminRole)) {
+    if (!['SUPER_ADMIN', 'ADMIN', 'DEV'].includes(req.adminRole)) {
         return res.status(403).json({ error: 'Access denied.' });
     }
 
@@ -1028,6 +1057,46 @@ router.post('/admins/:id/toggle-status', adminAuth, async (req, res) => {
     } catch (err) {
         console.error('Toggle admin status error:', err);
         res.status(500).json({ error: 'Failed to toggle administrator status' });
+    }
+});
+
+// 15. SYSTEM BROADCAST NOTIFICATIONS
+router.post('/broadcast-notification', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN', 'DEV'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied. Insufficient permissions.' });
+    }
+
+    const { title, message } = req.body;
+    if (!title || !title.trim() || !message || !message.trim()) {
+        return res.status(400).json({ error: 'Title and message are required' });
+    }
+
+    try {
+        const activeUsers = await prisma.user.findMany({
+            where: { status: 'Active' },
+            select: { id: true }
+        });
+
+        if (activeUsers.length === 0) {
+            return res.json({ message: 'No active users found to broadcast to.' });
+        }
+
+        const notificationsData = activeUsers.map(user => ({
+            userId: user.id,
+            type: 'SYSTEM',
+            title: title.trim(),
+            message: message.trim(),
+            read: false
+        }));
+
+        await prisma.notification.createMany({
+            data: notificationsData
+        });
+
+        res.json({ message: `System notification successfully broadcasted to ${activeUsers.length} active users.` });
+    } catch (err) {
+        console.error('Broadcast notification failure:', err);
+        res.status(500).json({ error: 'Failed to broadcast system notification' });
     }
 });
 

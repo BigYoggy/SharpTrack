@@ -1,6 +1,6 @@
 /* SharpTrack Admin Dashboard Core Script */
 
-// --- GLOBAL FETCH INTERCEPTOR: Attaches JWT from localStorage ---
+// --- GLOBAL FETCH INTERCEPTOR: Attaches JWT from sessionStorage ---
 // Cookies fail cross-origin with fetch(). This ensures every admin API
 // request carries the token via the Authorization header instead.
 const _originalFetch = window.fetch;
@@ -13,7 +13,7 @@ window.fetch = async function(resource, config) {
         resource = resource.replace('https://sharptrack-api.onrender.com', API_URL);
     }
 
-    const token = localStorage.getItem('admin_token');
+    const token = sessionStorage.getItem('admin_token');
 
     if (typeof resource === 'string' && resource.includes('/api/admin')) {
         config = config || {};
@@ -27,7 +27,7 @@ window.fetch = async function(resource, config) {
 
     // If any admin API call returns 401, session is dead — redirect to login
     if ((response.status === 401) && typeof resource === 'string' && resource.includes('/api/admin') && !resource.includes('/api/admin/login')) {
-        localStorage.removeItem('admin_token');
+        sessionStorage.removeItem('admin_token');
         window.location.href = '/admin/login.html';
     }
 
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Hide sidebar navigation items based on role permissions
         const productsNav = document.querySelector('.nav-item[data-target="products"]');
         if (productsNav) {
-            productsNav.parentElement.style.display = ['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(role) ? 'block' : 'none';
+            productsNav.parentElement.style.display = ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'DEV'].includes(role) ? 'block' : 'none';
         }
         
         const businessesNav = document.querySelector('.nav-item[data-target="businesses"]');
@@ -226,6 +226,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ingestionNav) {
             ingestionNav.parentElement.style.display = ['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(role) ? 'block' : 'none';
         }
+
+        const broadcastsNav = document.querySelector('.nav-item[data-target="broadcasts"]');
+        if (broadcastsNav) {
+            broadcastsNav.parentElement.style.display = ['SUPER_ADMIN', 'ADMIN', 'DEV'].includes(role) ? 'block' : 'none';
+        }
         
         const adminsNav = document.getElementById('nav-item-admins');
         if (adminsNav) {
@@ -235,21 +240,21 @@ document.addEventListener('DOMContentLoaded', () => {
         // Hide specific buttons
         const addProductBtn = document.getElementById('btn-add-product');
         if (addProductBtn) {
-            addProductBtn.style.display = ['SUPER_ADMIN', 'ADMIN'].includes(role) ? 'inline-flex' : 'none';
+            addProductBtn.style.display = ['SUPER_ADMIN', 'ADMIN', 'DEV'].includes(role) ? 'inline-flex' : 'none';
         }
 
         const addCategoryBtn = document.getElementById('btn-add-category');
         if (addCategoryBtn) {
-            addCategoryBtn.style.display = ['SUPER_ADMIN', 'ADMIN'].includes(role) ? 'inline-block' : 'none';
+            addCategoryBtn.style.display = ['SUPER_ADMIN', 'ADMIN', 'DEV'].includes(role) ? 'inline-block' : 'none';
         }
 
         const categorySettingsTab = document.querySelector('.settings-nav-item[data-subtarget="categories"]');
         const sourcesSettingsTab = document.querySelector('.settings-nav-item[data-subtarget="sources"]');
         if (categorySettingsTab) {
-            categorySettingsTab.style.display = ['SUPER_ADMIN', 'ADMIN'].includes(role) ? 'block' : 'none';
+            categorySettingsTab.style.display = ['SUPER_ADMIN', 'ADMIN', 'DEV'].includes(role) ? 'block' : 'none';
         }
         if (sourcesSettingsTab) {
-            sourcesSettingsTab.style.display = ['SUPER_ADMIN', 'ADMIN'].includes(role) ? 'block' : 'none';
+            sourcesSettingsTab.style.display = ['SUPER_ADMIN', 'ADMIN', 'DEV'].includes(role) ? 'block' : 'none';
         }
     }
 
@@ -1109,7 +1114,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="prod-spec-text">${p.specifications || 'Standard packaging'}</span>
                     <span class="prod-brand-text">Brand: ${p.brand || 'Unbranded'}</span>
                 </div>
-                ${['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(state.currentAdminRole) ? `
+                ${['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'DEV'].includes(state.currentAdminRole) ? `
                 <div class="prod-action-block">
                     <button class="btn btn-secondary btn-sm btn-icon-only btn-edit-prod" data-id="${p.id}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -1743,17 +1748,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Action: Logout securely
     document.getElementById('btn-logout').addEventListener('click', async () => {
-        if (confirm('Are you sure you want to end the Super Admin session?')) {
+        if (confirm('Are you sure you want to end the admin session?')) {
             showToast('info', 'Logging out...', 'Ending secure admin token session...');
             try {
                 await fetch('https://sharptrack-api.onrender.com/api/admin/logout', { method: 'POST' });
             } catch (err) {
                 // Ignore network errors on logout
             }
-            localStorage.removeItem('admin_token');
+            sessionStorage.removeItem('admin_token');
             window.location.href = '/admin/login.html';
         }
     });
+
+    // Action: System Broadcast Form Submit
+    const broadcastForm = document.getElementById('broadcast-form');
+    if (broadcastForm) {
+        broadcastForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('broadcast-title').value.trim();
+            const message = document.getElementById('broadcast-message').value.trim();
+            const submitBtn = broadcastForm.querySelector('button[type="submit"]');
+
+            if (!title || !message) {
+                showToast('error', 'Validation Error', 'Title and message are required.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Broadcasting...';
+
+            try {
+                const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                    ? ''
+                    : 'https://sharptrack-api.onrender.com';
+
+                const response = await fetch(`${API_URL}/api/admin/broadcast-notification`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, message })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to send broadcast');
+                }
+
+                showToast('success', 'Broadcast Sent', data.message || 'System notification broadcasted successfully.');
+                broadcastForm.reset();
+            } catch (err) {
+                showToast('error', 'Broadcast Failure', err.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+    }
 
     // Ctrl+K to search
     document.addEventListener('keydown', (e) => {
