@@ -1,150 +1,214 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to SharpTrack</title>
+    <title>Set Up Workspace | SharpTrack</title>
     <link rel="icon" type="image/png" href="logo2.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Shared Design System CSS for variables & global resets -->
     <link rel="stylesheet" href="css/design-system.css">
+    
+    <!-- Immediate theme initialization to prevent flash -->
+    <script>
+        (function() {
+            const localTheme = localStorage.getItem('st_theme');
+            let themeToApply = 'light';
+            try {
+                const user = JSON.parse(localStorage.getItem('st_user'));
+                if (user && user.darkMode !== undefined) {
+                    themeToApply = user.darkMode ? 'dark' : 'light';
+                } else if (localTheme) {
+                    themeToApply = localTheme;
+                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    themeToApply = 'dark';
+                }
+            } catch(e) {}
+            document.documentElement.setAttribute('data-theme', themeToApply);
+        })();
+    </script>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['selector', '[data-theme="dark"]'],
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            DEFAULT: 'var(--primary)',
+                            dark: 'var(--primary-dark)',
+                            light: 'var(--primary-light)',
+                            glow: 'var(--primary-ghost)',
+                        },
+                        bg: {
+                            DEFAULT: 'var(--bg)',
+                            secondary: 'var(--bg-secondary)',
+                            card: 'var(--card-bg)',
+                        },
+                        border: {
+                            DEFAULT: 'var(--border)',
+                            light: 'var(--border-light)',
+                        },
+                        text: {
+                            DEFAULT: 'var(--text)',
+                            secondary: 'var(--text-secondary)',
+                            muted: 'var(--muted)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { padding: 0; overflow: hidden; }
-
-        .onboarding { display: flex; flex-direction: column; height: 100vh; background: var(--bg); }
-
-        .progress-bar {
-            height: 4px; background: var(--border); position: relative; flex-shrink: 0;
+        .bg-glow {
+            background: radial-gradient(circle at top center, var(--primary-ghost) 0%, transparent 60%);
         }
-        .progress-fill {
-            height: 100%; background: var(--primary); transition: width 0.4s ease;
-            border-radius: 0 2px 2px 0;
-        }
-
-        .skip-bar {
-            display: flex; justify-content: flex-end; padding: 12px 20px 0; flex-shrink: 0;
-        }
-        .skip-btn {
-            font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer;
-            background: none; border: none; font-family: var(--font-family);
-            padding: 6px 12px; border-radius: 8px;
-        }
-        .skip-btn:hover { color: var(--primary); background: var(--primary-ghost); }
-
-        .slides { flex: 1; overflow: hidden; position: relative; }
-        .slide {
-            position: absolute; inset: 0; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; padding: 20px 32px;
-            text-align: center; transition: transform 0.45s ease, opacity 0.45s ease;
-            opacity: 0; transform: translateX(60px);
-        }
-        .slide.active { opacity: 1; transform: translateX(0); }
-        .slide.exit { opacity: 0; transform: translateX(-60px); }
-
-        .slide-icon {
-            width: 100px; height: 100px; border-radius: 50%;
-            background: var(--primary-light); display: flex; align-items: center; justify-content: center;
-            margin-bottom: 32px;
-        }
-        .slide-icon span { font-size: 48px; }
-
-        .slide h2 { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 12px; }
-        .slide p { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 320px; }
-
-        .dots {
-            display: flex; justify-content: center; gap: 8px; margin-top: 24px;
-        }
-        .dot {
-            width: 8px; height: 8px; border-radius: 4px; background: var(--border);
-            transition: all 0.3s;
-        }
-        .dot.active { width: 24px; background: var(--primary); }
-
-        .nav-buttons {
-            display: flex; gap: 12px; padding: 16px 24px 32px; flex-shrink: 0;
-        }
-        .nav-buttons .btn { flex: 1; }
-
-        .final-slide .slide-icon { background: var(--green-bg); }
     </style>
 </head>
-<body>
+<body class="h-full font-sans text-text bg-bg flex items-center justify-center p-4 relative overflow-x-hidden transition-colors duration-300">
+    <!-- Top Ambient Glow -->
+    <div class="absolute top-0 left-0 w-full h-[500px] bg-glow pointer-events-none z-0"></div>
 
-<div class="onboarding">
-    <div class="progress-bar">
-        <div class="progress-fill" id="progressFill" style="width:12.5%"></div>
+    <div class="w-full max-w-[420px] bg-bg-card border border-border p-8 rounded-2xl shadow-lg relative z-10 animate-fade-in transition-all duration-300">
+        <!-- Progress Steps (Step 2 of 2) -->
+        <div class="flex items-center justify-between mb-8">
+            <span class="text-xs font-bold text-brand uppercase tracking-wider">Step 2 of 2</span>
+            <div class="flex space-x-1.5">
+                <div class="w-8 h-1.5 rounded-full bg-brand/30"></div>
+                <div class="w-8 h-1.5 rounded-full bg-brand"></div>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold font-outfit text-left">Set Up Your Store Workspace</h1>
+            <p class="text-text-muted text-sm mt-1 text-left font-light">Tell us a bit about your store to customize your dashboard features.</p>
+        </div>
+
+        <!-- Onboarding Form -->
+        <form onsubmit="handleOnboarding(event);" class="space-y-5">
+            <div>
+                <label for="storeName" class="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Store / Business Name</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-text-muted">
+                        <svg class="h-5 width-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </span>
+                    <input type="text" id="storeName" placeholder="e.g. Alpha Pharmacy & Stores" 
+                           class="w-full bg-bg border border-border rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-brand text-text transition-colors duration-200" required>
+                </div>
+            </div>
+
+            <div>
+                <label for="businessSector" class="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Business Sector</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-text-muted pointer-events-none">
+                        <svg class="h-5 width-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                    </span>
+                    <select id="businessSector" 
+                            class="w-full bg-bg border border-border rounded-xl py-3 pl-10 pr-10 text-sm focus:outline-none focus:border-brand appearance-none text-text transition-colors duration-200" required>
+                        <option value="" disabled selected class="text-text-muted">Select business category...</option>
+                        <option value="Pharmacy">Pharmacy / Healthcare</option>
+                        <option value="Supermarket">Supermarket / Grocery</option>
+                        <option value="Boutique">Boutique / Apparel</option>
+                        <option value="Restaurant">Restaurant / Food Services</option>
+                        <option value="Electronics">Electronics / Gadgets</option>
+                        <option value="General Retail">General Retail / Provision Store</option>
+                        <option value="Other">Other Retail Business</option>
+                    </select>
+                    <!-- Custom Arrow Icon -->
+                    <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-text-muted pointer-events-none">
+                        <svg class="h-5 width-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </span>
+                </div>
+            </div>
+
+            <button type="submit" id="onboarding-btn" 
+                    class="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-3 px-4 rounded-xl text-sm transition-all duration-200 transform active:scale-[0.98] mt-4 flex items-center justify-center shadow-md">
+                Launch Dashboard &rarr;
+            </button>
+        </form>
     </div>
 
-    <div class="skip-bar">
-        <button class="skip-btn" id="skipBtn" onclick="finishOnboarding()">Skip</button>
-    </div>
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+    <script>
+        // Check if logged in, redirect if not or already onboarded
+        if (!isLoggedIn()) {
+            window.location.href = 'index.html';
+        } else {
+            const user = getUser();
+            if (user && user.onboardingCompleted) {
+                window.location.href = 'dashboard.html';
+            }
+        }
 
-    <div class="slides" id="slides">
-        <!-- Slide 0 -->
-        <div class="slide active" data-index="0">
-            <div class="slide-icon"><span>🎉</span></div>
-            <h2>Welcome to SharpTrack!</h2>
-            <p>Your all-in-one business companion for tracking inventory, recording sales, and staying on top of your business.</p>
-        </div>
-        <!-- Slide 1 -->
-        <div class="slide" data-index="1">
-            <div class="slide-icon"><span>📊</span></div>
-            <h2>Your Dashboard</h2>
-            <p>See your daily sales, low stock alerts, and recent activity at a glance. Everything you need, right on your home screen.</p>
-        </div>
-        <!-- Slide 2 -->
-        <div class="slide" data-index="2">
-            <div class="slide-icon"><span>📦</span></div>
-            <h2>Manage Inventory</h2>
-            <p>Add products, track stock levels, and get alerts when you're running low. Never miss a sale due to empty shelves.</p>
-        </div>
-        <!-- Slide 3 -->
-        <div class="slide" data-index="3">
-            <div class="slide-icon"><span>💰</span></div>
-            <h2>Record Sales</h2>
-            <p>Record sales quickly with just a few taps. SharpTrack automatically updates your inventory in real time.</p>
-        </div>
-        <!-- Slide 4 -->
-        <div class="slide" data-index="4">
-            <div class="slide-icon"><span>🔔</span></div>
-            <h2>Smart Notifications</h2>
-            <p>Get notified about low stock, out-of-stock items, and important business events so you never miss anything.</p>
-        </div>
-        <!-- Slide 5 -->
-        <div class="slide" data-index="5">
-            <div class="slide-icon"><span>👤</span></div>
-            <h2>Your Profile</h2>
-            <p>Customize your profile with your store name, contact info, and appearance preferences including dark mode.</p>
-        </div>
-        <!-- Slide 6 -->
-        <div class="slide" data-index="6">
-            <div class="slide-icon"><span>💡</span></div>
-            <h2>Pro Tips</h2>
-            <p>Set reorder levels for each product so SharpTrack alerts you before you run out. Use the quick actions on your dashboard for faster workflows.</p>
-        </div>
-        <!-- Slide 7 -->
-        <div class="slide final-slide" data-index="7">
-            <div class="slide-icon"><span>🚀</span></div>
-            <h2>You're All Set!</h2>
-            <p>Start by adding your first product to your inventory. SharpTrack will handle the rest. Let's grow your business together!</p>
-        </div>
-    </div>
+        initTheme();
 
-    <div class="dots" id="dots"></div>
+        async function handleOnboarding(event) {
+            event.preventDefault();
+            const storeName = document.getElementById('storeName').value.trim();
+            const businessSector = document.getElementById('businessSector').value;
+            const btn = document.getElementById('onboarding-btn');
 
-    <div class="nav-buttons">
-        <button class="btn btn-outline" id="prevBtn" onclick="prevSlide()" style="display:none">Back</button>
-        <button class="btn btn-primary" id="nextBtn" onclick="nextSlide()">Continue</button>
-    </div>
-</div>
+            if (!storeName) {
+                showToast('warning', 'Store Name Required', 'Please enter your store name.');
+                return;
+            }
+            if (!businessSector) {
+                showToast('warning', 'Sector Required', 'Please choose your business sector.');
+                return;
+            }
 
-<script src="js/app.js"></script>
-<script>
-    initTheme();
-    if (!isLoggedIn()) {
-        window.location.href = 'index.html';
-    } else {
-        localStorage.removeItem('onboardingComplete');
-        window.location.href = 'dashboard.html';
-    }
-</script>
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"></span>Launching Dashboard...`;
+
+            try {
+                const res = await apiRequest('/api/auth/profile', {
+                    method: 'PUT',
+                    body: JSON.stringify({ 
+                        storeName, 
+                        businessSector, 
+                        onboardingCompleted: true 
+                    })
+                });
+
+                // Update local user state
+                const user = getUser();
+                if (user) {
+                    user.storeName = storeName;
+                    user.businessSector = businessSector;
+                    user.onboardingCompleted = true;
+                    localStorage.setItem('st_user', JSON.stringify(user));
+                }
+
+                showToast('success', 'Workspace Configured! 🎉', 'Welcome to your dashboard.');
+                
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 800);
+            } catch (err) {
+                showToast('error', 'Onboarding Failed', err.message);
+                btn.disabled = false;
+                btn.innerHTML = 'Launch Dashboard &rarr;';
+            }
+        }
+    </script>
 </body>
 </html>

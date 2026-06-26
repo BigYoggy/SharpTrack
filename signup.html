@@ -1,193 +1,307 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up | SharpTrack — Inventory Software for Nigeria</title>
     <meta name="description" content="Create your SharpTrack account. Set up your retail shop inventory, track daily store sales, and generate reports using our easy-to-use business software.">
     <link rel="icon" type="image/png" href="logo2.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Shared Design System CSS for variables & global resets -->
     <link rel="stylesheet" href="css/design-system.css">
+    
+    <!-- Immediate theme initialization to prevent flash -->
+    <script>
+        (function() {
+            const localTheme = localStorage.getItem('st_theme');
+            let themeToApply = 'light';
+            try {
+                const user = JSON.parse(localStorage.getItem('st_user'));
+                if (user && user.darkMode !== undefined) {
+                    themeToApply = user.darkMode ? 'dark' : 'light';
+                } else if (localTheme) {
+                    themeToApply = localTheme;
+                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    themeToApply = 'dark';
+                }
+            } catch(e) {}
+            document.documentElement.setAttribute('data-theme', themeToApply);
+        })();
+    </script>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['selector', '[data-theme="dark"]'],
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            DEFAULT: 'var(--primary)',
+                            dark: 'var(--primary-dark)',
+                            light: 'var(--primary-light)',
+                            glow: 'var(--primary-ghost)',
+                        },
+                        bg: {
+                            DEFAULT: 'var(--bg)',
+                            secondary: 'var(--bg-secondary)',
+                            card: 'var(--card-bg)',
+                        },
+                        border: {
+                            DEFAULT: 'var(--border)',
+                            light: 'var(--border-light)',
+                        },
+                        text: {
+                            DEFAULT: 'var(--text)',
+                            secondary: 'var(--text-secondary)',
+                            muted: 'var(--muted)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Sign-In Library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-            background-image: radial-gradient(circle at bottom right, rgba(10, 77, 51, 0.05) 0%, transparent 40%),
-                              radial-gradient(circle at bottom left, rgba(10, 77, 51, 0.08) 0%, transparent 50%);
-        }
-
-        .container {
-            width: 100%;
-            max-width: 400px;
-            animation: fadeUp 0.4s ease both;
-        }
-
-        .logo-section {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 28px;
-        }
-
-        .logo-img { width: 260px; max-width: 100%; height: auto; mix-blend-mode: multiply; }
-        [data-theme="dark"] .logo-img { filter: brightness(1.5); mix-blend-mode: normal; }
-
-        .page-title { font-size: 22px; font-weight: 800; color: var(--text); text-align: center; margin-bottom: 4px; }
-        .page-sub { font-size: 14px; color: var(--muted); text-align: center; margin-bottom: 24px; }
-
-        .footer-text {
-            margin-top: 20px;
-            font-size: 14px;
-            color: var(--muted);
-            text-align: center;
-            font-weight: 500;
-        }
-
-        .footer-text a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 700;
-            transition: color 0.2s;
-        }
-        .footer-text a:hover { text-decoration: underline; }
-
-        .name-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        @media (max-width: 400px) {
-            .name-row { grid-template-columns: 1fr; gap: 8px; }
+        .bg-glow {
+            background: radial-gradient(circle at top center, var(--primary-ghost) 0%, transparent 60%);
         }
     </style>
 </head>
-<body>
+<body class="h-full font-sans text-text bg-bg flex items-center justify-center p-4 relative overflow-x-hidden transition-colors duration-300">
+    <!-- Top Ambient Glow -->
+    <div class="absolute top-0 left-0 w-full h-[500px] bg-glow pointer-events-none z-0"></div>
 
-    <div class="container">
-        <div class="logo-section">
-            <img src="logo2.png" alt="SharpTrack Logo" class="logo-img">
+    <div class="w-full max-w-[420px] bg-bg-card border border-border p-8 rounded-2xl shadow-lg relative z-10 animate-fade-in transition-all duration-300">
+        <!-- Logo Header -->
+        <div class="flex flex-col items-center mb-8">
+            <img src="logo2.png" alt="SharpTrack Logo" class="h-10 mb-6 brightness-100 dark:brightness-125 transition-all duration-200">
+            <h1 class="text-2xl font-bold font-outfit text-center">Create Your Account</h1>
+            <p class="text-text-muted text-sm mt-1 text-center font-light">Get started with Nigeria's mobile-first inventory engine.</p>
         </div>
 
-        <h1 class="page-title">Create Account</h1>
-        <p class="page-sub">Start tracking your business in minutes</p>
-
-        <div id="signupForm">
-            <div class="name-row">
-                <div class="input-group">
-                    <label for="firstName">First Name</label>
-                    <div class="input-wrapper">
-                        <span class="icon-left">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        </span>
-                        <input type="text" id="firstName" placeholder="First name" autocomplete="given-name">
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label for="lastName">Last Name</label>
-                    <div class="input-wrapper">
-                        <span class="icon-left">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        </span>
-                        <input type="text" id="lastName" placeholder="Last name" autocomplete="family-name">
-                    </div>
-                </div>
+        <!-- Google One-Tap & Button Container -->
+        <div class="space-y-4 mb-6">
+            <div id="google-btn-wrapper" class="w-full min-h-[44px]">
+                <div id="google-signin-btn" class="w-full flex justify-center"></div>
             </div>
-
-            <div class="input-group">
-                <label for="phone">Phone Number</label>
-                <div class="input-wrapper">
-                    <span class="icon-left">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12.9a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.59 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    </span>
-                    <input type="tel" id="phone" placeholder="e.g. 08012345678" autocomplete="tel">
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label for="pin">Create PIN</label>
-                <div class="input-wrapper">
-                    <span class="icon-left">
-                        <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    </span>
-                    <input type="password" id="pin" placeholder="6-digit PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password">
-                    <span class="icon-right" onclick="toggleVis('pin')">
-                        <svg class="icon" id="pin-eye" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                    </span>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label for="confirmPin">Confirm PIN</label>
-                <div class="input-wrapper">
-                    <span class="icon-left">
-                        <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    </span>
-                    <input type="password" id="confirmPin" placeholder="Confirm PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password">
-                    <span class="icon-right" onclick="toggleVis('confirmPin')">
-                        <svg class="icon" id="confirmPin-eye" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                    </span>
-                </div>
-            </div>
-
-            <button type="button" class="btn btn-primary btn-block btn-lg" id="signup-btn" onclick="handleSignup()">Create Account</button>
         </div>
 
-        <div class="footer-text">
-            Already have an account? <a href="index.html">Sign In</a>
+        <!-- Divider -->
+        <div class="relative flex py-3 items-center mb-6">
+            <div class="flex-grow border-t border-border"></div>
+            <span class="flex-shrink mx-4 text-text-muted text-xs uppercase tracking-wider font-semibold">Or register with email</span>
+            <div class="flex-grow border-t border-border"></div>
+        </div>
+
+        <!-- Email Sign Up Form -->
+        <form onsubmit="event.preventDefault(); handleEmailSignup();" class="space-y-4">
+            <div>
+                <label for="name" class="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Full Name</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-text-muted">
+                        <svg class="h-5 width-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </span>
+                    <input type="text" id="name" placeholder="John Doe" 
+                           class="w-full bg-bg border border-border rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-brand text-text transition-colors duration-200" required>
+                </div>
+            </div>
+
+            <div>
+                <label for="email" class="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Email Address</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-text-muted">
+                        <svg class="h-5 width-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </span>
+                    <input type="email" id="email" placeholder="owner@pharmacy.com" 
+                           class="w-full bg-bg border border-border rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-brand text-text transition-colors duration-200" required>
+                </div>
+            </div>
+
+            <div>
+                <label for="password" class="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Password</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-text-muted">
+                        <svg class="h-5 width-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </span>
+                    <input type="password" id="password" placeholder="Min. 6 characters" 
+                           class="w-full bg-bg border border-border rounded-xl py-3 pl-10 pr-10 text-sm focus:outline-none focus:border-brand text-text transition-colors duration-200" required>
+                    <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-text-muted hover:text-text transition-colors duration-150">
+                        <svg id="eye-icon" class="h-5 width-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" id="email-signup-btn" 
+                    class="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-3 px-4 rounded-xl text-sm transition-all duration-200 transform active:scale-[0.98] mt-2 shadow-md">
+                Create Account
+            </button>
+        </form>
+
+        <!-- Redirect Link -->
+        <div class="mt-6 text-center text-sm text-text-muted">
+            Already have an account? <a href="index.html" class="text-brand hover:text-brand-dark font-semibold transition-colors duration-150">Sign In</a>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="js/app.js"></script>
     <script>
-        initTheme();
-        if (isLoggedIn()) window.location.href = 'dashboard.html';
-
-        function toggleVis(inputId) {
-            const input = document.getElementById(inputId);
-            const isPass = input.type === 'password';
-            input.type = isPass ? 'text' : 'password';
+        // Check if logged in, redirect accordingly
+        if (isLoggedIn()) {
+            const user = getUser();
+            if (user && user.onboardingCompleted) {
+                window.location.href = 'dashboard.html';
+            } else {
+                window.location.href = 'onboarding.html';
+            }
         }
 
-        async function handleSignup() {
-            const firstName = document.getElementById('firstName').value.trim();
-            const lastName = document.getElementById('lastName').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const pin = document.getElementById('pin').value.trim();
-            const confirmPin = document.getElementById('confirmPin').value.trim();
-            const btn = document.getElementById('signup-btn');
+        window.onload = async function() {
+            initTheme();
+            
+            // Fetch Google Client ID from backend config
+            try {
+                const config = await apiRequest('/api/auth/google-client-id');
+                if (config.clientId) {
+                    google.accounts.id.initialize({
+                        client_id: config.clientId,
+                        callback: handleCredentialResponse
+                    });
+                    google.accounts.id.renderButton(
+                        document.getElementById("google-signin-btn"),
+                        { 
+                            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'completed' : 'outline', 
+                            size: "large", 
+                            width: "356", 
+                            type: "standard", 
+                            shape: "rectangular", 
+                            text: "signup_with",
+                            logo_alignment: "left"
+                        }
+                    );
+                } else {
+                    document.getElementById("google-signin-btn").innerHTML = 
+                        `<div class="text-center text-xs text-brand/80 py-2.5 border border-brand/20 rounded-xl bg-brand/5">
+                            Google Authentication is not configured.
+                         </div>`;
+                }
+            } catch (err) {
+                console.error('Failed to load Google Client ID config:', err);
+                document.getElementById("google-signin-btn").innerHTML = 
+                    `<div class="text-center text-xs text-red-500/80 py-2.5 border border-red-500/20 rounded-xl bg-red-500/5">
+                        Could not contact identity server.
+                     </div>`;
+            }
+        };
 
-            if (!firstName || !lastName) {
-                showToast('warning', 'Name Required', 'Please enter your first and last name.');
-                return;
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eye-icon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                `;
+            } else {
+                passInput.type = 'password';
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                `;
             }
-            if (!phone) {
-                showToast('warning', 'Phone Required', 'Please enter your phone number.');
-                return;
-            }
-            if (!pin || pin.length !== 6 || !/^\d{6}$/.test(pin)) {
-                showToast('warning', 'Invalid PIN', 'PIN must be exactly 6 digits.');
-                return;
-            }
-            if (pin !== confirmPin) {
-                showToast('error', 'PIN Mismatch', 'Your PINs do not match. Please try again.');
-                return;
-            }
+        }
 
-            // Save pending data and send OTP
-            localStorage.setItem('pendingSignup', JSON.stringify({
-                name: firstName + ' ' + lastName, phone, pin
-            }));
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span> Sending verification...';
+        async function handleCredentialResponse(response) {
+            const token = response.credential;
+            const btnWrapper = document.getElementById('google-btn-wrapper');
+            if (btnWrapper) btnWrapper.style.opacity = '0.5';
 
             try {
-                await apiRequest('/api/otp/send', {
+                const res = await apiRequest('/api/auth/google', {
                     method: 'POST',
-                    body: JSON.stringify({ phone })
+                    body: JSON.stringify({ token })
                 });
 
-                showToast('success', 'Code Sent!', 'A verification code has been sent to your phone.');
-                setTimeout(() => { window.location.href = 'verify.html'; }, 800);
+                showToast('success', 'Logged in! 🎉', 'Google login successful.');
+                setAuth(res.token, res.user);
+
+                setTimeout(() => {
+                    if (res.user.onboardingCompleted) {
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        window.location.href = 'onboarding.html';
+                    }
+                }, 800);
             } catch (err) {
-                showToast('error', 'Failed to Send Code', err.message);
+                showToast('error', 'Google Auth Failed', err.message);
+                if (btnWrapper) btnWrapper.style.opacity = '1';
+            }
+        }
+
+        async function handleEmailSignup() {
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('email-signup-btn');
+
+            if (!name || !email || !password) {
+                showToast('warning', 'Missing Fields', 'Please fill in all fields.');
+                return;
+            }
+
+            if (name.length < 2) {
+                showToast('warning', 'Invalid Name', 'Name must be at least 2 characters.');
+                return;
+            }
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showToast('warning', 'Invalid Email', 'Please enter a valid email address.');
+                return;
+            }
+
+            if (password.length < 6) {
+                showToast('warning', 'Weak Password', 'Password must be at least 6 characters.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"></span>Creating Account...`;
+
+            try {
+                const response = await apiRequest('/api/auth/register-email', {
+                    method: 'POST',
+                    body: JSON.stringify({ name, email, password })
+                });
+
+                showToast('success', 'Welcome! 🎉', 'Your account has been created.');
+                setAuth(response.token, response.user);
+
+                setTimeout(() => {
+                    window.location.href = 'onboarding.html';
+                }, 800);
+            } catch (err) {
+                showToast('error', 'Registration Failed', err.message);
                 btn.disabled = false;
                 btn.innerHTML = 'Create Account';
             }

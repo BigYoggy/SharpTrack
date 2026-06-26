@@ -46,6 +46,11 @@ function authGuard() {
         window.location.href = 'index.html';
         return false;
     }
+    const user = getUser();
+    if (user && user.onboardingCompleted === false && !window.location.pathname.endsWith('onboarding.html')) {
+        window.location.href = 'onboarding.html';
+        return false;
+    }
     return true;
 }
 
@@ -212,7 +217,12 @@ function formatTime(dateString) {
 
 /* ── THEME MANAGEMENT ── */
 function getTheme() {
-    return localStorage.getItem('st_theme') || 'light';
+    const local = localStorage.getItem('st_theme');
+    if (local) return local;
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+    }
+    return 'light';
 }
 
 function setTheme(mode) {
@@ -222,7 +232,12 @@ function setTheme(mode) {
 
 function initTheme() {
     const user = getUser();
-    const savedTheme = user?.darkMode ? 'dark' : getTheme();
+    let savedTheme;
+    if (user && user.darkMode !== undefined) {
+        savedTheme = user.darkMode ? 'dark' : 'light';
+    } else {
+        savedTheme = getTheme();
+    }
     setTheme(savedTheme);
 }
 

@@ -2,9 +2,12 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { OAuth2Client } = require('google-auth-library');
 const prisma = require('./lib/prisma');
 const authMiddleware = require('./middleware/auth');
 
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const { otpStore } = require('./store');
 const { logActivity, createNotification } = require('./lib/monitoring');
 
@@ -42,6 +45,258 @@ function recordMerchantFailedAttempt(phone) {
 function resetMerchantFailedAttempts(phone) {
     delete merchantLoginAttempts[phone];
 }
+
+// GOOGLE AUTH
+router.post('/google', async (req, res) => {
+    const { token } = req.body;
+    if (!token) {
+        return res.status(400).json({ error: 'Google ID token is required' });
+    }
+
+    try {
+        let payload;
+        // Support testing with mock token
+        if (token.startsWith('mock-google-token-')) {
+            const suffix = token.replace('mock-google-token-', '');
+            payload = {
+                sub: `mock-google-id-${suffix}`,
+                email: `${suffix}@example.com`,
+                name: `Mock User ${suffix}`,
+                email_verified: true
+            };
+        } else {
+            const ticket = await googleClient.verifyIdToken({
+                idToken: token,
+                audience: process.env.GOOGLE_CLIENT_ID,
+            });
+            payload = ticket.getPayload();
+        }
+
+        if (!payload || !payload.email) {
+            return res.status(400).json({ error: 'Invalid Google token' });
+        }
+
+        const googleId = payload.sub;
+        const email = payload.email.toLowerCase();
+        const name = payload.name || email.split('@')[0];
+
+        // 1. Find user by googleId
+        let user = await prisma.user.findUnique({ where: { googleId } });
+
+        if (!user) {
+            // 2. Or find user by email
+            user = await prisma.user.findUnique({ where: { email } });
+            if (user) {
+                // Link Google to existing email account
+                user = await prisma.user.update({
+                    where: { id: user.id },
+                    data: {
+                        googleId,
+                        authProvider: 'google'
+                    }
+                });
+                await logActivity(user.id, 'google_account_linked', 'Linked Google login to existing email account');
+            } else {
+                // 3. Create a new user
+                user = await prisma.user.create({
+                    data: {
+                        name,
+                        email,
+                        googleId,
+                        authProvider: 'google',
+                        onboardingCompleted: false
+                    }
+                });
+                await createNotification(
+                    user.id,
+                    'INFO',
+                    'Welcome to SharpTrack! 🎉',
+                    'Your account has been created successfully. Set up your workspace to get started.'
+                );
+                await logActivity(user.id, 'account_created', 'Account registered successfully via Google OAuth');
+            }
+        }
+
+        if (user.status === 'Suspended') {
+            return res.status(403).json({ error: 'This merchant account has been suspended. Please contact support.' });
+        }
+
+        const jwtToken = jwt.sign(
+            { userId: user.id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        res.status(200).json({
+            message: 'Google authentication successful',
+            token: jwtToken,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                storeName: user.storeName,
+                businessSector: user.businessSector,
+                profilePhoto: user.profilePhoto,
+                onboardingCompleted: user.onboardingCompleted,
+                darkMode: user.darkMode,
+                createdAt: user.createdAt
+            }
+        });
+
+    } catch (err) {
+        console.error('Google Auth error:', err.message);
+        res.status(500).json({ error: 'Google authentication failed. Please try again.' });
+    }
+});
+
+// EMAIL REGISTER
+router.post('/register-email', async (req, res) => {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    if (typeof name !== 'string' || name.trim().length < 2) {
+        return res.status(400).json({ error: 'Name must be at least 2 characters' });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+        return res.status(400).json({ error: 'Please enter a valid email address' });
+    }
+
+    if (typeof password !== 'string' || password.length < 6) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    try {
+        const existingUser = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email: cleanEmail }
+                ]
+            }
+        });
+
+        if (existingUser) {
+            return res.status(400).json({ error: 'An account with this email is already registered.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        const user = await prisma.user.create({
+            data: {
+                name: name.trim(),
+                email: cleanEmail,
+                password: hashedPassword,
+                authProvider: 'email',
+                onboardingCompleted: false
+            }
+        });
+
+        await createNotification(
+            user.id,
+            'INFO',
+            'Welcome to SharpTrack! 🎉',
+            'Your account has been created successfully. Set up your workspace to get started.'
+        );
+
+        await logActivity(user.id, 'account_created', 'Account registered successfully via email/password');
+
+        const jwtToken = jwt.sign(
+            { userId: user.id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        res.status(201).json({
+            message: 'Account created successfully',
+            token: jwtToken,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                storeName: user.storeName,
+                businessSector: user.businessSector,
+                profilePhoto: user.profilePhoto,
+                onboardingCompleted: user.onboardingCompleted,
+                darkMode: user.darkMode,
+                createdAt: user.createdAt
+            }
+        });
+
+    } catch (err) {
+        console.error('Email registration error:', err.message);
+        res.status(500).json({ error: 'Something went wrong. Please try again.' });
+    }
+});
+
+// EMAIL LOGIN
+router.post('/login-email', async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+
+    try {
+        const user = await prisma.user.findUnique({ where: { email: cleanEmail } });
+        if (!user) {
+            return res.status(400).json({ error: 'Invalid email or password' });
+        }
+
+        if (user.status === 'Suspended') {
+            return res.status(403).json({ error: 'This merchant account has been suspended. Please contact support.' });
+        }
+
+        if (user.authProvider === 'google' && !user.password) {
+            return res.status(400).json({ error: 'This account was created with Google. Please use Google Sign In.' });
+        }
+
+        if (!user.password) {
+            return res.status(400).json({ error: 'Password authentication not set up for this account.' });
+        }
+
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) {
+            return res.status(400).json({ error: 'Invalid email or password' });
+        }
+
+        const jwtToken = jwt.sign(
+            { userId: user.id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        await logActivity(user.id, 'login', 'Logged in successfully via email/password');
+
+        res.status(200).json({
+            message: 'Login successful',
+            token: jwtToken,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                storeName: user.storeName,
+                businessSector: user.businessSector,
+                profilePhoto: user.profilePhoto,
+                onboardingCompleted: user.onboardingCompleted,
+                darkMode: user.darkMode,
+                createdAt: user.createdAt
+            }
+        });
+
+    } catch (err) {
+        console.error('Email login error:', err.message);
+        res.status(500).json({ error: 'Something went wrong. Please try again.' });
+    }
+});
 
 // REGISTER
 router.post('/register', async (req, res) => {
@@ -194,6 +449,11 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// GET GOOGLE CLIENT ID
+router.get('/google-client-id', (req, res) => {
+    res.json({ clientId: process.env.GOOGLE_CLIENT_ID || '' });
+});
+
 // GET CURRENT USER
 router.get('/me', authMiddleware, async (req, res) => {
     try {
@@ -226,13 +486,14 @@ router.get('/me', authMiddleware, async (req, res) => {
 
 // UPDATE PROFILE
 router.put('/profile', authMiddleware, async (req, res) => {
-    const { name, email, storeName, profilePhoto, onboardingCompleted, darkMode } = req.body;
+    const { name, email, storeName, businessSector, profilePhoto, onboardingCompleted, darkMode } = req.body;
 
     try {
         const updateData = {};
         if (name !== undefined) updateData.name = name.trim();
         if (email !== undefined) updateData.email = email.trim();
         if (storeName !== undefined) updateData.storeName = storeName.trim();
+        if (businessSector !== undefined) updateData.businessSector = businessSector.trim();
         if (profilePhoto !== undefined) updateData.profilePhoto = profilePhoto;
         if (onboardingCompleted !== undefined) updateData.onboardingCompleted = onboardingCompleted;
         if (darkMode !== undefined) updateData.darkMode = darkMode;
@@ -246,6 +507,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
                 phone: true,
                 email: true,
                 storeName: true,
+                businessSector: true,
                 profilePhoto: true,
                 onboardingCompleted: true,
                 darkMode: true,

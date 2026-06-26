@@ -10,10 +10,13 @@ datasource db {
 model User {
   id                  String          @id @default(cuid())
   name                String
-  phone               String          @unique
-  password            String
-  email               String?
+  phone               String?         @unique
+  password            String?
+  email               String?         @unique
+  googleId            String?         @unique
+  authProvider        String          @default("phone") // "phone" | "email" | "google"
   storeName           String?
+  businessSector      String?
   profilePhoto        String?
   onboardingCompleted Boolean         @default(false)
   darkMode            Boolean         @default(false)

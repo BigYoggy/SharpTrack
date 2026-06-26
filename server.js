@@ -84,6 +84,9 @@ const productCreateLimiter = rateLimit({
 // Apply rate limiters to matching routes
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/google', authLimiter);
+app.use('/api/auth/register-email', authLimiter);
+app.use('/api/auth/login-email', authLimiter);
 app.use('/api/otp/send', otpLimiter);
 app.use('/api/ai/', aiLimiter);
 app.use('/api/chat', aiLimiter);
