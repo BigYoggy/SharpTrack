@@ -10,6 +10,7 @@ const authMiddleware = require('./middleware/auth');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const { otpStore } = require('./store');
 const { logActivity, createNotification } = require('./lib/monitoring');
+const { sendCongratulationMail } = require('./services/email');
 
 // Lockout state for merchant login attempts
 const merchantLoginAttempts = {};
@@ -171,6 +172,12 @@ router.post('/register-email', async (req, res) => {
         return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
+    // Enforce OTP verification check for email
+    const otpRecord = otpStore[cleanEmail];
+    if (!otpRecord || !otpRecord.verified || Date.now() > otpRecord.verificationExpires) {
+        return res.status(400).json({ error: 'Email has not been verified via OTP or verification has expired.' });
+    }
+
     try {
         const existingUser = await prisma.user.findFirst({
             where: {
@@ -204,6 +211,9 @@ router.post('/register-email', async (req, res) => {
         );
 
         await logActivity(user.id, 'account_created', 'Account registered successfully via email/password');
+
+        // Consume the OTP verification session
+        delete otpStore[cleanEmail];
 
         const jwtToken = jwt.sign(
             { userId: user.id, email: user.email },
@@ -498,6 +508,9 @@ router.put('/profile', authMiddleware, async (req, res) => {
         if (onboardingCompleted !== undefined) updateData.onboardingCompleted = onboardingCompleted;
         if (darkMode !== undefined) updateData.darkMode = darkMode;
 
+        // Fetch existing user to check if onboarding is being completed for the first time
+        const existingUser = await prisma.user.findUnique({ where: { id: req.userId } });
+
         const user = await prisma.user.update({
             where: { id: req.userId },
             data: updateData,
@@ -518,6 +531,15 @@ router.put('/profile', authMiddleware, async (req, res) => {
 
         await logActivity(req.userId, 'profile_updated', 'Profile information updated');
         await createNotification(req.userId, 'info', 'Store Profile Updated', 'Your store profile settings have been updated successfully.');
+
+        // Send congratulation email if onboarding was just completed now
+        if (onboardingCompleted === true && existingUser && !existingUser.onboardingCompleted && user.email) {
+            try {
+                await sendCongratulationMail(user.email, user.name, user.storeName || 'your store');
+            } catch (emailErr) {
+                console.error('Failed to send congratulation email:', emailErr.message);
+            }
+        }
 
         res.json({ message: 'Profile updated successfully', user });
     } catch (err) {
