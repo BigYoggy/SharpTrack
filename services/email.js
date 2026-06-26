@@ -1,6 +1,6 @@
 const { Resend } = require('resend');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || 're_123456789');
 // Use a verified domain if possible. Using resend.dev for testing.
 const FROM_EMAIL = process.env.EMAIL_FROM || 'SharpTrack <onboarding@resend.dev>'; 
 
