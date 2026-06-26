@@ -425,6 +425,9 @@ function injectBottomNav(activePage) {
     const existing = document.getElementById('st-bottom-nav');
     if (existing) return;
 
+    // Add class for desktop layout spacing
+    document.body.classList.add('has-sidebar');
+
     const pages = [
         { id: 'dashboard', label: 'Dashboard', href: 'dashboard.html', icon: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>' },
         { id: 'inventory', label: 'Inventory', href: 'inventory.html', icon: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>' },
@@ -532,7 +535,7 @@ function handleGlobalShortcuts(e) {
 
 /* ── PAGE INIT ── */
 function initPage(activePage, requireAuth = true) {
-    initTheme();
+
 
     if (requireAuth && !authGuard()) return false;
 

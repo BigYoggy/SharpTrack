@@ -1313,7 +1313,7 @@
     <script src="js/app.js"></script>
     <script>
         // Auto-login redirect
-        if (typeof initTheme === 'function') initTheme();
+
         if (typeof isLoggedIn === 'function' && isLoggedIn()) {
             const user = getUser();
             if (user && user.onboardingCompleted) {

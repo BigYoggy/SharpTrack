@@ -15,24 +15,7 @@
     <!-- Shared Design System CSS for variables & global resets -->
     <link rel="stylesheet" href="css/design-system.css">
     
-    <!-- Immediate theme initialization to prevent flash -->
-    <script>
-        (function() {
-            const localTheme = localStorage.getItem('st_theme');
-            let themeToApply = 'light';
-            try {
-                const user = JSON.parse(localStorage.getItem('st_user'));
-                if (user && user.darkMode !== undefined) {
-                    themeToApply = user.darkMode ? 'dark' : 'light';
-                } else if (localTheme) {
-                    themeToApply = localTheme;
-                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    themeToApply = 'dark';
-                }
-            } catch(e) {}
-            document.documentElement.setAttribute('data-theme', themeToApply);
-        })();
-    </script>
+    <!-- Tailwind CSS CDN -->
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -214,7 +197,7 @@
         }
 
         window.onload = async function() {
-            initTheme();
+
             
             // Fetch Google Client ID from backend config
             try {
