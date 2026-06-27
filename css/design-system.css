@@ -2398,17 +2398,17 @@ svg.icon-lg { width: 28px; height: 28px; }
 
     .content {
         width: 100%;
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 40px;
+        max-width: 1400px;
+        margin: 0; /* Left align next to sidebar instead of centering with huge gap */
+        padding: 40px 60px;
     }
 
     /* Top Navbar */
     .navbar {
         width: 100% !important;
-        max-width: 1000px !important;
+        max-width: 1400px !important;
         left: 0 !important;
-        margin: 0 auto !important;
+        margin: 0 !important;
         transform: none !important;
         padding: 14px 40px !important;
         border-radius: 0 !important;
@@ -2419,9 +2419,9 @@ svg.icon-lg { width: 28px; height: 28px; }
 
     .app-header {
         width: 100% !important;
-        max-width: 1000px !important;
+        max-width: 1400px !important;
         left: 0 !important;
-        margin: 0 auto !important;
+        margin: 0 !important;
         transform: none !important;
         padding: 14px 40px !important;
         border-radius: 0 !important;
@@ -2463,6 +2463,11 @@ svg.icon-lg { width: 28px; height: 28px; }
         gap: 16px !important;
         border-radius: 12px !important;
         width: 100% !important;
+        transition: background-color 0.2s, color 0.2s, transform 0.1s !important;
+    }
+
+    .nav-item:hover {
+        background: rgba(255, 255, 255, 0.08) !important;
     }
 
     .nav-item.active {
@@ -2536,5 +2541,12 @@ svg.icon-lg { width: 28px; height: 28px; }
     .ai-chat-btn {
         right: 40px !important;
         bottom: 40px !important;
+    }
+
+    /* Keep the logo centered in the navbar */
+    .nav-logo {
+        position: absolute !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
     }
 }
