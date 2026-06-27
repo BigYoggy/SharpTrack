@@ -6,8 +6,6 @@
     <title>SharpTrack — Add Stock</title>
     <link rel="icon" type="image/png" href="logo2.png">
     <link rel="stylesheet" href="css/design-system.css">
-
-    <!-- External Libraries -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -16,9 +14,7 @@
         body { padding-bottom: 90px; }
 
         /* ── BACK ROW ── */
-        .back-row {
-            display: flex; align-items: center; gap: 8px; padding: 16px 0 8px;
-        }
+        .back-row { display: flex; align-items: center; gap: 8px; padding: 16px 0 8px; }
         .back-btn {
             display: flex; align-items: center; gap: 4px; color: var(--primary); font-size: 14px;
             font-weight: 600; cursor: pointer; text-decoration: none; background: none; border: none;
@@ -31,97 +27,86 @@
         .page-title h1 { font-size: 24px; margin-bottom: 4px; }
         .page-title p { font-size: 14px; color: var(--muted); }
 
-        /* ── IMAGE BOX ── */
+        /* ══════════════════════════════════
+           MODE SELECTION
+           ══════════════════════════════════ */
+        .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 8px; }
+        .mode-card {
+            background: var(--card-bg); border: 2px solid var(--border); border-radius: var(--radius-xl);
+            padding: 28px 16px; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 14px; cursor: pointer; transition: all var(--transition-normal);
+            text-align: center; min-height: 180px;
+        }
+        .mode-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .mode-card:active { transform: scale(0.97); }
+        .mode-card .mode-icon {
+            width: 56px; height: 56px; border-radius: 50%; background: var(--primary-light);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .mode-card .mode-icon svg { width: 28px; height: 28px; color: var(--primary); }
+        .mode-card h3 { font-size: 15px; font-weight: 700; color: var(--text); }
+        .mode-card p { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+        /* ══════════════════════════════════
+           SHARED FORM STYLES
+           ══════════════════════════════════ */
         .image-box {
-            background: var(--card-bg);
-            border: 2px solid var(--border);
-            border-radius: var(--radius-xl);
-            height: 200px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            margin-bottom: 16px;
-            transition: all var(--transition-normal);
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 0 20px rgba(37, 160, 96, 0.08);
+            background: var(--card-bg); border: 2px dashed var(--border); border-radius: var(--radius-xl);
+            height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; margin-bottom: 16px; transition: all var(--transition-normal);
+            overflow: hidden; position: relative;
         }
         .image-box:hover { border-color: var(--primary); }
-        .image-box.has-image {
-            border-color: var(--primary);
-            box-shadow: 0 0 24px rgba(37, 160, 96, 0.15);
-        }
+        .image-box.has-image { border-style: solid; border-color: var(--primary); }
         .image-box img { width: 100%; height: 100%; object-fit: contain; }
         .image-box .placeholder {
-            display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--muted);
-            font-size: 13px; font-weight: 500;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            color: var(--muted); font-size: 13px; font-weight: 500;
         }
         .image-box .placeholder svg { color: var(--primary); opacity: 0.6; }
 
-        /* ── ACTION BUTTONS ── */
-        .magic-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
+        .magic-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .magic-actions.three-col { grid-template-columns: 1fr 1fr 1fr; }
+        @media (max-width: 400px) { .magic-actions.three-col { grid-template-columns: 1fr; } }
+
         .magic-btn {
-            padding: 12px 16px; border-radius: var(--radius-md);
-            border: 1.5px solid var(--border);
-            background: var(--card-bg); font-weight: 600; font-size: 13px; color: var(--text);
-            display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+            padding: 12px 10px; border-radius: var(--radius-md); border: 1.5px solid var(--border);
+            background: var(--card-bg); font-weight: 600; font-size: 12px; color: var(--text);
+            display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;
             transition: all var(--transition-fast); font-family: var(--font-family);
         }
         .magic-btn:hover { border-color: var(--primary); color: var(--primary); }
         .magic-btn:active { transform: scale(0.97); }
-        .magic-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .magic-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .magic-btn.ai {
             background: linear-gradient(135deg, var(--primary-light), var(--card-bg));
             border-color: var(--primary); color: var(--primary);
         }
-        .magic-btn.ai:hover { box-shadow: var(--shadow-primary); }
 
-        /* ── FORM CARDS ── */
         .form-card {
             background: var(--card-bg); border-radius: var(--radius-lg); padding: 20px;
             margin-bottom: 16px; border: 1px solid var(--border);
         }
         .form-card h2 {
             font-size: 15px; font-weight: 700; margin-bottom: 16px;
-            display: flex; align-items: center; justify-content: space-between;
-            color: var(--text);
+            display: flex; align-items: center; justify-content: space-between; color: var(--text);
         }
 
-        /* ── AI BADGE ── */
         .ai-badge {
             font-size: 11px; font-weight: 600; color: var(--primary);
             background: var(--primary-light); padding: 4px 10px; border-radius: 12px;
-            animation: bannerSlideIn 0.3s ease both;
         }
 
-        /* ── FIELD ROWS ── */
         .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        @media (max-width: 400px) { .field-row { grid-template-columns: 1fr; gap: 8px; } }
+        @media (max-width: 400px) { .field-row { grid-template-columns: 1fr; } }
 
-        /* ── INPUT OVERRIDES ── */
-        .input-wrapper input,
-        .input-wrapper select {
-            background: var(--bg-secondary) !important;
-            border-color: var(--border) !important;
-            color: var(--text) !important;
+        .input-wrapper input, .input-wrapper select {
+            background: var(--bg-secondary) !important; border-color: var(--border) !important; color: var(--text) !important;
         }
-        .input-wrapper input:focus {
-            border-color: var(--primary) !important;
-            box-shadow: 0 0 0 3px var(--primary-ghost);
-        }
+        .input-wrapper input:focus { border-color: var(--primary) !important; box-shadow: 0 0 0 3px var(--primary-ghost); }
         .input-wrapper input::placeholder { color: var(--muted); opacity: 0.6; }
+        .input-wrapper input:not([type="number"]), .input-wrapper select { padding-left: 44px; }
 
-        .input-wrapper input:not([type="number"]),
-        .input-wrapper select { padding-left: 44px; }
-
-        /* ── BARCODE ROW ── */
         .barcode-row { display: flex; gap: 8px; }
         .barcode-row .input-wrapper { flex: 1; }
         .btn-lookup {
@@ -131,19 +116,16 @@
         }
         .btn-lookup:hover { background: var(--primary); color: white; }
 
-        /* ── UNIT TAGS ── */
         .quick-units { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .unit-tag {
             padding: 6px 14px; border-radius: 16px; background: var(--bg-secondary);
             font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-secondary);
-            border: 1.5px solid transparent; transition: all var(--transition-fast);
-            font-family: var(--font-family);
+            border: 1.5px solid transparent; transition: all var(--transition-fast); font-family: var(--font-family);
         }
         .unit-tag:hover, .unit-tag.active {
             border-color: var(--primary); background: var(--primary-light); color: var(--primary);
         }
 
-        /* ── AI STATUS BANNER ── */
         @keyframes bannerSlideIn {
             from { opacity: 0; transform: translateY(-8px); }
             to { opacity: 1; transform: translateY(0); }
@@ -151,45 +133,21 @@
         .ai-status-banner {
             padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px;
             margin-bottom: 16px; display: flex; gap: 8px; align-items: center;
-            animation: bannerSlideIn 0.3s ease both;
-            font-weight: 500;
+            animation: bannerSlideIn 0.3s ease both; font-weight: 500;
         }
-        .ai-status-banner.success {
-            background: rgba(46, 158, 91, 0.15); color: var(--green);
-            border: 1px solid rgba(46, 158, 91, 0.3);
-        }
-        .ai-status-banner.warning {
-            background: rgba(224, 123, 42, 0.15); color: var(--orange);
-            border: 1px solid rgba(224, 123, 42, 0.3);
-        }
-        .ai-status-banner.error {
-            background: rgba(229, 57, 53, 0.15); color: var(--red);
-            border: 1px solid rgba(229, 57, 53, 0.3);
-        }
+        .ai-status-banner.success { background: rgba(46,158,91,0.15); color: var(--green); border: 1px solid rgba(46,158,91,0.3); }
+        .ai-status-banner.warning { background: rgba(224,123,42,0.15); color: var(--orange); border: 1px solid rgba(224,123,42,0.3); }
+        .ai-status-banner.error { background: rgba(229,57,53,0.15); color: var(--red); border: 1px solid rgba(229,57,53,0.3); }
 
-        /* ── AI GENERATED MARKER ── */
         .ai-generated { border-left: 3px solid var(--primary) !important; }
 
-        /* ── LOADING OVERLAY ── */
         .ai-loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px); z-index: 9999;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             color: white; font-weight: 600; gap: 16px;
         }
 
-        /* ── SUBMIT BUTTON SPACING ── */
-        #submitBtn { margin-bottom: 24px; }
-
-        /* ── UTILITIES ── */
-        .hidden { display: none !important; }
-        .mb-0 { margin-bottom: 0 !important; }
-
-        /* ── BARCODE SCANNER ── */
-        #reader { width: 100%; border-radius: var(--radius-lg); overflow: hidden; border: none; margin-bottom: 16px; }
-
-        /* ── CUSTOM DROPDOWN ── */
         .custom-dropdown { position: relative; width: 100%; }
         .custom-dropdown-header {
             width: 100%; height: 48px; padding: 0 16px 0 44px;
@@ -199,56 +157,124 @@
             display: flex; align-items: center; justify-content: space-between;
             cursor: pointer; transition: all var(--transition-fast);
         }
-        .custom-dropdown-header:focus, .custom-dropdown.open .custom-dropdown-header {
-            border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-ghost); outline: none;
-        }
         .custom-dropdown-header.placeholder-text { color: var(--muted); }
         .custom-dropdown-list {
             position: absolute; top: 100%; left: 0; right: 0;
             background: var(--bg-secondary); border: 1px solid var(--border);
             border-radius: var(--radius-md); margin-top: 4px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3); z-index: 10;
-            max-height: 200px; overflow-y: auto; display: none;
+            box-shadow: var(--shadow-lg); z-index: 10; max-height: 200px; overflow-y: auto; display: none;
         }
-        .custom-dropdown.open .custom-dropdown-list {
-            display: block; animation: bannerSlideIn 0.2s ease;
-        }
+        .custom-dropdown.open .custom-dropdown-list { display: block; animation: bannerSlideIn 0.2s ease; }
         .custom-dropdown-item {
             padding: 12px 16px; font-size: 14px; color: var(--text);
             cursor: pointer; transition: background var(--transition-fast);
         }
-        .custom-dropdown-item:hover {
-            background: var(--primary-ghost); color: var(--primary);
+        .custom-dropdown-item:hover { background: var(--primary-ghost); color: var(--primary); }
+
+        /* ══════════════════════════════════
+           BULK WIZARD — STEP INDICATOR
+           ══════════════════════════════════ */
+        .step-indicator {
+            display: flex; align-items: center; justify-content: center; gap: 0;
+            margin-bottom: 28px; padding: 0 8px;
         }
+        .step-dot {
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0;
+            border: 2px solid var(--border); background: var(--card-bg); color: var(--muted);
+            transition: all var(--transition-normal);
+        }
+        .step-dot.active { border-color: var(--primary); background: var(--primary); color: white; }
+        .step-dot.completed { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+        .step-line { flex: 1; height: 2px; background: var(--border); transition: background var(--transition-normal); }
+        .step-line.completed { background: var(--primary); }
+        .step-labels { display: flex; justify-content: space-between; margin-top: 8px; margin-bottom: 20px; }
+        .step-label { font-size: 11px; color: var(--muted); text-align: center; flex: 1; }
+        .step-label.active { color: var(--primary); font-weight: 600; }
+
+        /* ══════════════════════════════════
+           BULK ITEMS LIST
+           ══════════════════════════════════ */
+        .bulk-item-row {
+            display: flex; align-items: center; gap: 10px; padding: 14px;
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-md);
+            margin-bottom: 10px; transition: all var(--transition-fast);
+            border-left: 3px solid var(--primary);
+        }
+        .bulk-item-row .drag-handle { color: var(--muted); cursor: grab; flex-shrink: 0; }
+        .bulk-item-row .tag-icon { color: var(--primary); flex-shrink: 0; }
+        .bulk-item-row .item-name {
+            flex: 1; min-width: 0; font-weight: 600; font-size: 14px; color: var(--text);
+            background: none; border: none; font-family: var(--font-family); outline: none;
+        }
+        .bulk-item-row .item-name::placeholder { color: var(--muted); }
+        .bulk-field-group { display: flex; flex-direction: column; gap: 2px; }
+        .bulk-field-group label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+        .bulk-field-group input {
+            width: 80px; height: 36px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+            background: var(--bg-secondary); color: var(--text); font-family: var(--font-family);
+            font-size: 14px; font-weight: 600; text-align: center; outline: none;
+        }
+        .bulk-field-group input:focus { border-color: var(--primary); }
+        .bulk-delete-btn {
+            background: none; border: none; color: var(--red); cursor: pointer; padding: 6px;
+            border-radius: 8px; transition: all var(--transition-fast); flex-shrink: 0;
+        }
+        .bulk-delete-btn:hover { background: var(--red-bg); }
+
+        .add-item-btn {
+            display: flex; align-items: center; gap: 6px; padding: 10px 16px;
+            border: 1.5px dashed var(--primary); border-radius: var(--radius-md);
+            background: none; color: var(--primary); font-weight: 600; font-size: 13px;
+            cursor: pointer; font-family: var(--font-family); transition: all var(--transition-fast);
+        }
+        .add-item-btn:hover { background: var(--primary-light); }
+
+        /* ══════════════════════════════════
+           REVIEW TABLE
+           ══════════════════════════════════ */
+        .review-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .review-table th {
+            text-align: left; padding: 10px 8px; font-size: 11px; font-weight: 700;
+            color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border);
+        }
+        .review-table th:last-child { text-align: right; }
+        .review-table td {
+            padding: 12px 8px; border-bottom: 1px solid var(--border); color: var(--text);
+        }
+        .review-table td:last-child { text-align: right; font-weight: 600; }
+        .review-totals {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 0; margin-top: 8px; border-top: 2px solid var(--border);
+        }
+        .review-totals .total-label { font-size: 13px; color: var(--muted); }
+        .review-totals .total-value { font-size: 18px; font-weight: 800; color: var(--primary); }
 
         /* ── CROPPER MODAL ── */
         .st-cropper-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 10000;
-            display: flex; flex-direction: column;
+            background: #000; z-index: 10000; display: flex; flex-direction: column;
         }
-        .cropper-container-wrapper {
-            flex: 1; width: 100%; height: calc(100% - 80px);
-        }
+        .cropper-container-wrapper { flex: 1; width: 100%; height: calc(100% - 80px); }
         .cropper-actions {
             height: 80px; background: #111; display: flex; align-items: center;
             justify-content: space-between; padding: 0 20px;
         }
+
+        #submitBtn { margin-bottom: 24px; }
+        .hidden { display: none !important; }
+        .mb-0 { margin-bottom: 0 !important; }
+        #reader { width: 100%; border-radius: var(--radius-lg); overflow: hidden; border: none; margin-bottom: 16px; }
     </style>
 </head>
 <body>
-
     <div class="content">
         <div class="back-row">
             <button class="back-btn" onclick="goBack()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
                 Back
             </button>
-        </div>
-
-        <div class="page-title">
-            <h1>Add Stock</h1>
-            <p>Add a new product to your inventory</p>
         </div>
 
         <!-- BARCODE SCANNER OVERLAY -->
@@ -258,165 +284,317 @@
             <div style="height: 24px;"></div>
         </div>
 
-        <!-- MAIN FORM -->
-        <div id="mainFormContainer">
-            <!-- Image Box -->
-            <div class="image-box" id="imageBox" onclick="document.getElementById('manualImageInput').click()">
-                <div class="placeholder" id="imagePlaceholder">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <polyline points="21 15 16 10 5 21"/>
-                    </svg>
-                    <span>Tap to Add Photo</span>
-                </div>
-                <img id="imagePreview" class="hidden" src="" alt="Product Preview">
-            </div>
-            <input type="file" id="manualImageInput" accept="image/*" class="hidden" onchange="initCrop(event, 'manual')">
-
-            <!-- Action Buttons -->
-            <div class="magic-actions">
-                <button class="magic-btn ai" id="aiScanBtn" onclick="document.getElementById('aiCameraInput').click()">
-                    <span>📷</span> Scan Product
-                </button>
-                <input type="file" id="aiCameraInput" accept="image/*" capture="environment" class="hidden" onchange="initCrop(event, 'ai')">
-
-                <button class="magic-btn" onclick="startBarcodeScanner()">
-                    <span>🔍</span> Scan Barcode
-                </button>
+        <!-- ═══════════════════════════════════
+             MODE SELECTION
+             ═══════════════════════════════════ -->
+        <div id="modeSelection">
+            <div class="page-title">
+                <h1>Add Stock</h1>
+                <p>Choose how you'd like to add products</p>
             </div>
 
-            <!-- AI Status Banner -->
-            <div id="aiStatusBanner" class="ai-status-banner hidden">
-                <div id="aiStatusIcon"></div>
-                <span id="aiStatusText"></span>
-            </div>
-
-            <!-- PRODUCT INFORMATION -->
-            <div class="form-card">
-                <h2>
-                    Product Information
-                    <span class="ai-badge hidden" id="aiBadge">✨ AI Filled</span>
-                </h2>
-
-                <!-- Barcode with Lookup -->
-                <div class="input-group">
-                    <label for="barcode">Barcode</label>
-                    <div class="barcode-row">
-                        <div class="input-wrapper">
-                            <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></span>
-                            <input type="text" id="barcode" placeholder="e.g. 6151100020126">
-                        </div>
-                        <button class="btn-lookup" onclick="lookupBarcodeManual()">Lookup</button>
+            <div class="mode-cards">
+                <div class="mode-card" onclick="showSingleProduct()">
+                    <div class="mode-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                            <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
                     </div>
+                    <h3>Single Product</h3>
+                    <p>Add one product with full details</p>
                 </div>
 
-                <div class="input-group">
-                    <label for="productName">Product Name *</label>
-                    <div class="input-wrapper">
-                        <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>
-                        <input type="text" id="productName" placeholder="e.g. Peak Milk Tin">
+                <div class="mode-card" onclick="showBulkProducts()">
+                    <div class="mode-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="6" width="10" height="10" rx="1.5"/>
+                            <rect x="13" y="6" width="10" height="10" rx="1.5"/>
+                            <rect x="7" y="1" width="10" height="10" rx="1.5"/>
+                        </svg>
                     </div>
+                    <h3>Bulk Products</h3>
+                    <p>Add multiple items from one photo or receipt</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════
+             SINGLE PRODUCT MODE
+             ═══════════════════════════════════ -->
+        <div id="singleProductMode" class="hidden">
+            <div class="page-title">
+                <h1>Add Product</h1>
+                <p>Add a new product to your inventory</p>
+            </div>
+
+            <div id="singleFormContainer">
+                <div class="image-box" id="imageBox" onclick="document.getElementById('manualImageInput').click()">
+                    <div class="placeholder" id="imagePlaceholder">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21 15 16 10 5 21"/>
+                        </svg>
+                        <span>Tap to Add Photo</span>
+                    </div>
+                    <img id="imagePreview" class="hidden" src="" alt="Product Preview">
+                </div>
+                <input type="file" id="manualImageInput" accept="image/*" class="hidden" onchange="initCrop(event, 'manual')">
+
+                <div class="magic-actions">
+                    <button class="magic-btn ai" id="aiScanBtn" onclick="document.getElementById('aiCameraInput').click()">
+                        <span>📷</span> AI Scan
+                    </button>
+                    <input type="file" id="aiCameraInput" accept="image/*" capture="environment" class="hidden" onchange="initCrop(event, 'ai')">
+                    <button class="magic-btn" onclick="startBarcodeScanner()">
+                        <span>🔍</span> Scan Barcode
+                    </button>
                 </div>
 
-                <div class="field-row">
+                <div id="aiStatusBanner" class="ai-status-banner hidden">
+                    <div id="aiStatusIcon"></div>
+                    <span id="aiStatusText"></span>
+                </div>
+
+                <!-- PRODUCT INFORMATION -->
+                <div class="form-card">
+                    <h2>Product Information <span class="ai-badge hidden" id="aiBadge">✨ AI Filled</span></h2>
                     <div class="input-group">
-                        <label for="brand">Brand</label>
-                        <div class="input-wrapper">
-                            <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span>
-                            <input type="text" id="brand" placeholder="e.g. FrieslandCampina">
+                        <label for="barcode">Barcode</label>
+                        <div class="barcode-row">
+                            <div class="input-wrapper">
+                                <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></span>
+                                <input type="text" id="barcode" placeholder="e.g. 6151100020126">
+                            </div>
+                            <button class="btn-lookup" onclick="lookupBarcodeManual()">Lookup</button>
                         </div>
                     </div>
                     <div class="input-group">
-                        <label for="weight">Weight/Size</label>
+                        <label for="productName">Product Name *</label>
                         <div class="input-wrapper">
-                            <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg></span>
-                            <input type="text" id="weight" placeholder="e.g. 400g">
+                            <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>
+                            <input type="text" id="productName" placeholder="e.g. Peak Milk Tin">
                         </div>
                     </div>
-                </div>
-
-                <div class="input-group mb-0">
-                    <label>Category</label>
-                    <div class="custom-dropdown" id="categoryDropdown" onclick="toggleDropdown()">
-                        <div class="input-wrapper" style="position:relative;">
-                            <span class="icon-left" style="z-index:2;"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
-                            <div class="custom-dropdown-header placeholder-text" id="categorySelected" tabindex="0">
-                                Select or type category...
+                    <div class="field-row">
+                        <div class="input-group">
+                            <label for="brand">Brand</label>
+                            <div class="input-wrapper">
+                                <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span>
+                                <input type="text" id="brand" placeholder="e.g. FrieslandCampina">
                             </div>
                         </div>
-                        <div class="custom-dropdown-list" id="categoryOptions">
-                            <!-- Populated dynamically -->
+                        <div class="input-group">
+                            <label for="weight">Weight/Size</label>
+                            <div class="input-wrapper">
+                                <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg></span>
+                                <input type="text" id="weight" placeholder="e.g. 400g">
+                            </div>
                         </div>
                     </div>
-                    <input type="hidden" id="categoryName" value="">
+                    <div class="input-group mb-0">
+                        <label>Category</label>
+                        <div class="custom-dropdown" id="categoryDropdown" onclick="toggleDropdown()">
+                            <div class="input-wrapper" style="position:relative;">
+                                <span class="icon-left" style="z-index:2;"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
+                                <div class="custom-dropdown-header placeholder-text" id="categorySelected" tabindex="0">Select or type category...</div>
+                            </div>
+                            <div class="custom-dropdown-list" id="categoryOptions"></div>
+                        </div>
+                        <input type="hidden" id="categoryName" value="">
+                    </div>
+                </div>
+
+                <!-- PRICING & STOCK -->
+                <div class="form-card">
+                    <h2>Pricing &amp; Stock</h2>
+                    <div class="field-row">
+                        <div class="input-group">
+                            <label for="costPrice">Cost Price (₦) *</label>
+                            <div class="input-wrapper">
+                                <span class="icon-left" style="font-size:16px;font-weight:700;color:var(--muted);">₦</span>
+                                <input type="number" id="costPrice" placeholder="0.00" min="0" step="0.01" style="padding-left:44px;">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="sellingPrice">Selling Price (₦) *</label>
+                            <div class="input-wrapper">
+                                <span class="icon-left" style="font-size:16px;font-weight:700;color:var(--primary);">₦</span>
+                                <input type="number" id="sellingPrice" placeholder="0.00" min="0" step="0.01" style="padding-left:44px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="input-group">
+                            <label for="quantity">Quantity *</label>
+                            <div class="input-wrapper">
+                                <span class="icon-left" style="font-size:14px;font-weight:700;color:var(--primary);">#</span>
+                                <input type="number" id="quantity" placeholder="0" min="0" step="1" style="padding-left:44px;">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="reorderLevel">Reorder Level</label>
+                            <div class="input-wrapper">
+                                <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></span>
+                                <input type="number" id="reorderLevel" placeholder="5" min="0" step="1" style="padding-left:44px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group mb-0">
+                        <label>Select Unit</label>
+                        <div class="quick-units">
+                            <button class="unit-tag active" onclick="selectUnit(this, 'pieces')">Pieces</button>
+                            <button class="unit-tag" onclick="selectUnit(this, 'cartons')">Cartons</button>
+                            <button class="unit-tag" onclick="selectUnit(this, 'bags')">Bags</button>
+                            <button class="unit-tag" onclick="selectUnit(this, 'packs')">Packs</button>
+                            <button class="unit-tag" onclick="selectUnit(this, 'crates')">Crates</button>
+                            <button class="unit-tag" onclick="selectUnit(this, 'kg')">Kg</button>
+                            <button class="unit-tag" onclick="selectUnit(this, 'litres')">Litres</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-block btn-lg" id="submitBtn" onclick="handleSubmit()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Save Product
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════
+             BULK PRODUCTS MODE
+             ═══════════════════════════════════ -->
+        <div id="bulkProductsMode" class="hidden">
+            <div class="page-title">
+                <h1>Bulk Add Stock</h1>
+                <p>Add multiple items using one photo</p>
+            </div>
+
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step-dot active" id="stepDot1">1</div>
+                <div class="step-line" id="stepLine1"></div>
+                <div class="step-dot" id="stepDot2">2</div>
+                <div class="step-line" id="stepLine2"></div>
+                <div class="step-dot" id="stepDot3">3</div>
+            </div>
+            <div class="step-labels">
+                <span class="step-label active" id="stepLabel1">Photo</span>
+                <span class="step-label" id="stepLabel2">Items</span>
+                <span class="step-label" id="stepLabel3">Review</span>
+            </div>
+
+            <!-- STEP 1: CAPTURE -->
+            <div id="bulkStep1">
+                <div class="form-card">
+                    <h2>📷 Product Photo</h2>
+                    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Take one photo for this product group or category</p>
+                    <div class="image-box" id="bulkImageBox" onclick="document.getElementById('bulkManualInput').click()" style="height:220px;">
+                        <div class="placeholder" id="bulkImagePlaceholder">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            <span>Tap to upload or take a photo</span>
+                        </div>
+                        <img id="bulkImagePreview" class="hidden" src="" alt="Bulk Preview">
+                    </div>
+                    <input type="file" id="bulkManualInput" accept="image/*" class="hidden" onchange="initCrop(event, 'bulk-manual')">
+                    <p style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:8px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        This photo will represent all items in this group.
+                    </p>
+                </div>
+
+                <div class="magic-actions three-col">
+                    <button class="magic-btn ai" onclick="document.getElementById('bulkAiInput').click()">
+                        <span>📷</span> AI Scan
+                    </button>
+                    <input type="file" id="bulkAiInput" accept="image/*" capture="environment" class="hidden" onchange="initCrop(event, 'bulk-ai')">
+
+                    <button class="magic-btn" onclick="document.getElementById('receiptInput').click()">
+                        <span>🧾</span> Receipt
+                    </button>
+                    <input type="file" id="receiptInput" accept="image/*" capture="environment" class="hidden" onchange="initCrop(event, 'receipt')">
+
+                    <button class="magic-btn" onclick="startBarcodeScanner()">
+                        <span>🔍</span> Barcode
+                    </button>
+                </div>
+
+                <div id="bulkAiStatusBanner" class="ai-status-banner hidden">
+                    <span id="bulkAiStatusText"></span>
+                </div>
+
+                <button class="btn btn-primary btn-block btn-lg" onclick="goToStep(2)" id="bulkStep1Next">
+                    Continue to Items →
+                </button>
+            </div>
+
+            <!-- STEP 2: ADD ITEMS -->
+            <div id="bulkStep2" class="hidden">
+                <div class="form-card">
+                    <h2>
+                        Add Items
+                        <button class="add-item-btn" onclick="addBulkItem()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Add Another Item
+                        </button>
+                    </h2>
+                    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Tag multiple items under this photo and set price & quantity</p>
+
+                    <div id="bulkItemsList"></div>
+                </div>
+
+                <div style="display:flex;gap:12px;">
+                    <button class="btn btn-outline btn-block" onclick="goToStep(1)" style="flex:1;border-color:var(--border);color:var(--text);">← Back</button>
+                    <button class="btn btn-primary btn-block" onclick="goToStep(3)" style="flex:2;">Continue to Review →</button>
                 </div>
             </div>
 
-            <!-- PRICING & STOCK -->
-            <div class="form-card">
-                <h2>Pricing &amp; Stock</h2>
+            <!-- STEP 3: REVIEW -->
+            <div id="bulkStep3" class="hidden">
+                <div class="form-card">
+                    <h2>📋 Review Summary</h2>
+                    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Review all items before saving to inventory</p>
 
-                <div class="field-row">
-                    <div class="input-group">
-                        <label for="costPrice">Cost Price (₦) *</label>
-                        <div class="input-wrapper">
-                            <span class="icon-left" style="font-size:16px;font-weight:700;color:var(--muted);">₦</span>
-                            <input type="number" id="costPrice" placeholder="0.00" min="0" step="0.01" style="padding-left:44px;">
+                    <table class="review-table">
+                        <thead>
+                            <tr><th>Item</th><th>Price (₦)</th><th>Quantity</th><th>Total (₦)</th></tr>
+                        </thead>
+                        <tbody id="reviewTableBody"></tbody>
+                    </table>
+
+                    <div class="review-totals">
+                        <div>
+                            <div class="total-label">Total Items</div>
+                            <div style="font-size:20px;font-weight:800;color:var(--primary);" id="reviewTotalItems">0</div>
                         </div>
-                    </div>
-                    <div class="input-group">
-                        <label for="sellingPrice">Selling Price (₦) *</label>
-                        <div class="input-wrapper">
-                            <span class="icon-left" style="font-size:16px;font-weight:700;color:var(--primary);">₦</span>
-                            <input type="number" id="sellingPrice" placeholder="0.00" min="0" step="0.01" style="padding-left:44px;">
+                        <div style="text-align:right;">
+                            <div class="total-label">Total Value</div>
+                            <div class="total-value" id="reviewTotalValue">₦0</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="field-row">
-                    <div class="input-group">
-                        <label for="quantity">Quantity *</label>
-                        <div class="input-wrapper">
-                            <span class="icon-left" style="font-size:14px;font-weight:700;color:var(--primary);">#</span>
-                            <input type="number" id="quantity" placeholder="0" min="0" step="1" style="padding-left:44px;">
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label for="reorderLevel">Reorder Level</label>
-                        <div class="input-wrapper">
-                            <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></span>
-                            <input type="number" id="reorderLevel" placeholder="5" min="0" step="1" style="padding-left:44px;">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="input-group mb-0">
-                    <label>Select Unit</label>
-                    <div class="quick-units">
-                        <button class="unit-tag active" onclick="selectUnit(this, 'pieces')">Pieces</button>
-                        <button class="unit-tag" onclick="selectUnit(this, 'cartons')">Cartons</button>
-                        <button class="unit-tag" onclick="selectUnit(this, 'bags')">Bags</button>
-                        <button class="unit-tag" onclick="selectUnit(this, 'packs')">Packs</button>
-                        <button class="unit-tag" onclick="selectUnit(this, 'crates')">Crates</button>
-                        <button class="unit-tag" onclick="selectUnit(this, 'kg')">Kg</button>
-                        <button class="unit-tag" onclick="selectUnit(this, 'litres')">Litres</button>
-                    </div>
+                <button class="btn btn-primary btn-block btn-lg" onclick="handleBulkSubmit()" id="bulkSubmitBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save to Inventory
+                </button>
+                <div style="text-align:center;margin-top:12px;">
+                    <button class="back-btn" onclick="goToStep(2)" style="margin:0 auto;">← Back to Items</button>
                 </div>
             </div>
-
-            <button class="btn btn-primary btn-block btn-lg" id="submitBtn" onclick="handleSubmit()">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Save Product
-            </button>
         </div>
 
         <!-- AI LOADING OVERLAY -->
         <div id="aiLoadingOverlay" class="ai-loading-overlay hidden">
             <div class="spinner" style="width: 40px; height: 40px; border-width: 4px;"></div>
-            <p>Analyzing Product with AI... ✨</p>
+            <p>Analyzing with AI... ✨</p>
         </div>
-
     </div>
 
     <!-- CROPPER MODAL -->
@@ -446,49 +624,153 @@
         let selectedUnit = 'pieces';
         let html5Qrcode = null;
         let aiImageBase64 = null;
+        let bulkImageBase64 = null;
         let cropper = null;
-        let activeCropMode = 'manual'; // 'manual' or 'ai'
+        let activeCropMode = 'manual';
+        let currentMode = 'selection'; // 'selection', 'single', 'bulk'
+        let currentBulkStep = 1;
+        let bulkItems = [];
 
-        // --- UNIT MAPPING (normalized aliases) ---
+        // ── MODE SWITCHING ──
+        function showModeSelection() {
+            currentMode = 'selection';
+            document.getElementById('modeSelection').classList.remove('hidden');
+            document.getElementById('singleProductMode').classList.add('hidden');
+            document.getElementById('bulkProductsMode').classList.add('hidden');
+        }
+
+        function showSingleProduct() {
+            currentMode = 'single';
+            document.getElementById('modeSelection').classList.add('hidden');
+            document.getElementById('singleProductMode').classList.remove('hidden');
+            document.getElementById('bulkProductsMode').classList.add('hidden');
+        }
+
+        function showBulkProducts() {
+            currentMode = 'bulk';
+            currentBulkStep = 1;
+            document.getElementById('modeSelection').classList.add('hidden');
+            document.getElementById('singleProductMode').classList.add('hidden');
+            document.getElementById('bulkProductsMode').classList.remove('hidden');
+            if (bulkItems.length === 0) addBulkItem();
+            goToStep(1);
+        }
+
+        function goBack() {
+            if (!document.getElementById('scannerSection').classList.contains('hidden')) {
+                stopBarcodeScanner();
+            } else if (currentMode === 'single' || currentMode === 'bulk') {
+                showModeSelection();
+            } else {
+                history.back();
+            }
+        }
+
+        // ── BULK WIZARD STEPS ──
+        function goToStep(step) {
+            currentBulkStep = step;
+            document.getElementById('bulkStep1').classList.add('hidden');
+            document.getElementById('bulkStep2').classList.add('hidden');
+            document.getElementById('bulkStep3').classList.add('hidden');
+            document.getElementById('bulkStep' + step).classList.remove('hidden');
+
+            for (let i = 1; i <= 3; i++) {
+                const dot = document.getElementById('stepDot' + i);
+                const label = document.getElementById('stepLabel' + i);
+                dot.className = 'step-dot';
+                label.className = 'step-label';
+                if (i < step) { dot.classList.add('completed'); dot.innerHTML = '✓'; label.classList.add('completed'); }
+                else if (i === step) { dot.classList.add('active'); dot.innerHTML = i; label.classList.add('active'); }
+                else { dot.innerHTML = i; }
+            }
+            if (step > 1) document.getElementById('stepLine1').classList.add('completed');
+            else document.getElementById('stepLine1').classList.remove('completed');
+            if (step > 2) document.getElementById('stepLine2').classList.add('completed');
+            else document.getElementById('stepLine2').classList.remove('completed');
+
+            if (step === 2) renderBulkItems();
+            if (step === 3) renderReviewTable();
+        }
+
+        // ── BULK ITEMS MANAGEMENT ──
+        function addBulkItem(name, price, qty) {
+            bulkItems.push({ name: name || '', price: price || '', quantity: qty || '' });
+            renderBulkItems();
+        }
+
+        function removeBulkItem(index) {
+            bulkItems.splice(index, 1);
+            if (bulkItems.length === 0) addBulkItem();
+            else renderBulkItems();
+        }
+
+        function updateBulkItem(index, field, value) {
+            if (bulkItems[index]) bulkItems[index][field] = value;
+        }
+
+        function renderBulkItems() {
+            const container = document.getElementById('bulkItemsList');
+            container.innerHTML = bulkItems.map((item, i) => `
+                <div class="bulk-item-row">
+                    <div class="drag-handle">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
+                    </div>
+                    <div class="tag-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    </div>
+                    <input type="text" class="item-name" placeholder="Product name" value="${item.name}" oninput="updateBulkItem(${i},'name',this.value)">
+                    <div class="bulk-field-group">
+                        <label>Price (₦)</label>
+                        <input type="number" placeholder="0" value="${item.price}" oninput="updateBulkItem(${i},'price',this.value)">
+                    </div>
+                    <div class="bulk-field-group">
+                        <label>Quantity</label>
+                        <input type="number" placeholder="0" value="${item.quantity}" oninput="updateBulkItem(${i},'quantity',this.value)">
+                    </div>
+                    <button class="bulk-delete-btn" onclick="removeBulkItem(${i})">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function renderReviewTable() {
+            const body = document.getElementById('reviewTableBody');
+            let totalItems = 0;
+            let totalValue = 0;
+
+            body.innerHTML = bulkItems.filter(it => it.name.trim()).map(item => {
+                const price = parseFloat(item.price) || 0;
+                const qty = parseInt(item.quantity) || 0;
+                const total = price * qty;
+                totalItems++;
+                totalValue += total;
+                return `<tr><td>${item.name}</td><td>${price.toLocaleString()}</td><td>${qty}</td><td>${total.toLocaleString()}</td></tr>`;
+            }).join('');
+
+            document.getElementById('reviewTotalItems').textContent = totalItems;
+            document.getElementById('reviewTotalValue').textContent = '₦' + totalValue.toLocaleString();
+        }
+
+        // ── UNIT LOGIC ──
         const CATEGORY_UNIT_MAP = {
-            // Liquids
-            'beverage': 'litres', 'beverages': 'litres', 'soft drink': 'litres',
-            'soda': 'litres', 'carbonated': 'litres', 'juice': 'litres',
-            'water': 'litres', 'wine': 'litres', 'spirit': 'litres',
-            'cooking oil': 'litres', 'oil': 'litres', 'liquid': 'litres',
-            // Crates
-            'drinks': 'crates', 'beer': 'crates', 'malt': 'crates',
-            // Bags
-            'rice': 'bags', 'grains': 'bags', 'flour': 'bags', 'sugar': 'bags',
-            'cement': 'bags', 'building': 'bags', 'feed': 'bags',
-            // Packs
-            'groceries': 'packs', 'grocery': 'packs', 'snacks': 'packs',
-            'snack': 'packs', 'biscuit': 'packs', 'noodles': 'packs',
-            'pasta': 'packs', 'seasoning': 'packs', 'spice': 'packs',
-            'detergent': 'packs', 'cleaning': 'packs', 'toiletries': 'packs',
-            'cosmetics': 'packs', 'soap': 'packs',
-            // Kg
-            'meat': 'kg', 'fish': 'kg', 'produce': 'kg', 'vegetable': 'kg',
-            'fruit': 'kg', 'frozen': 'kg',
-            // Pieces
-            'electronics': 'pieces', 'gadgets': 'pieces', 'phones': 'pieces',
-            'phone': 'pieces', 'accessory': 'pieces', 'accessories': 'pieces',
-            'dairy': 'pieces', 'milk': 'pieces', 'canned': 'pieces',
-            'tin': 'pieces', 'battery': 'pieces', 'bulb': 'pieces',
-            // Cartons
-            'carton': 'cartons', 'wholesale': 'cartons',
+            'beverage':'litres','beverages':'litres','soft drink':'litres','soda':'litres',
+            'juice':'litres','water':'litres','wine':'litres','cooking oil':'litres','oil':'litres',
+            'drinks':'crates','beer':'crates','malt':'crates',
+            'rice':'bags','grains':'bags','flour':'bags','sugar':'bags','cement':'bags','feed':'bags',
+            'groceries':'packs','grocery':'packs','snacks':'packs','noodles':'packs','pasta':'packs',
+            'seasoning':'packs','detergent':'packs','cleaning':'packs','toiletries':'packs','soap':'packs',
+            'meat':'kg','fish':'kg','produce':'kg','vegetable':'kg','fruit':'kg','frozen':'kg',
+            'electronics':'pieces','phones':'pieces','dairy':'pieces','milk':'pieces','canned':'pieces',
+            'carton':'cartons','wholesale':'cartons',
         };
 
         function getUnitForCategory(category) {
             if (!category) return null;
-            const normalized = category.toLowerCase().trim();
-
-            // Direct match first
-            if (CATEGORY_UNIT_MAP[normalized]) return CATEGORY_UNIT_MAP[normalized];
-
-            // Partial / substring match
+            const n = category.toLowerCase().trim();
+            if (CATEGORY_UNIT_MAP[n]) return CATEGORY_UNIT_MAP[n];
             for (const [alias, unit] of Object.entries(CATEGORY_UNIT_MAP)) {
-                if (normalized.includes(alias) || alias.includes(normalized)) return unit;
+                if (n.includes(alias) || alias.includes(n)) return unit;
             }
             return null;
         }
@@ -499,18 +781,8 @@
             const unitBtns = document.querySelectorAll('.unit-tag');
             for (const btn of unitBtns) {
                 if (btn.textContent.trim().toLowerCase() === normalized) {
-                    selectUnit(btn, normalized);
-                    return;
+                    selectUnit(btn, normalized); return;
                 }
-            }
-            // No matching button found — ignore safely
-        }
-
-        function goBack() {
-            if (!document.getElementById('scannerSection').classList.contains('hidden')) {
-                stopBarcodeScanner();
-            } else {
-                history.back();
             }
         }
 
@@ -520,7 +792,7 @@
             el.classList.add('active');
         }
 
-        // --- CUSTOM DROPDOWN LOGIC ---
+        // ── CATEGORY DROPDOWN ──
         let categoryList = [];
 
         async function loadCategories() {
@@ -528,9 +800,7 @@
                 const res = await apiRequest('/api/products/categories');
                 categoryList = res.categories || [];
                 renderCategories(categoryList);
-            } catch (err) {
-                console.error("Failed to load categories:", err);
-            }
+            } catch (err) { console.error("Failed to load categories:", err); }
         }
 
         function renderCategories(list) {
@@ -542,9 +812,7 @@
             container.innerHTML = list.map(c => `<div class="custom-dropdown-item" onclick="selectCategory('${c}', event)">${c}</div>`).join('');
         }
 
-        function toggleDropdown() {
-            document.getElementById('categoryDropdown').classList.toggle('open');
-        }
+        function toggleDropdown() { document.getElementById('categoryDropdown').classList.toggle('open'); }
 
         function selectCategory(catName, e) {
             if(e) e.stopPropagation();
@@ -554,36 +822,26 @@
             document.getElementById('categoryDropdown').classList.remove('open');
         }
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
             const dropdown = document.getElementById('categoryDropdown');
-            if (dropdown && !dropdown.contains(e.target)) {
-                dropdown.classList.remove('open');
-            }
+            if (dropdown && !dropdown.contains(e.target)) dropdown.classList.remove('open');
         });
 
-        // --- CROPPER LOGIC ---
+        // ── CROPPER LOGIC ──
         async function initCrop(event, mode) {
             const file = event.target.files[0];
             if (!file) return;
-
             activeCropMode = mode;
             const base64Str = await convertFileToBase64(file);
-            
-            // Open Cropper Modal
             document.getElementById('cropperModal').classList.remove('hidden');
             const image = document.getElementById('cropperImage');
             image.src = base64Str;
-            
             if (cropper) cropper.destroy();
             cropper = new Cropper(image, {
-                aspectRatio: 1, // Square crop for products
-                viewMode: 1,
-                autoCropArea: 0.8,
-                background: false
+                aspectRatio: (mode === 'receipt') ? NaN : 1,
+                viewMode: 1, autoCropArea: 0.8, background: false
             });
-
-            event.target.value = ''; // Reset file input
+            event.target.value = '';
         }
 
         function cancelCrop() {
@@ -593,33 +851,43 @@
 
         function confirmCrop() {
             if (!cropper) return;
-            
-            // Get cropped image
-            const canvas = cropper.getCroppedCanvas({
-                width: 500,
-                height: 500,
-            });
+            const canvas = cropper.getCroppedCanvas({ width: 500, height: 500 });
             const croppedBase64 = canvas.toDataURL('image/jpeg', 0.8);
-            
             cancelCrop();
-            setPreviewImage(croppedBase64);
 
-            if (activeCropMode === 'ai') {
+            if (activeCropMode === 'manual') {
+                setPreviewImage(croppedBase64);
+            } else if (activeCropMode === 'ai') {
+                setPreviewImage(croppedBase64);
                 processAIImage(croppedBase64);
+            } else if (activeCropMode === 'bulk-manual') {
+                setBulkPreviewImage(croppedBase64);
+            } else if (activeCropMode === 'bulk-ai') {
+                setBulkPreviewImage(croppedBase64);
+                processBulkAIImage(croppedBase64);
+            } else if (activeCropMode === 'receipt') {
+                setBulkPreviewImage(croppedBase64);
+                processReceiptImage(croppedBase64);
             }
         }
 
-        // --- IMAGE HANDLING ---
+        // ── IMAGE HANDLING ──
         function setPreviewImage(base64Str) {
             aiImageBase64 = base64Str;
             const img = document.getElementById('imagePreview');
             const box = document.getElementById('imageBox');
             const placeholder = document.getElementById('imagePlaceholder');
-            
-            img.src = base64Str;
-            img.classList.remove('hidden');
-            placeholder.classList.add('hidden');
-            box.classList.add('has-image');
+            img.src = base64Str; img.classList.remove('hidden');
+            placeholder.classList.add('hidden'); box.classList.add('has-image');
+        }
+
+        function setBulkPreviewImage(base64Str) {
+            bulkImageBase64 = base64Str;
+            const img = document.getElementById('bulkImagePreview');
+            const box = document.getElementById('bulkImageBox');
+            const placeholder = document.getElementById('bulkImagePlaceholder');
+            img.src = base64Str; img.classList.remove('hidden');
+            placeholder.classList.add('hidden'); box.classList.add('has-image');
         }
 
         function convertFileToBase64(file) {
@@ -631,70 +899,62 @@
             });
         }
 
-        // --- BARCODE SCANNER & LOOKUP LOGIC ---
+        // ── BARCODE SCANNER ──
         function startBarcodeScanner() {
-            document.getElementById('mainFormContainer').classList.add('hidden');
+            document.getElementById('singleFormContainer')?.classList.add('hidden');
+            document.getElementById('bulkStep1')?.classList.add('hidden');
             document.getElementById('scannerSection').classList.remove('hidden');
-            
-            if (!html5Qrcode) {
-                html5Qrcode = new Html5Qrcode("reader");
-            }
-            
+            if (!html5Qrcode) html5Qrcode = new Html5Qrcode("reader");
             html5Qrcode.start(
                 { facingMode: "environment" },
                 { fps: 10, qrbox: { width: 250, height: 150 } },
-                onScanSuccess,
-                onScanFailure
+                onScanSuccess, onScanFailure
             ).catch(err => {
                 console.error("Camera error:", err);
-                showToast('error', 'Camera Error', 'Could not access the camera automatically. Please check permissions.');
+                showToast('error', 'Camera Error', 'Could not access camera.');
                 stopBarcodeScanner();
             });
         }
 
         function stopBarcodeScanner() {
             if (html5Qrcode && html5Qrcode.isScanning) {
-                html5Qrcode.stop().then(() => {
-                    html5Qrcode.clear();
-                }).catch(err => console.error(err));
+                html5Qrcode.stop().then(() => html5Qrcode.clear()).catch(err => console.error(err));
             }
             document.getElementById('scannerSection').classList.add('hidden');
-            document.getElementById('mainFormContainer').classList.remove('hidden');
+            if (currentMode === 'single') document.getElementById('singleFormContainer')?.classList.remove('hidden');
+            if (currentMode === 'bulk') document.getElementById('bulkStep1')?.classList.remove('hidden');
         }
 
         async function onScanSuccess(decodedText) {
             stopBarcodeScanner();
-            document.getElementById('barcode').value = decodedText;
-            lookupBarcode(decodedText);
+            if (currentMode === 'single') {
+                document.getElementById('barcode').value = decodedText;
+                lookupBarcode(decodedText);
+            } else if (currentMode === 'bulk') {
+                // Add as a new bulk item from barcode
+                addBulkItem(decodedText, '', '');
+                showToast('success', 'Barcode Scanned', `Added ${decodedText} to items list.`);
+                goToStep(2);
+            }
         }
 
-        function onScanFailure(error) { /* Ignore background scanning errors */ }
+        function onScanFailure(error) { /* Ignore */ }
 
         async function lookupBarcodeManual() {
             const val = document.getElementById('barcode').value.trim();
-            if (!val) {
-                showToast('warning', 'Barcode Missing', 'Please enter a barcode to lookup.');
-                return;
-            }
+            if (!val) { showToast('warning', 'Barcode Missing', 'Enter a barcode to lookup.'); return; }
             lookupBarcode(val);
         }
 
         async function lookupBarcode(barcodeValue) {
             const lookupBtn = document.querySelector('.btn-lookup');
             const originalText = lookupBtn.innerText;
-            lookupBtn.innerText = '...';
-            lookupBtn.disabled = true;
-
-            showToast('info', 'Searching Database', 'Looking up product info...');
-            
+            lookupBtn.innerText = '...'; lookupBtn.disabled = true;
+            showToast('info', 'Searching', 'Looking up product info...');
             try {
-                // Tier 1: Query local database first
                 const localRes = await fetch(`${API_BASE}/api/products/barcode/${barcodeValue}`, {
-                    headers: {
-                        ...(getToken() ? { 'Authorization': `Bearer ${getToken()}` } : {})
-                    }
+                    headers: { ...(getToken() ? { 'Authorization': `Bearer ${getToken()}` } : {}) }
                 });
-                
                 if (localRes.ok) {
                     const localData = await localRes.json();
                     if (localData && localData.found) {
@@ -702,33 +962,22 @@
                         if (p.name && !document.getElementById('productName').value) document.getElementById('productName').value = p.name;
                         if (p.brand && !document.getElementById('brand').value) document.getElementById('brand').value = p.brand;
                         if (p.weight && !document.getElementById('weight').value) document.getElementById('weight').value = p.weight;
-                        
-                        // Fill category if empty
                         if (p.category) {
                             const catField = document.getElementById('categoryName');
                             if (catField && catField.value.trim() === '') {
                                 selectCategory(p.category);
-                                if (!categoryList.includes(p.category)) {
-                                    categoryList.push(p.category);
-                                    renderCategories(categoryList);
-                                }
+                                if (!categoryList.includes(p.category)) { categoryList.push(p.category); renderCategories(categoryList); }
                             }
                         }
-
-                        // Fill prices and select unit if empty
                         if (p.costPrice !== null && !document.getElementById('costPrice').value) document.getElementById('costPrice').value = p.costPrice;
                         if (p.sellingPrice !== null && !document.getElementById('sellingPrice').value) document.getElementById('sellingPrice').value = p.sellingPrice;
                         if (p.unit) autoSelectUnit(p.unit);
-
-                        showToast('success', 'Found Locally! 📦', 'Product details auto-filled from database.');
+                        showToast('success', 'Found! 📦', 'Product details auto-filled.');
                         return;
                     }
                 }
-
-                // Tier 2: Fallback to global database
                 const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcodeValue}.json`);
                 const data = await res.json();
-                
                 if (data && data.product) {
                     const p = data.product;
                     if (p.product_name && !document.getElementById('productName').value) document.getElementById('productName').value = p.product_name;
@@ -736,192 +985,74 @@
                     if (p.quantity && !document.getElementById('weight').value) document.getElementById('weight').value = p.quantity;
                     showToast('success', 'Found Globally!', 'Product details auto-filled.');
                 } else {
-                    showToast('warning', 'Not Found', 'Barcode recognized but no data found in global database. Try AI Scan.');
+                    showToast('warning', 'Not Found', 'No data found. Try AI Scan.');
                 }
             } catch (err) {
                 console.error("Barcode lookup failed:", err);
                 showToast('error', 'Lookup Failed', 'Could not fetch product data.');
             } finally {
-                lookupBtn.innerText = originalText;
-                lookupBtn.disabled = false;
+                lookupBtn.innerText = originalText; lookupBtn.disabled = false;
             }
         }
 
-        // --- AI SCANNER LOGIC ---
+        // ── AI SCANNER (SINGLE) ──
         function setAIStatus(type, title, message) {
             const banner = document.getElementById('aiStatusBanner');
             const text = document.getElementById('aiStatusText');
             const badge = document.getElementById('aiBadge');
-
-            if (type === 'hidden') {
-                banner.classList.add('hidden');
-                if (badge) badge.classList.add('hidden');
-                return;
-            }
-
+            if (type === 'hidden') { banner.classList.add('hidden'); if(badge) badge.classList.add('hidden'); return; }
             banner.className = `ai-status-banner ${type}`;
             text.innerHTML = `<strong>${title}:</strong> ${message}`;
             banner.classList.remove('hidden');
-
-            // Show AI badge on success or warning
-            if (badge) {
-                if (type === 'success' || type === 'warning') {
-                    badge.classList.remove('hidden');
-                } else {
-                    badge.classList.add('hidden');
-                }
-            }
+            if (badge) { badge.classList[type === 'success' || type === 'warning' ? 'remove' : 'add']('hidden'); }
         }
 
         async function processAIImage(base64Str) {
             const scanBtn = document.getElementById('aiScanBtn');
             const overlay = document.getElementById('aiLoadingOverlay');
-
-            // Show loading state
             overlay.classList.remove('hidden');
             if (scanBtn) scanBtn.disabled = true;
-
-            // Clear previous AI markers (don't clear field values — preserve user edits)
-            document.querySelectorAll('[data-ai-filled]').forEach(el => {
-                el.removeAttribute('data-ai-filled');
-                el.classList.remove('ai-generated');
-            });
-
-            console.log("=== AI Scan Start ===");
-            console.log("Image length:", base64Str?.length);
-            console.log("API Base:", API_BASE);
-
-            const payload = {
-               imageBase64: base64Str,
-               mimeType: "image/jpeg"
-            };
-
-            console.log("Payload:", payload);
-
+            document.querySelectorAll('[data-ai-filled]').forEach(el => { el.removeAttribute('data-ai-filled'); el.classList.remove('ai-generated'); });
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
                 const response = await fetch(`${API_BASE}/api/scan-product`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(getToken() ? { 'Authorization': `Bearer ${getToken()}` } : {})
-                    },
-                    body: JSON.stringify(payload),
+                    headers: { 'Content-Type': 'application/json', ...(getToken() ? { 'Authorization': `Bearer ${getToken()}` } : {}) },
+                    body: JSON.stringify({ imageBase64: base64Str, mimeType: "image/jpeg" }),
                     signal: controller.signal
                 });
-
                 clearTimeout(timeoutId);
-                console.log("Response status:", response.status);
-
                 const rawText = await response.text();
-
-                console.log("Raw response:", rawText);
-
-                let result;
-
-                try{
-                   result = JSON.parse(rawText);
-                }catch(err){
-                   console.error("JSON parse failed:", err);
-                }
-
-                if (!response.ok) {
-                    let errorMsg = 'Unable to analyze product.';
-                    const serverError = result && (result.error || result.debug);
-                    if (serverError) {
-                        errorMsg = serverError;
-                    } else if (response.status === 400) {
-                        errorMsg = "Invalid image request";
-                    } else if (response.status === 401 || response.status === 403) {
-                        errorMsg = "Authentication problem";
-                    } else if (response.status === 404) {
-                        errorMsg = "AI endpoint not found";
-                    } else if (response.status === 429) {
-                        errorMsg = "Rate limit exceeded";
-                    } else if (response.status === 500) {
-                        errorMsg = "Backend AI processing failed";
-                    } else {
-                        errorMsg = `Server error (${response.status})`;
-                    }
-                    throw new Error(errorMsg);
-                }
-
+                let result; try { result = JSON.parse(rawText); } catch(e) {}
+                if (!response.ok) throw new Error(result?.error || 'AI analysis failed');
                 const data = result && (result.data || result);
-                if (!data) {
-                    throw new Error("No data returned from AI scanner");
-                }
+                if (!data) throw new Error("No data from AI");
                 const confidence = parseFloat(data.confidence) || 0;
-
-                // Field-level validation — confidence alone is not enough
-                const hasName = !!data.productName;
-                const hasCategory = !!data.category;
-
-                // Fill only if field is currently empty (preserve user edits)
                 const fillIfEmpty = (id, val) => {
                     const field = document.getElementById(id);
-                    if (val && field && field.value.trim() === '') {
-                        field.value = val;
-                        field.setAttribute('data-ai-filled', 'true');
-                        field.classList.add('ai-generated');
-                    }
+                    if (val && field && field.value.trim() === '') { field.value = val; field.setAttribute('data-ai-filled','true'); field.classList.add('ai-generated'); }
                 };
-
-                if (confidence >= 0.8 && hasName) {
-                    // High confidence with valid product name
+                if (confidence >= 0.5 && data.productName) {
                     fillIfEmpty('productName', data.productName);
                     fillIfEmpty('brand', data.brand);
                     fillIfEmpty('weight', data.weight);
                     fillIfEmpty('barcode', data.barcode);
-
-                    if (hasCategory) {
+                    if (data.category) {
                         const catField = document.getElementById('categoryName');
                         if (catField && catField.value.trim() === '') {
                             selectCategory(data.category);
-                            if (!categoryList.includes(data.category)) {
-                                categoryList.push(data.category);
-                                renderCategories(categoryList);
-                            }
+                            if (!categoryList.includes(data.category)) { categoryList.push(data.category); renderCategories(categoryList); }
                             autoSelectUnit(getUnitForCategory(data.category));
                         }
                     }
-
-                    setAIStatus('success', 'AI Scan Complete', 'AI detected product information');
-
-                } else if (confidence >= 0.5 && hasName) {
-                    // Medium confidence — auto-fill with warning
-                    fillIfEmpty('productName', data.productName);
-                    fillIfEmpty('brand', data.brand);
-                    fillIfEmpty('weight', data.weight);
-                    fillIfEmpty('barcode', data.barcode);
-
-                    if (hasCategory) {
-                        const catField = document.getElementById('categoryName');
-                        if (catField && catField.value.trim() === '') {
-                            selectCategory(data.category);
-                            if (!categoryList.includes(data.category)) {
-                                categoryList.push(data.category);
-                                renderCategories(categoryList);
-                            }
-                            autoSelectUnit(getUnitForCategory(data.category));
-                        }
-                    }
-
-                    setAIStatus('warning', 'AI Scan', 'Please verify this information');
-
+                    setAIStatus(confidence >= 0.8 ? 'success' : 'warning', 'AI Scan', confidence >= 0.8 ? 'Product detected!' : 'Please verify info');
                 } else {
-                    // Low confidence or missing key fields — do NOT auto-fill
-                    setAIStatus('error', 'Low Confidence', 'Low confidence — please fill manually');
+                    setAIStatus('error', 'Low Confidence', 'Could not detect — fill manually');
                 }
-
-                // Save scan record for training data
                 saveScanRecord(base64Str, data, confidence);
-
             } catch (error) {
                 console.error(error);
-                alert(error.message);
-
                 showToast('error', 'AI Scan Failed', error.message);
                 setAIStatus('hidden');
             } finally {
@@ -930,96 +1061,185 @@
             }
         }
 
-        // --- SCAN HISTORY ---
-        function saveScanRecord(imageBase64, aiOutput, confidence) {
+        // ── AI SCANNER (BULK) ──
+        async function processBulkAIImage(base64Str) {
+            const overlay = document.getElementById('aiLoadingOverlay');
+            overlay.classList.remove('hidden');
             try {
-                const record = {
-                    aiOutput: aiOutput,
-                    confidence: confidence,
-                    timestamp: Date.now(),
-                    imageSnippet: imageBase64.substring(0, 200) // Truncated — full image is too large for localStorage
-                };
-                const history = JSON.parse(localStorage.getItem('st_scan_history') || '[]');
-                history.push(record);
-                // Keep last 50 scans to prevent storage overflow
-                if (history.length > 50) history.shift();
-                localStorage.setItem('st_scan_history', JSON.stringify(history));
-            } catch (e) {
-                console.warn('Could not save scan record:', e);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
+                const response = await fetch(`${API_BASE}/api/scan-product`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...(getToken() ? { 'Authorization': `Bearer ${getToken()}` } : {}) },
+                    body: JSON.stringify({ imageBase64: base64Str, mimeType: "image/jpeg" }),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                const rawText = await response.text();
+                let result; try { result = JSON.parse(rawText); } catch(e) {}
+                if (!response.ok) throw new Error(result?.error || 'AI analysis failed');
+                const data = result && (result.data || result);
+                if (data && data.productName) {
+                    bulkItems = [];
+                    addBulkItem(data.productName, data.sellingPrice || '', data.quantity || '');
+                    setBulkStatus('success', 'AI detected product: ' + data.productName);
+                    goToStep(2);
+                } else {
+                    setBulkStatus('warning', 'Could not detect products. Add items manually.');
+                    goToStep(2);
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('error', 'AI Scan Failed', error.message);
+            } finally {
+                overlay.classList.add('hidden');
             }
         }
 
-        // --- SUBMIT FORM ---
+        // ── RECEIPT SCANNER ──
+        async function processReceiptImage(base64Str) {
+            const overlay = document.getElementById('aiLoadingOverlay');
+            overlay.classList.remove('hidden');
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 45000);
+                const response = await fetch(`${API_BASE}/api/scan-product`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...(getToken() ? { 'Authorization': `Bearer ${getToken()}` } : {}) },
+                    body: JSON.stringify({ imageBase64: base64Str, mimeType: "image/jpeg", mode: "receipt" }),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                const rawText = await response.text();
+                let result; try { result = JSON.parse(rawText); } catch(e) {}
+                if (!response.ok) throw new Error(result?.error || 'Receipt analysis failed');
+                const data = result && (result.data || result);
+                if (data && data.items && Array.isArray(data.items)) {
+                    bulkItems = [];
+                    data.items.forEach(item => {
+                        addBulkItem(item.name || item.productName || '', item.price || item.sellingPrice || '', item.quantity || item.qty || '');
+                    });
+                    setBulkStatus('success', `Found ${data.items.length} items from receipt!`);
+                    goToStep(2);
+                } else if (data && data.productName) {
+                    bulkItems = [];
+                    addBulkItem(data.productName, data.sellingPrice || '', data.quantity || '');
+                    setBulkStatus('success', 'Detected 1 item from receipt.');
+                    goToStep(2);
+                } else {
+                    setBulkStatus('warning', 'Could not read receipt. Add items manually.');
+                    goToStep(2);
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('error', 'Receipt Scan Failed', error.message);
+            } finally {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function setBulkStatus(type, message) {
+            const banner = document.getElementById('bulkAiStatusBanner');
+            const text = document.getElementById('bulkAiStatusText');
+            banner.className = `ai-status-banner ${type}`;
+            text.textContent = message;
+            banner.classList.remove('hidden');
+        }
+
+        function saveScanRecord(imageBase64, aiOutput, confidence) {
+            try {
+                const record = { aiOutput, confidence, timestamp: Date.now(), imageSnippet: imageBase64.substring(0, 200) };
+                const history = JSON.parse(localStorage.getItem('st_scan_history') || '[]');
+                history.push(record);
+                if (history.length > 50) history.shift();
+                localStorage.setItem('st_scan_history', JSON.stringify(history));
+            } catch (e) { console.warn('Could not save scan record:', e); }
+        }
+
+        // ── SUBMIT: SINGLE ──
         async function handleSubmit() {
             const name = document.getElementById('productName').value.trim();
             const sellingPrice = document.getElementById('sellingPrice').value;
             const costPrice = document.getElementById('costPrice').value;
             const quantity = document.getElementById('quantity').value;
             const reorderLevel = document.getElementById('reorderLevel').value || '5';
-            
             const barcode = document.getElementById('barcode').value.trim();
             const brand = document.getElementById('brand').value.trim();
             const weight = document.getElementById('weight').value.trim();
             const categoryName = document.getElementById('categoryName').value.trim();
-            
             const btn = document.getElementById('submitBtn');
 
-            if (!name) {
-                showToast('warning', 'Name Required', 'Enter a product name.');
-                document.getElementById('productName').focus();
-                return;
-            }
-
-            if (!costPrice || parseFloat(costPrice) < 0) {
-                showToast('warning', 'Cost Price Required', 'Enter a valid cost price.');
-                document.getElementById('costPrice').focus();
-                return;
-            }
-
-            if (!sellingPrice || parseFloat(sellingPrice) <= 0) {
-                showToast('warning', 'Selling Price Required', 'Enter a valid selling price.');
-                document.getElementById('sellingPrice').focus();
-                return;
-            }
-
-            if (!quantity || parseInt(quantity) < 0) {
-                showToast('warning', 'Quantity Required', 'Enter the stock quantity.');
-                document.getElementById('quantity').focus();
-                return;
-            }
+            if (!name) { showToast('warning', 'Name Required', 'Enter a product name.'); return; }
+            if (!costPrice || parseFloat(costPrice) < 0) { showToast('warning', 'Cost Price Required', 'Enter a valid cost price.'); return; }
+            if (!sellingPrice || parseFloat(sellingPrice) <= 0) { showToast('warning', 'Selling Price Required', 'Enter a valid selling price.'); return; }
+            if (!quantity || parseInt(quantity) < 0) { showToast('warning', 'Quantity Required', 'Enter the stock quantity.'); return; }
 
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner"></span> Saving...';
-
             try {
                 await apiRequest('/api/products', {
                     method: 'POST',
                     body: JSON.stringify({
-                        name,
-                        sellingPrice: parseFloat(sellingPrice),
-                        costPrice: parseFloat(costPrice),
-                        quantity: parseInt(quantity),
-                        reorderLevel: parseInt(reorderLevel),
-                        unit: selectedUnit,
-                        barcode: barcode || null,
-                        brand: brand || null,
-                        weight: weight || null,
-                        categoryName: categoryName || null,
-                        image: aiImageBase64 || null
+                        name, sellingPrice: parseFloat(sellingPrice), costPrice: parseFloat(costPrice),
+                        quantity: parseInt(quantity), reorderLevel: parseInt(reorderLevel),
+                        unit: selectedUnit, barcode: barcode || null, brand: brand || null,
+                        weight: weight || null, categoryName: categoryName || null, image: aiImageBase64 || null
                     })
                 });
-
-                showToast('success', 'Product Saved! 📦', `${name} has been added to your inventory.`);
-
-                // Reset and reload
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-
+                showToast('success', 'Product Saved! 📦', `${name} has been added.`);
+                setTimeout(() => location.reload(), 1500);
             } catch (err) {
                 showToast('error', 'Failed', err.message);
                 btn.disabled = false;
                 btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Save Product';
+            }
+        }
+
+        // ── SUBMIT: BULK ──
+        async function handleBulkSubmit() {
+            const validItems = bulkItems.filter(it => it.name.trim() && parseFloat(it.price) > 0 && parseInt(it.quantity) > 0);
+            if (validItems.length === 0) {
+                showToast('warning', 'No Items', 'Add at least one item with name, price, and quantity.');
+                return;
+            }
+
+            const btn = document.getElementById('bulkSubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Saving all items...';
+
+            let saved = 0;
+            let failed = 0;
+
+            try {
+                const promises = validItems.map(item =>
+                    apiRequest('/api/products', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            name: item.name.trim(),
+                            sellingPrice: parseFloat(item.price),
+                            costPrice: parseFloat(item.price) * 0.7,
+                            quantity: parseInt(item.quantity),
+                            reorderLevel: 5,
+                            unit: 'pieces',
+                            image: bulkImageBase64 || null
+                        })
+                    }).then(() => { saved++; }).catch(() => { failed++; })
+                );
+
+                await Promise.all(promises);
+
+                if (saved > 0) {
+                    showToast('success', 'Inventory Updated! 📦', `${saved} product(s) saved successfully.`);
+                }
+                if (failed > 0) {
+                    showToast('warning', 'Partial Save', `${failed} product(s) failed to save.`);
+                }
+
+                setTimeout(() => { window.location.href = 'inventory.html'; }, 1500);
+            } catch (err) {
+                showToast('error', 'Save Failed', err.message);
+                btn.disabled = false;
+                btn.innerHTML = 'Save to Inventory';
             }
         }
     </script>

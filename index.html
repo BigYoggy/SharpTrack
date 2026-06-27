@@ -13,25 +13,45 @@
     <style>
         /* ── LANDING PAGE DESIGN SYSTEM ── */
         :root {
-            --lp-bg: #0f1410;
-            --lp-surface: #1e2a24;
-            --lp-surface-2: #1a201c;
-            --lp-border: #2d3a34;
-            --lp-border-light: #253028;
-            --lp-text: #e8efe9;
-            --lp-text-secondary: #b0c4b8;
-            --lp-text-muted: #7a9486;
-            --lp-accent: #25a060;
-            --lp-accent-dark: #1d8a50;
-            --lp-accent-glow: rgba(37, 160, 96, 0.15);
-            --lp-accent-glow-strong: rgba(37, 160, 96, 0.25);
-            --lp-nav-bg: rgba(15, 20, 16, 0.8);
+            /* LIGHT MODE (Default System Preference) */
+            --lp-bg: #f4efeb;
+            --lp-surface: #f9f6f0;
+            --lp-surface-2: #eae2d6;
+            --lp-border: #dcd3c6;
+            --lp-border-light: #e6dfd5;
+            --lp-text: #1b4332;
+            --lp-text-secondary: #2d6a4f;
+            --lp-text-muted: #52796f;
+            --lp-accent: #17432b;
+            --lp-accent-dark: #081c15;
+            --lp-accent-glow: rgba(23, 67, 43, 0.15);
+            --lp-accent-glow-strong: rgba(23, 67, 43, 0.25);
+            --lp-nav-bg: rgba(244, 239, 235, 0.85);
             --lp-danger: #e53935;
             --lp-warning: #e07b2a;
             --lp-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
             --lp-radius: 12px;
             --lp-radius-lg: 16px;
             --lp-radius-xl: 24px;
+        }
+
+        /* DARK MODE (System Preference) */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --lp-bg: #0f1410;
+                --lp-surface: #1e2a24;
+                --lp-surface-2: #1a201c;
+                --lp-border: #2d3a34;
+                --lp-border-light: #253028;
+                --lp-text: #e8efe9;
+                --lp-text-secondary: #b0c4b8;
+                --lp-text-muted: #7a9486;
+                --lp-accent: #25a060;
+                --lp-accent-dark: #1d8a50;
+                --lp-accent-glow: rgba(37, 160, 96, 0.15);
+                --lp-accent-glow-strong: rgba(37, 160, 96, 0.25);
+                --lp-nav-bg: rgba(15, 20, 16, 0.8);
+            }
         }
 
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
