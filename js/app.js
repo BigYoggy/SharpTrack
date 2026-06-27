@@ -2,6 +2,40 @@
    SHARPTRACK — SHARED APPLICATION JS
    ============================================ */
 
+/* ── THEME SYSTEM ── */
+// Apply saved theme immediately to prevent flash of wrong theme
+(function() {
+    const saved = localStorage.getItem('st_theme');
+    if (saved) {
+        document.documentElement.setAttribute('data-theme', saved);
+    }
+    // If no saved preference, system preference is used automatically via CSS
+})();
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const isDarkSystem = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    let newTheme;
+    if (current === 'dark') {
+        newTheme = 'light';
+    } else if (current === 'light') {
+        newTheme = 'dark';
+    } else {
+        // No manual override set — currently following system
+        newTheme = isDarkSystem ? 'light' : 'dark';
+    }
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('st_theme', newTheme);
+}
+
+function getCurrentTheme() {
+    const saved = document.documentElement.getAttribute('data-theme');
+    if (saved) return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')
     ? 'http://localhost:3000'
     : 'https://sharptrack-api.onrender.com';

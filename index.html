@@ -10,6 +10,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        // Apply saved theme immediately to prevent flash
+        (function() {
+            var saved = localStorage.getItem('st_theme');
+            if (saved) document.documentElement.setAttribute('data-theme', saved);
+        })();
+    </script>
     <style>
         /* ── LANDING PAGE DESIGN SYSTEM ── */
         :root {
@@ -35,9 +42,9 @@
             --lp-radius-xl: 24px;
         }
 
-        /* DARK MODE (System Preference) */
+        /* DARK MODE — auto via system preference */
         @media (prefers-color-scheme: dark) {
-            :root {
+            :root:not([data-theme="light"]) {
                 --lp-bg: #0f1410;
                 --lp-surface: #1e2a24;
                 --lp-surface-2: #1a201c;
@@ -54,16 +61,55 @@
             }
         }
 
+        /* DARK MODE — manual toggle */
+        :root[data-theme="dark"] {
+            --lp-bg: #0f1410;
+            --lp-surface: #1e2a24;
+            --lp-surface-2: #1a201c;
+            --lp-border: #2d3a34;
+            --lp-border-light: #253028;
+            --lp-text: #e8efe9;
+            --lp-text-secondary: #b0c4b8;
+            --lp-text-muted: #7a9486;
+            --lp-accent: #25a060;
+            --lp-accent-dark: #1d8a50;
+            --lp-accent-glow: rgba(37, 160, 96, 0.15);
+            --lp-accent-glow-strong: rgba(37, 160, 96, 0.25);
+            --lp-nav-bg: rgba(15, 20, 16, 0.8);
+        }
+
+        /* LIGHT MODE — manual toggle override */
+        :root[data-theme="light"] {
+            --lp-bg: #f4efeb;
+            --lp-surface: #f9f6f0;
+            --lp-surface-2: #eae2d6;
+            --lp-border: #dcd3c6;
+            --lp-border-light: #e6dfd5;
+            --lp-text: #1b4332;
+            --lp-text-secondary: #2d6a4f;
+            --lp-text-muted: #52796f;
+            --lp-accent: #17432b;
+            --lp-accent-dark: #081c15;
+            --lp-accent-glow: rgba(23, 67, 43, 0.15);
+            --lp-accent-glow-strong: rgba(23, 67, 43, 0.25);
+            --lp-nav-bg: rgba(244, 239, 235, 0.85);
+        }
+
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-        html { scroll-behavior: smooth; }
+        html { 
+            scroll-behavior: smooth; 
+            overflow-x: hidden;
+            width: 100vw;
+        }
 
         body {
             font-family: var(--lp-font);
             background: var(--lp-bg);
             color: var(--lp-text);
             min-height: 100vh;
-            max-width: 100%;
+            width: 100%;
+            max-width: 100vw;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             line-height: 1.6;
@@ -1237,6 +1283,8 @@
         <div class="lp-footer-inner">
             <p>© 2026 SharpTrack. Built for Nigerian merchants.</p>
             <ul class="lp-footer-links">
+                <li><a href="terms.html">Terms & Conditions</a></li>
+                <li><a href="privacy.html">Privacy Policy</a></li>
                 <li><a href="help.html">Help & FAQs</a></li>
                 <li><a href="signup.html">Create Account</a></li>
             </ul>

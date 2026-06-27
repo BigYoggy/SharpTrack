@@ -75,17 +75,17 @@
         </div>
 
         <!-- Google One-Tap & Button Container -->
-        <div class="space-y-4 mb-6" id="google-btn-section">
-            <div id="google-btn-wrapper" class="w-full min-h-[44px] relative rounded-xl overflow-hidden shadow-md" style="height: 44px;">
+        <div class="space-y-4 mb-6 flex justify-center" id="google-btn-section">
+            <div id="google-btn-wrapper" class="w-full max-w-[280px] min-h-[44px] relative rounded-xl overflow-hidden shadow-md" style="height: 44px;">
                 <!-- Custom Visual Button -->
-                <button type="button" class="w-full h-full flex items-center justify-center gap-2 bg-brand text-white font-semibold text-sm cursor-pointer border-none transition-colors duration-200">
-                    <svg class="w-4 h-4 bg-white rounded-full p-[2px]" viewBox="0 0 24 24">
+                <button type="button" class="w-full h-full flex items-center justify-center gap-3 bg-brand text-white font-semibold text-[13px] cursor-pointer border-none transition-colors duration-200 tracking-wide hover:bg-brand-dark">
+                    <svg class="w-5 h-5 bg-white rounded-full p-[3px] shadow-sm" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                     </svg>
-                    Sign up with Google
+                    Continue with Google
                 </button>
                 <!-- Invisible Google Iframe Container -->
                 <div id="google-signin-btn" class="absolute top-0 left-0 w-full h-full opacity-0 flex items-center justify-center z-10"></div>
@@ -125,6 +125,19 @@
                             </svg>
                         </span>
                         <input type="email" id="email" placeholder="owner@pharmacy.com" 
+                               class="w-full bg-bg border border-border rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-brand text-text transition-colors duration-200" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="phone" class="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Phone Number</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-text-muted">
+                            <svg class="h-5 width-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                        </span>
+                        <input type="tel" id="phone" placeholder="08012345678" 
                                class="w-full bg-bg border border-border rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-brand text-text transition-colors duration-200" required>
                     </div>
                 </div>
@@ -171,58 +184,55 @@
 
         <!-- OTP Form Container (Hidden initially) -->
         <div id="otp-form-container" class="hidden animate-fade-in flex flex-col items-center w-full">
-            <!-- Shield Icon -->
-            <div class="w-16 h-16 bg-brand/10 rounded-full flex items-center justify-center mb-6">
-                <svg class="w-8 h-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            <!-- Mail Icon -->
+            <div class="mb-4 text-brand">
+                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                 </svg>
             </div>
             
-            <h3 class="text-2xl font-bold text-center mb-2">Verify Your Email</h3>
-            <p class="text-sm text-text-muted text-center mb-6">We've sent a 6-digit verification code to</p>
-            
-            <!-- Email Pill -->
-            <div class="inline-flex items-center gap-2 bg-brand/10 rounded-lg px-4 py-2.5 mb-6">
-                <svg class="w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <span id="display-email" class="font-semibold text-brand tracking-wide"></span>
-            </div>
-
-            <hr class="w-full border-t border-border mb-6">
+            <h3 class="text-2xl font-bold text-center mb-2">Check your email</h3>
+            <p class="text-sm text-text-muted text-center leading-relaxed mb-8">
+                We sent a 6-digit verification code to<br>
+                <span id="display-email" class="font-bold text-text"></span>
+            </p>
             
             <form onsubmit="event.preventDefault(); handleOtpVerification();" class="w-full flex flex-col items-center">
-                <label class="block text-sm font-bold text-text self-start mb-4">Enter OTP</label>
+                <label class="block text-[11px] font-bold text-text-muted uppercase tracking-wider self-center mb-3">VERIFICATION CODE</label>
                 
-                <div class="flex justify-between w-full gap-2 mb-8">
-                    <input type="text" maxlength="1" class="otp-box w-full max-w-[50px] h-14 bg-bg border-2 border-border rounded-lg text-center text-xl font-bold text-text focus:outline-none focus:border-brand transition-colors">
-                    <input type="text" maxlength="1" class="otp-box w-full max-w-[50px] h-14 bg-bg border-2 border-border rounded-lg text-center text-xl font-bold text-text focus:outline-none focus:border-brand transition-colors">
-                    <input type="text" maxlength="1" class="otp-box w-full max-w-[50px] h-14 bg-bg border-2 border-border rounded-lg text-center text-xl font-bold text-text focus:outline-none focus:border-brand transition-colors">
-                    <input type="text" maxlength="1" class="otp-box w-full max-w-[50px] h-14 bg-bg border-2 border-border rounded-lg text-center text-xl font-bold text-text focus:outline-none focus:border-brand transition-colors">
-                    <input type="text" maxlength="1" class="otp-box w-full max-w-[50px] h-14 bg-bg border-2 border-border rounded-lg text-center text-xl font-bold text-text focus:outline-none focus:border-brand transition-colors">
-                    <input type="text" maxlength="1" class="otp-box w-full max-w-[50px] h-14 bg-bg border-2 border-border rounded-lg text-center text-xl font-bold text-text focus:outline-none focus:border-brand transition-colors">
+                <div class="flex justify-center items-center w-full max-w-[320px] bg-[#1a1c1a] border border-[#2d332d] rounded-xl py-3 px-2 mb-8" id="otp-container-box">
+                    <input type="text" maxlength="1" class="otp-box w-10 h-10 bg-transparent text-center text-xl font-bold text-white focus:outline-none placeholder-gray-600 transition-colors" placeholder="•">
+                    <input type="text" maxlength="1" class="otp-box w-10 h-10 bg-transparent text-center text-xl font-bold text-white focus:outline-none placeholder-gray-600 transition-colors" placeholder="•">
+                    <input type="text" maxlength="1" class="otp-box w-10 h-10 bg-transparent text-center text-xl font-bold text-white focus:outline-none placeholder-gray-600 transition-colors" placeholder="•">
+                    <input type="text" maxlength="1" class="otp-box w-10 h-10 bg-transparent text-center text-xl font-bold text-white focus:outline-none placeholder-gray-600 transition-colors" placeholder="•">
+                    <input type="text" maxlength="1" class="otp-box w-10 h-10 bg-transparent text-center text-xl font-bold text-white focus:outline-none placeholder-gray-600 transition-colors" placeholder="•">
+                    <input type="text" maxlength="1" class="otp-box w-10 h-10 bg-transparent text-center text-xl font-bold text-white focus:outline-none placeholder-gray-600 transition-colors" placeholder="•">
                 </div>
 
-                <hr class="w-full border-t border-border mb-6">
-                
-                <div class="flex flex-col items-center gap-2 mb-8">
-                    <div class="flex items-center gap-2 text-sm text-text-muted">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>Didn't receive the code?</span>
-                    </div>
-                    <button type="button" class="text-brand font-semibold text-sm hover:underline" onclick="resendOtp()">Resend OTP <span class="font-normal text-brand/80" id="otp-timer">in 25s</span></button>
-                </div>
+                <style>
+                    /* Handle focus styling for the entire box */
+                    #otp-container-box:focus-within {
+                        border-color: var(--primary);
+                        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+                    }
+                </style>
                 
                 <button type="submit" id="verify-otp-btn" 
-                        class="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-3.5 px-4 rounded-xl text-sm transition-all duration-200 transform active:scale-[0.98] shadow-md">
-                    Verify & Continue
+                        class="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-3.5 px-4 rounded-xl text-sm transition-all duration-200 transform active:scale-[0.98] shadow-md mb-6">
+                    Verify & Create Account
                 </button>
             </form>
             
-            <div class="mt-6 text-center">
-                <a href="signup.html" class="text-brand font-semibold text-sm hover:underline">Back to Login</a>
+            <div class="flex flex-col items-center gap-4 w-full">
+                <div class="text-sm text-text-muted">
+                    Didn't receive the code? <button type="button" class="text-brand font-semibold hover:underline" onclick="resendOtp()">Resend Code <span class="font-normal text-brand/80" id="otp-timer"></span></button>
+                </div>
+                <div class="text-sm">
+                    <a href="javascript:void(0)" onclick="location.reload()" class="text-text-muted hover:text-text flex items-center gap-1 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        Change email address
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -325,11 +335,13 @@
         async function handleEmailSignup() {
             const name = document.getElementById('name').value.trim();
             const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const terms = document.getElementById('terms').checked;
             const btn = document.getElementById('email-signup-btn');
 
-            if (!name || !email || !password) {
-                showToast('warning', 'Missing Fields', 'Please fill in all fields.');
+            if (!name || !email || !phone || !password || !terms) {
+                showToast('warning', 'Missing Fields', 'Please fill all fields and accept terms.');
                 return;
             }
 
@@ -358,7 +370,7 @@
                     body: JSON.stringify({ email })
                 });
 
-                signupData = { name, email, password };
+                signupData = { name, email, phone, password };
                 
                 // Show OTP form and hide logo, Google button, divider
                 document.getElementById('signup-logo-header').classList.add('hidden');
@@ -456,6 +468,30 @@
                     }
                 });
             });
+
+            // ── Cookie Banner Logic ──
+            if (!localStorage.getItem('cookiesAccepted')) {
+                const banner = document.createElement('div');
+                banner.id = 'cookie-banner';
+                banner.innerHTML = `
+                    <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; z-index: 9999; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                        <p style="margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                            We use cookies to enhance your experience, analyze site traffic, and serve tailored content. By continuing to use our site, you consent to our use of cookies.
+                        </p>
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button id="accept-cookies-btn" style="background: var(--brand); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s;">Accept All</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(banner);
+                
+                document.getElementById('accept-cookies-btn').addEventListener('click', () => {
+                    localStorage.setItem('cookiesAccepted', 'true');
+                    banner.style.opacity = '0';
+                    banner.style.transition = 'opacity 0.3s ease';
+                    setTimeout(() => banner.remove(), 300);
+                });
+            }
         });
     </script>
 </body>

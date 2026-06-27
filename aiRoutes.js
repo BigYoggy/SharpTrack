@@ -76,54 +76,82 @@ async function scanProductLogic(req, res) {
             base64Data = Buffer.concat(buffers).toString('base64');
         } else {
             // Read from JSON body
-            const { imageBase64, mimeType: bodyMime } = req.body || {};
-            if (!imageBase64) {
-                return res.status(400).json({
-                    success: false,
-                    debug: "No image provided (empty imageBase64)"
-                });
-            }
-            base64Data = imageBase64.replace(/^data:image\/\w+;base64,/i, "");
-            if (bodyMime) mimeType = bodyMime;
-        }
-
-        const imageData = base64Data;
-
-        // Logging request info
-        console.log("=== Scan Request ===");
-        console.log("Request received");
-        console.log("Image exists:", !!imageData);
-        console.log("Image size:", imageData?.length);
-
-        // 1. Verify: API key exists
-        console.log(
-            "GEMINI key exists:",
-            !!process.env.GEMINI_API_KEY
-        );
-        if (!process.env.GEMINI_API_KEY) {
-            console.error("Gemini failure: GEMINI_API_KEY is not configured");
-            return res.status(500).json({
-                success: false,
-                debug: "GEMINI_API_KEY is not configured"
-            });
-        }
-
-        // 3. Verify request image format and magic bytes signature
-        const imgVal = validateImageContent(base64Data);
-        if (!imgVal.valid) {
-            console.error("Gemini failure: Invalid image content:", imgVal.error);
+        const { imageBase64, mimeType: bodyMime, mode } = req.body || {};
+        if (!imageBase64) {
             return res.status(400).json({
                 success: false,
-                debug: `Image validation failed: ${imgVal.error}`
+                debug: "No image provided (empty imageBase64)"
             });
         }
-        if (imgVal.mimeType) {
-            mimeType = imgVal.mimeType;
-        }
+        base64Data = imageBase64.replace(/^data:image\/\w+;base64,/i, "");
+        if (bodyMime) mimeType = bodyMime;
+    }
 
-        console.log("Calling Gemini with fallbacks...");
+    const imageData = base64Data;
 
-        const prompt = `Analyze this product image and return ONLY valid JSON.
+    // Logging request info
+    console.log("=== Scan Request ===");
+    console.log("Request received");
+    console.log("Image exists:", !!imageData);
+    console.log("Image size:", imageData?.length);
+
+    // 1. Verify: API key exists
+    console.log(
+        "GEMINI key exists:",
+        !!process.env.GEMINI_API_KEY
+    );
+    if (!process.env.GEMINI_API_KEY) {
+        console.error("Gemini failure: GEMINI_API_KEY is not configured");
+        return res.status(500).json({
+            success: false,
+            debug: "GEMINI_API_KEY is not configured"
+        });
+    }
+
+    // 3. Verify request image format and magic bytes signature
+    const imgVal = validateImageContent(base64Data);
+    if (!imgVal.valid) {
+        console.error("Gemini failure: Invalid image content:", imgVal.error);
+        return res.status(400).json({
+            success: false,
+            debug: `Image validation failed: ${imgVal.error}`
+        });
+    }
+    if (imgVal.mimeType) {
+        mimeType = imgVal.mimeType;
+    }
+
+    console.log("Calling Gemini with fallbacks...");
+
+    const { mode: parsedMode } = req.body || {};
+
+    let prompt = "";
+    if (parsedMode === "bulk" || parsedMode === "receipt") {
+        prompt = `Analyze this image (which may be a receipt, invoice, or a picture of multiple products) and return ONLY valid JSON.
+Extract all the visible products/items.
+Return a JSON object with an "items" array. Each item should have:
+{
+  "items": [
+    {
+      "productName": "Name of the product",
+      "brand": "Brand of the product (if visible)",
+      "category": "Category of the product",
+      "quantity": "Quantity (if visible, as a number)",
+      "costPrice": "Cost price / unit price paid (if visible, as a number)",
+      "sellingPrice": "Selling price (if visible, as a number)",
+      "description": "Short description",
+      "weight": "Product weight, volume, or size (e.g., '50cl', '500ml', '1kg')",
+      "barcode": "Barcode if visible"
+    }
+  ]
+}
+Rules:
+* Extract all distinct items or products listed on the receipt/invoice or seen in the image.
+* If quantity or price is not visible, leave them out or set to null.
+* Do not guess uncertain values.
+* No extra text outside JSON.`;
+    } else {
+        prompt = `Analyze this product image and return ONLY valid JSON.
 Required fields:
 {
   "productName": "Name of the product",
@@ -140,6 +168,7 @@ Rules:
 * Return null when uncertain
 * Confidence should be from 0–1
 * No extra text outside JSON`;
+    }
 
         const ai = getAi();
         const response = await generateContentWithFallback(ai, [
@@ -186,7 +215,9 @@ Rules:
             description: jsonResult.description || null,
             weight: jsonResult.weight || null,
             barcode: jsonResult.barcode || null,
-            confidence: jsonResult.confidence !== undefined && jsonResult.confidence !== null ? parseFloat(jsonResult.confidence) : null
+            confidence: jsonResult.confidence !== undefined && jsonResult.confidence !== null ? parseFloat(jsonResult.confidence) : null,
+            costPrice: jsonResult.costPrice || null,
+            items: jsonResult.items || null
         };
 
         // Determine if request is from the legacy client endpoint (/api/ai/scan-product)

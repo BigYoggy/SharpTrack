@@ -374,9 +374,9 @@
                 localStorage.setItem('st_user', JSON.stringify(user));
                 populateProfile(user);
 
-                // Set dark mode toggle
+                // Set dark mode toggle visual state based on current active theme
                 const toggle = document.getElementById('darkModeToggle');
-                if (user.darkMode) toggle.classList.add('on');
+                if (getCurrentTheme() === 'dark') toggle.classList.add('on');
             } catch (err) {
                 if (!cached) showToast('error', 'Failed to load', err.message);
             }

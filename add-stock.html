@@ -266,6 +266,33 @@
         .hidden { display: none !important; }
         .mb-0 { margin-bottom: 0 !important; }
         #reader { width: 100%; border-radius: var(--radius-lg); overflow: hidden; border: none; margin-bottom: 16px; }
+        /* ══════════════════════════════════
+           MOBILE RESPONSIVENESS
+           ══════════════════════════════════ */
+        @media (max-width: 480px) {
+            .mode-select { grid-template-columns: 1fr; }
+            .bulk-item-row { 
+                display: grid;
+                grid-template-columns: auto auto 1fr auto;
+                grid-template-areas: 
+                    "drag icon name delete"
+                    "cost sell qty qty";
+                gap: 12px 8px;
+                padding: 12px;
+                align-items: center;
+            }
+            .bulk-item-row .drag-handle { grid-area: drag; }
+            .bulk-item-row .tag-icon { grid-area: icon; }
+            .bulk-item-row .item-name { grid-area: name; width: 100%; min-width: 0; }
+            .bulk-item-row .bulk-delete-btn { grid-area: delete; margin: 0; }
+            
+            .bulk-item-row .cost-group { grid-area: cost; }
+            .bulk-item-row .sell-group { grid-area: sell; }
+            .bulk-item-row .qty-group { grid-area: qty; }
+
+            .bulk-field-group input { width: 100%; min-width: 0; }
+            .review-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        }
     </style>
 </head>
 <body>
@@ -693,8 +720,13 @@
         }
 
         // ── BULK ITEMS MANAGEMENT ──
-        function addBulkItem(name, price, qty) {
-            bulkItems.push({ name: name || '', price: price || '', quantity: qty || '' });
+        function addBulkItem(name, costPrice, sellingPrice, qty) {
+            bulkItems.push({ 
+                name: name || '', 
+                costPrice: costPrice || '', 
+                sellingPrice: sellingPrice || '', 
+                quantity: qty || '' 
+            });
             renderBulkItems();
         }
 
@@ -719,11 +751,15 @@
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                     </div>
                     <input type="text" class="item-name" placeholder="Product name" value="${item.name}" oninput="updateBulkItem(${i},'name',this.value)">
-                    <div class="bulk-field-group">
-                        <label>Price (₦)</label>
-                        <input type="number" placeholder="0" value="${item.price}" oninput="updateBulkItem(${i},'price',this.value)">
+                    <div class="bulk-field-group cost-group">
+                        <label>Cost (₦)</label>
+                        <input type="number" placeholder="0" value="${item.costPrice}" oninput="updateBulkItem(${i},'costPrice',this.value)">
                     </div>
-                    <div class="bulk-field-group">
+                    <div class="bulk-field-group sell-group">
+                        <label>Sell (₦)</label>
+                        <input type="number" placeholder="0" value="${item.sellingPrice}" oninput="updateBulkItem(${i},'sellingPrice',this.value)">
+                    </div>
+                    <div class="bulk-field-group qty-group">
                         <label>Quantity</label>
                         <input type="number" placeholder="0" value="${item.quantity}" oninput="updateBulkItem(${i},'quantity',this.value)">
                     </div>
@@ -932,7 +968,7 @@
                 lookupBarcode(decodedText);
             } else if (currentMode === 'bulk') {
                 // Add as a new bulk item from barcode
-                addBulkItem(decodedText, '', '');
+                addBulkItem(decodedText, '', '', '');
                 showToast('success', 'Barcode Scanned', `Added ${decodedText} to items list.`);
                 goToStep(2);
             }
@@ -1071,7 +1107,7 @@
                 const response = await fetch(`${API_BASE}/api/scan-product`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', ...(getToken() ? { 'Authorization': `Bearer ${getToken()}` } : {}) },
-                    body: JSON.stringify({ imageBase64: base64Str, mimeType: "image/jpeg" }),
+                    body: JSON.stringify({ imageBase64: base64Str, mimeType: "image/jpeg", mode: "bulk" }),
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
@@ -1079,9 +1115,17 @@
                 let result; try { result = JSON.parse(rawText); } catch(e) {}
                 if (!response.ok) throw new Error(result?.error || 'AI analysis failed');
                 const data = result && (result.data || result);
-                if (data && data.productName) {
+                
+                if (data && data.items && Array.isArray(data.items)) {
                     bulkItems = [];
-                    addBulkItem(data.productName, data.sellingPrice || '', data.quantity || '');
+                    data.items.forEach(item => {
+                        addBulkItem(item.name || item.productName || '', item.costPrice || '', item.sellingPrice || item.price || '', item.quantity || item.qty || '');
+                    });
+                    setBulkStatus('success', `AI detected ${data.items.length} products!`);
+                    goToStep(2);
+                } else if (data && data.productName) {
+                    bulkItems = [];
+                    addBulkItem(data.productName, data.costPrice || '', data.sellingPrice || '', data.quantity || '');
                     setBulkStatus('success', 'AI detected product: ' + data.productName);
                     goToStep(2);
                 } else {
@@ -1117,13 +1161,13 @@
                 if (data && data.items && Array.isArray(data.items)) {
                     bulkItems = [];
                     data.items.forEach(item => {
-                        addBulkItem(item.name || item.productName || '', item.price || item.sellingPrice || '', item.quantity || item.qty || '');
+                        addBulkItem(item.name || item.productName || '', item.costPrice || '', item.sellingPrice || item.price || '', item.quantity || item.qty || '');
                     });
                     setBulkStatus('success', `Found ${data.items.length} items from receipt!`);
                     goToStep(2);
                 } else if (data && data.productName) {
                     bulkItems = [];
-                    addBulkItem(data.productName, data.sellingPrice || '', data.quantity || '');
+                    addBulkItem(data.productName, data.costPrice || '', data.sellingPrice || '', data.quantity || '');
                     setBulkStatus('success', 'Detected 1 item from receipt.');
                     goToStep(2);
                 } else {
