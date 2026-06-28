@@ -146,6 +146,9 @@ app.use('/api/notifications', notificationRoutes);
 const activityRoutes = require('./activity');
 app.use('/api/activity', activityRoutes);
 
+const feedbackRoutes = require('./feedbackRoutes');
+app.use('/api/feedback', feedbackRoutes);
+
 const aiRoutes = require('./aiRoutes');
 app.use('/api/ai', aiRoutes);
 app.get('/test-ai', aiRoutes.testAi);

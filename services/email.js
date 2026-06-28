@@ -71,4 +71,36 @@ async function sendCongratulationMail(email, name, storeName) {
     }
 }
 
-module.exports = { sendEmailOTP, sendCongratulationMail };
+async function sendFeedbackEmail(feedbackItem) {
+    try {
+        const supportEmail = 'support@sharptrack.space';
+        const response = await resend.emails.send({
+            from: FROM_EMAIL,
+            to: supportEmail,
+            subject: `New Feedback: ${feedbackItem.type.toUpperCase()}`,
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; padding: 20px;">
+                    <h2>New Feedback Received</h2>
+                    <p><strong>Type:</strong> ${feedbackItem.type}</p>
+                    <p><strong>User ID:</strong> ${feedbackItem.userId}</p>
+                    <p><strong>User Name:</strong> ${feedbackItem.userName}</p>
+                    <p><strong>Message:</strong></p>
+                    <div style="background-color: #f4f4f5; padding: 15px; border-radius: 8px;">
+                        <p style="white-space: pre-wrap;">${feedbackItem.message}</p>
+                    </div>
+                </div>
+            `
+        });
+        
+        if (response.error) {
+            throw new Error(response.error.message || 'Resend API Error');
+        }
+        
+        return { success: true, data: response.data };
+    } catch (error) {
+        console.error('[Resend Feedback Error]:', error);
+        throw error;
+    }
+}
+
+module.exports = { sendEmailOTP, sendCongratulationMail, sendFeedbackEmail };

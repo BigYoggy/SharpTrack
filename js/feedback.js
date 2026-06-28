@@ -65,12 +65,17 @@ function resetFeedbackForm() {
     if (txt) txt.value = '';
 }
 
-function submitFeedback() {
+async function submitFeedback() {
     const message = document.getElementById('feedback-message').value.trim();
     if (!message) {
         showToast('warning', 'Empty Message', 'Please enter a message before submitting.');
         return;
     }
+
+    const btn = document.querySelector('.shortcut-modal-body .btn-primary');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-sm" style="display:inline-block; border-color:transparent; border-top-color:white; width:14px; height:14px; border-width:2px;"></span> Sending...';
 
     try {
         const user = getUser();
@@ -82,15 +87,20 @@ function submitFeedback() {
             timestamp: new Date().toISOString()
         };
 
-        // Save locally
-        let existing = JSON.parse(localStorage.getItem('st_feedback_log') || '[]');
-        existing.push(feedbackItem);
-        localStorage.setItem('st_feedback_log', JSON.stringify(existing));
+        // Send to backend
+        await apiRequest('/api/feedback', {
+            method: 'POST',
+            body: JSON.stringify(feedbackItem)
+        });
 
         // Close and notify
         closeFeedbackModal();
         showToast('success', 'Feedback Sent! 💖', 'Thank you for helping us improve SharpTrack.');
     } catch (err) {
-        showToast('error', 'Error', 'Failed to save feedback');
+        console.error(err);
+        showToast('error', 'Error', 'Failed to send feedback. Please try again.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
     }
 }

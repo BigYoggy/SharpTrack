@@ -835,44 +835,9 @@
             transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .lp-login-tabs {
-            display: flex;
-            background: var(--lp-surface-2);
-            border: 1px solid var(--lp-border);
-            border-radius: 10px;
-            padding: 4px;
-            margin-bottom: 24px;
-        }
-
-        .lp-tab-btn {
-            flex: 1;
-            padding: 8px 12px;
-            font-size: 13.5px;
-            font-weight: 600;
-            border: none;
-            background: none;
-            color: var(--lp-text-muted);
-            cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.2s;
-            font-family: var(--lp-font);
-        }
-
-        .lp-tab-btn.active {
-            background: var(--lp-surface);
-            color: var(--lp-text);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-
-        .lp-google-wrap {
-            margin-bottom: 16px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-        }
-
-        .lp-login-overlay.open .lp-login-card {
-            transform: translateY(0) scale(1);
+        :root[data-theme="light"] .lp-login-card,
+        :root:not([data-theme]) .lp-login-card {
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
         }
 
         .lp-login-close {
@@ -1379,71 +1344,21 @@
                 <p id="login-header-subtitle">Sign in to your account</p>
             </div>
 
-            <!-- Google Sign-In Wrapper -->
-            <div class="lp-google-wrap" id="google-login-btn-wrapper" style="position: relative; width: 100%; max-width: 280px; margin: 0 auto 20px auto; height: 44px; border-radius: 12px; overflow: hidden;">
-                <!-- Custom Button (Visual only) -->
-                <button type="button" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; background-color: #121212; color: #ffffff; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';">
-                    <svg style="width: 20px; height: 20px; background: white; border-radius: 50%; padding: 2px;" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Continue with Google
-                </button>
-                <!-- Invisible Google Button Overlay -->
-                <div id="google-login-signin-btn" style="position: absolute; top: -1px; left: -1px; width: calc(100% + 2px); height: calc(100% + 2px); opacity: 0.01; display: flex; align-items: center; justify-content: center; z-index: 2;"></div>
-            </div>
-
-            <!-- Divider -->
-            <div class="relative flex py-2 items-center" id="google-login-divider" style="display: flex; align-items: center; justify-content: center; width: 100%; margin-bottom: 20px;">
-                <div style="flex-grow: 1; border-top: 1px solid var(--lp-border); height: 1px; background: var(--lp-border);"></div>
-                <span style="flex-shrink: 0; margin: 0 12px; font-size: 11px; color: var(--lp-text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">or</span>
-                <div style="flex-grow: 1; border-top: 1px solid var(--lp-border); height: 1px; background: var(--lp-border);"></div>
-            </div>
-
-            <!-- Tabs -->
-            <div class="lp-login-tabs">
-                <button type="button" class="lp-tab-btn active" id="tab-email" onclick="switchLoginTab('email')">Email</button>
-                <button type="button" class="lp-tab-btn" id="tab-phone" onclick="switchLoginTab('phone')">Phone (Legacy)</button>
-            </div>
-
+            <!-- Unified Login Fields -->
             <div>
-                <!-- Email login fields -->
-                <div id="login-email-fields">
-                    <div class="lp-form-group">
-                        <label for="login-email">Email Address</label>
-                        <div class="lp-input-wrap">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"/></svg>
-                            <input type="email" id="login-email" class="lp-input" placeholder="owner@pharmacy.com" autocomplete="email">
-                        </div>
-                    </div>
-
-                    <div class="lp-form-group">
-                        <label for="login-email-password">Password</label>
-                        <div class="lp-input-wrap">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                            <input type="password" id="login-email-password" class="lp-input" placeholder="Enter password" autocomplete="current-password">
-                        </div>
+                <div class="lp-form-group">
+                    <label for="login-identity" id="login-identity-label">Email or Phone</label>
+                    <div class="lp-input-wrap">
+                        <svg id="login-identity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"/></svg>
+                        <input type="text" id="login-identity" class="lp-input" placeholder="Email or phone number" autocomplete="username" oninput="detectLoginInputType(this)">
                     </div>
                 </div>
 
-                <!-- Phone login fields (Legacy) -->
-                <div id="login-phone-fields" style="display: none;">
-                    <div class="lp-form-group">
-                        <label for="login-phone">Phone Number</label>
-                        <div class="lp-input-wrap">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                            <input type="tel" id="login-phone" class="lp-input" placeholder="e.g. 08012345678" autocomplete="tel">
-                        </div>
-                    </div>
-
-                    <div class="lp-form-group">
-                        <label for="login-pin">PIN</label>
-                        <div class="lp-input-wrap">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                            <input type="password" id="login-pin" class="lp-input" placeholder="Enter 6-digit PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password">
-                        </div>
+                <div class="lp-form-group">
+                    <label for="login-credential" id="login-credential-label">Password</label>
+                    <div class="lp-input-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <input type="password" id="login-credential" class="lp-input" placeholder="Enter password" autocomplete="current-password">
                     </div>
                 </div>
 
@@ -1465,7 +1380,6 @@
     <script src="js/app.js"></script>
     <script>
         // Auto-login redirect
-
         if (typeof isLoggedIn === 'function' && isLoggedIn()) {
             const user = getUser();
             if (user && user.onboardingCompleted) {
@@ -1476,19 +1390,39 @@
         }
 
         // ── Login Modal ──
-        let activeLoginTab = 'email';
-        let googleInitialized = false;
+        let loginInputType = 'email'; // 'email' or 'phone'
+
+        function detectLoginInputType(input) {
+            const val = input.value.trim();
+            const label = document.getElementById('login-credential-label');
+            const credInput = document.getElementById('login-credential');
+            const icon = document.getElementById('login-identity-icon');
+            const emailSvg = '<path d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"/>';
+            const phoneSvg = '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>';
+
+            if (/^[0+]/.test(val) && !val.includes('@')) {
+                loginInputType = 'phone';
+                label.textContent = 'PIN';
+                credInput.placeholder = 'Enter 6-digit PIN';
+                credInput.maxLength = 6;
+                credInput.inputMode = 'numeric';
+                icon.innerHTML = phoneSvg;
+            } else {
+                loginInputType = 'email';
+                label.textContent = 'Password';
+                credInput.placeholder = 'Enter password';
+                credInput.removeAttribute('maxLength');
+                credInput.inputMode = '';
+                icon.innerHTML = emailSvg;
+            }
+        }
 
         function openLogin() {
             document.getElementById('login-overlay').classList.add('open');
             document.body.style.overflow = 'hidden';
             initGoogleLogin();
             setTimeout(() => {
-                if (activeLoginTab === 'email') {
-                    document.getElementById('login-email').focus();
-                } else {
-                    document.getElementById('login-phone').focus();
-                }
+                document.getElementById('login-identity').focus();
             }, 350);
         }
 
@@ -1507,45 +1441,16 @@
             if (e.key === 'Escape') closeLogin();
         });
 
-        // Tab Switching
-        function switchLoginTab(tab) {
-            activeLoginTab = tab;
-            const emailTab = document.getElementById('tab-email');
-            const phoneTab = document.getElementById('tab-phone');
-            const emailFields = document.getElementById('login-email-fields');
-            const phoneFields = document.getElementById('login-phone-fields');
-
-            if (tab === 'email') {
-                emailTab.classList.add('active');
-                phoneTab.classList.remove('active');
-                emailFields.style.display = 'block';
-                phoneFields.style.display = 'none';
-                setTimeout(() => document.getElementById('login-email').focus(), 100);
-            } else {
-                phoneTab.classList.add('active');
-                emailTab.classList.remove('active');
-                phoneFields.style.display = 'block';
-                emailFields.style.display = 'none';
-                setTimeout(() => document.getElementById('login-phone').focus(), 100);
-            }
-        }
-
         // Enter key navigation
-        document.getElementById('login-email').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') document.getElementById('login-email-password').focus();
+        document.getElementById('login-identity').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') document.getElementById('login-credential').focus();
         });
-        document.getElementById('login-email-password').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') handleLoginSubmit();
-        });
-
-        document.getElementById('login-phone').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') document.getElementById('login-pin').focus();
-        });
-        document.getElementById('login-pin').addEventListener('keydown', (e) => {
+        document.getElementById('login-credential').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') handleLoginSubmit();
         });
 
         // Dynamic Google GSI library loader
+        let googleInitialized = false;
         async function initGoogleLogin() {
             if (googleInitialized) return;
             
@@ -1567,7 +1472,6 @@
                         client_id: config.clientId,
                         callback: handleGoogleLoginResponse
                     });
-                    const activeTheme = document.documentElement.getAttribute('data-theme') || 'light';
                     google.accounts.id.renderButton(
                         document.getElementById("google-login-signin-btn"),
                         { 
@@ -1619,32 +1523,24 @@
             }
         }
 
-        // Unified login submit
-        function handleLoginSubmit() {
-            if (activeLoginTab === 'email') {
-                handleEmailLogin();
-            } else {
-                handlePhoneLogin();
-            }
-        }
-
-        // Email login submit
-        async function handleEmailLogin() {
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-email-password').value;
+        // Unified login submit - auto-detects email vs phone
+        async function handleLoginSubmit() {
+            const identity = document.getElementById('login-identity').value.trim();
+            const credential = document.getElementById('login-credential').value.trim();
             const btn = document.getElementById('login-btn');
             const btnText = document.getElementById('login-btn-text');
             const spinner = document.getElementById('login-spinner');
 
-            if (!email) {
-                if (typeof showToast === 'function') showToast('warning', 'Email Required', 'Please enter your email.');
-                document.getElementById('login-email').focus();
+            if (!identity) {
+                if (typeof showToast === 'function') showToast('warning', 'Input Required', 'Please enter your email or phone number.');
+                document.getElementById('login-identity').focus();
                 return;
             }
 
-            if (!password) {
-                if (typeof showToast === 'function') showToast('warning', 'Password Required', 'Please enter your password.');
-                document.getElementById('login-email-password').focus();
+            if (!credential) {
+                const label = loginInputType === 'phone' ? 'PIN' : 'Password';
+                if (typeof showToast === 'function') showToast('warning', label + ' Required', 'Please enter your ' + label.toLowerCase() + '.');
+                document.getElementById('login-credential').focus();
                 return;
             }
 
@@ -1653,59 +1549,27 @@
             spinner.style.display = 'block';
 
             try {
-                const data = await apiRequest('/api/auth/login-email', {
-                    method: 'POST',
-                    body: JSON.stringify({ email, password })
-                });
-
-                setAuth(data.token, data.user);
-                if (typeof showToast === 'function') showToast('success', 'Welcome back!', `Signed in as ${data.user.name}`);
-
-                setTimeout(() => {
-                    if (data.user.onboardingCompleted === false) {
-                        window.location.href = 'onboarding.html';
-                    } else {
-                        window.location.href = 'dashboard.html';
+                let data;
+                if (loginInputType === 'phone') {
+                    // Legacy phone + PIN login
+                    if (credential.length !== 6 || !/^\d+$/.test(credential)) {
+                        if (typeof showToast === 'function') showToast('warning', 'Invalid PIN', 'PIN must be exactly 6 digits.');
+                        btn.disabled = false;
+                        btnText.textContent = 'Sign In';
+                        spinner.style.display = 'none';
+                        return;
                     }
-                }, 500);
-
-            } catch (err) {
-                if (typeof showToast === 'function') showToast('error', 'Sign In Failed', err.message);
-                btn.disabled = false;
-                btnText.textContent = 'Sign In';
-                spinner.style.display = 'none';
-            }
-        }
-
-        // Legacy phone login submit
-        async function handlePhoneLogin() {
-            const phone = document.getElementById('login-phone').value.trim();
-            const pin = document.getElementById('login-pin').value.trim();
-            const btn = document.getElementById('login-btn');
-            const btnText = document.getElementById('login-btn-text');
-            const spinner = document.getElementById('login-spinner');
-
-            if (!phone) {
-                if (typeof showToast === 'function') showToast('warning', 'Phone Required', 'Please enter your phone number.');
-                document.getElementById('login-phone').focus();
-                return;
-            }
-
-            if (!pin || pin.length !== 6 || !/^\d+$/.test(pin)) {
-                if (typeof showToast === 'function') showToast('warning', 'Invalid PIN', 'PIN must be exactly 6 digits.');
-                document.getElementById('login-pin').focus();
-                return;
-            }
-
-            btn.disabled = true;
-            btnText.textContent = 'Signing in...';
-            spinner.style.display = 'block';
-
-            try {
-                const data = await apiRequest('/api/auth/login', {
-                    method: 'POST',
-                    body: JSON.stringify({ phone, pin })
-                });
+                    data = await apiRequest('/api/auth/login', {
+                        method: 'POST',
+                        body: JSON.stringify({ phone: identity, pin: credential })
+                    });
+                } else {
+                    // Email + password login
+                    data = await apiRequest('/api/auth/login-email', {
+                        method: 'POST',
+                        body: JSON.stringify({ email: identity, password: credential })
+                    });
+                }
 
                 setAuth(data.token, data.user);
                 if (typeof showToast === 'function') showToast('success', 'Welcome back!', `Signed in as ${data.user.name}`);
