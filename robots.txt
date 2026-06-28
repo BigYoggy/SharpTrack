@@ -4,7 +4,8 @@ Allow: /index.html
 Allow: /signup.html
 Allow: /help.html
 Allow: /verify.html
-
+Allow: /privacy.html
+Allow: /terms.html
 # Block search engines from crawling private admin and dashboard pages
 Disallow: /dashboard.html
 Disallow: /add-stock.html
