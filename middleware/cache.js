@@ -16,7 +16,7 @@ const cache = (prefix, ttl = 3600) => {
         try {
             // Generate a cache key using the prefix, user ID (if available), and the URL
             const userId = req.user && req.user.userId ? req.user.userId : 'anonymous';
-            const key = `${prefix}:${userId}:${req.originalUrl}`;
+            const key = `${prefix}_v2:${userId}:${req.originalUrl}`;
 
             const cachedData = await redisClient.get(key);
 
@@ -28,9 +28,11 @@ const cache = (prefix, ttl = 3600) => {
             // If not in cache, capture the original res.json
             const originalJson = res.json.bind(res);
             res.json = (body) => {
-                // Cache the response body before sending
-                redisClient.setEx(key, ttl, JSON.stringify(body))
-                    .catch(err => console.error('Redis Set Error:', err));
+                // Cache the response body before sending, only for successful requests
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    redisClient.setEx(key, ttl, JSON.stringify(body))
+                        .catch(err => console.error('Redis Set Error:', err));
+                }
                 
                 // Call the original res.json to send the response
                 originalJson(body);
