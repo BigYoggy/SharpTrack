@@ -251,6 +251,207 @@
         .review-totals .total-label { font-size: 13px; color: var(--muted); }
         .review-totals .total-value { font-size: 18px; font-weight: 800; color: var(--primary); }
 
+        .image-box:hover { border-color: var(--primary); }
+        .image-box.has-image { border-style: solid; border-color: var(--primary); }
+        .image-box img { width: 100%; height: 100%; object-fit: contain; }
+        .image-box .placeholder {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            color: var(--muted); font-size: 13px; font-weight: 500;
+        }
+        .image-box .placeholder svg { color: var(--primary); opacity: 0.6; }
+
+        .magic-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .magic-actions.three-col { grid-template-columns: 1fr 1fr 1fr; }
+        @media (max-width: 400px) { .magic-actions.three-col { grid-template-columns: 1fr; } }
+
+        .magic-btn {
+            padding: 12px 10px; border-radius: var(--radius-md); border: 1.5px solid var(--border);
+            background: var(--card-bg); font-weight: 600; font-size: 12px; color: var(--text);
+            display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;
+            transition: all var(--transition-fast); font-family: var(--font-family);
+        }
+        .magic-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .magic-btn:active { transform: scale(0.97); }
+        .magic-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .magic-btn.ai {
+            background: linear-gradient(135deg, var(--primary-light), var(--card-bg));
+            border-color: var(--primary); color: var(--primary);
+        }
+
+        .form-card {
+            background: var(--card-bg); border-radius: var(--radius-lg); padding: 20px;
+            margin-bottom: 16px; border: 1px solid var(--border);
+        }
+        .form-card h2 {
+            font-size: 15px; font-weight: 700; margin-bottom: 16px;
+            display: flex; align-items: center; justify-content: space-between; color: var(--text);
+        }
+
+        .ai-badge {
+            font-size: 11px; font-weight: 600; color: var(--primary);
+            background: var(--primary-light); padding: 4px 10px; border-radius: 12px;
+        }
+
+        .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 400px) { .field-row { grid-template-columns: 1fr; } }
+
+        .input-wrapper input, .input-wrapper select {
+            background: var(--bg-secondary) !important; border-color: var(--border) !important; color: var(--text) !important;
+        }
+        .input-wrapper input:focus { border-color: var(--primary) !important; box-shadow: 0 0 0 3px var(--primary-ghost); }
+        .input-wrapper input::placeholder { color: var(--muted); opacity: 0.6; }
+        .input-wrapper input:not([type="number"]), .input-wrapper select { padding-left: 44px; }
+
+        .barcode-row { display: flex; gap: 8px; }
+        .barcode-row .input-wrapper { flex: 1; }
+        .btn-lookup {
+            background: var(--primary-light); color: var(--primary); border: none;
+            border-radius: var(--radius-md); padding: 0 16px; font-weight: 600; cursor: pointer;
+            font-family: var(--font-family); transition: all var(--transition-fast);
+        }
+        .btn-lookup:hover { background: var(--primary); color: white; }
+
+        .quick-units { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .unit-tag {
+            padding: 6px 14px; border-radius: 16px; background: var(--bg-secondary);
+            font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-secondary);
+            border: 1.5px solid transparent; transition: all var(--transition-fast); font-family: var(--font-family);
+        }
+        .unit-tag:hover, .unit-tag.active {
+            border-color: var(--primary); background: var(--primary-light); color: var(--primary);
+        }
+
+        @keyframes bannerSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .ai-status-banner {
+            padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px;
+            margin-bottom: 16px; display: flex; gap: 8px; align-items: center;
+            animation: bannerSlideIn 0.3s ease both; font-weight: 500;
+        }
+        .ai-status-banner.success { background: rgba(46,158,91,0.15); color: var(--green); border: 1px solid rgba(46,158,91,0.3); }
+        .ai-status-banner.warning { background: rgba(224,123,42,0.15); color: var(--orange); border: 1px solid rgba(224,123,42,0.3); }
+        .ai-status-banner.error { background: rgba(229,57,53,0.15); color: var(--red); border: 1px solid rgba(229,57,53,0.3); }
+
+        .ai-generated { border-left: 3px solid var(--primary) !important; }
+
+        .ai-loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white; font-weight: 600; gap: 16px;
+        }
+
+        .custom-dropdown { position: relative; width: 100%; }
+        .custom-dropdown-header {
+            width: 100%; height: 48px; padding: 0 16px 0 44px;
+            background: var(--bg-secondary); border: 1.5px solid var(--border);
+            border-radius: var(--radius-md); font-family: var(--font-family);
+            font-size: 14px; color: var(--text);
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; transition: all var(--transition-fast);
+        }
+        .custom-dropdown-header.placeholder-text { color: var(--muted); }
+        .custom-dropdown-list {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: var(--radius-md); margin-top: 4px;
+            box-shadow: var(--shadow-lg); z-index: 10; max-height: 200px; overflow-y: auto; display: none;
+        }
+        .custom-dropdown.open .custom-dropdown-list { display: block; animation: bannerSlideIn 0.2s ease; }
+        .custom-dropdown-item {
+            padding: 12px 16px; font-size: 14px; color: var(--text);
+            cursor: pointer; transition: background var(--transition-fast);
+        }
+        .custom-dropdown-item:hover { background: var(--primary-ghost); color: var(--primary); }
+
+        /* ══════════════════════════════════
+           BULK WIZARD — STEP INDICATOR
+           ══════════════════════════════════ */
+        .step-indicator {
+            display: flex; align-items: center; justify-content: center; gap: 0;
+            margin-bottom: 28px; padding: 0 8px;
+        }
+        .step-dot {
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0;
+            border: 2px solid var(--border); background: var(--card-bg); color: var(--muted);
+            transition: all var(--transition-normal);
+        }
+        .step-dot.active { border-color: var(--primary); background: var(--primary); color: white; }
+        .step-dot.completed { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+        .step-line { flex: 1; height: 2px; background: var(--border); transition: background var(--transition-normal); }
+        .step-line.completed { background: var(--primary); }
+        .step-labels { display: flex; justify-content: space-between; margin-top: 8px; margin-bottom: 20px; }
+        .step-label { font-size: 11px; color: var(--muted); text-align: center; flex: 1; }
+        .step-label.active { color: var(--primary); font-weight: 600; }
+
+        /* ══════════════════════════════════
+           BULK ITEMS LIST
+           ══════════════════════════════════ */
+        .bulk-item-row {
+            display: flex; flex-direction: column; padding: 14px;
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-md);
+            margin-bottom: 10px; transition: all var(--transition-fast);
+            border-left: 3px solid var(--primary);
+        }
+        .bulk-main-row {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .bulk-details-row {
+            display: flex; gap: 10px; margin-top: 10px; padding-left: 38px;
+        }
+        .bulk-item-row .drag-handle { color: var(--muted); cursor: grab; flex-shrink: 0; }
+        .bulk-item-row .tag-icon { color: var(--primary); flex-shrink: 0; }
+        .bulk-item-row .item-name {
+            flex: 1; min-width: 0; font-weight: 600; font-size: 14px; color: var(--text);
+            background: none; border: none; font-family: var(--font-family); outline: none;
+        }
+        .bulk-item-row .item-name::placeholder { color: var(--muted); }
+        .bulk-field-group { display: flex; flex-direction: column; gap: 2px; }
+        .bulk-field-group label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+        .bulk-field-group input {
+            width: 80px; height: 36px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+            background: var(--bg-secondary); color: var(--text); font-family: var(--font-family);
+            font-size: 14px; font-weight: 600; text-align: center; outline: none;
+        }
+        .bulk-field-group input:focus { border-color: var(--primary); }
+        .bulk-delete-btn {
+            background: none; border: none; color: var(--red); cursor: pointer; padding: 6px;
+            border-radius: 8px; transition: all var(--transition-fast); flex-shrink: 0;
+        }
+        .bulk-delete-btn:hover { background: var(--red-bg); }
+
+        .add-item-btn {
+            display: flex; align-items: center; gap: 6px; padding: 10px 16px;
+            border: 1.5px dashed var(--primary); border-radius: var(--radius-md);
+            background: none; color: var(--primary); font-weight: 600; font-size: 13px;
+            cursor: pointer; font-family: var(--font-family); transition: all var(--transition-fast);
+        }
+        .add-item-btn:hover { background: var(--primary-light); }
+
+        /* ══════════════════════════════════
+           REVIEW TABLE
+           ══════════════════════════════════ */
+        .review-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .review-table th {
+            text-align: left; padding: 10px 8px; font-size: 11px; font-weight: 700;
+            color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border);
+        }
+        .review-table th:last-child { text-align: right; }
+        .review-table td {
+            padding: 12px 8px; border-bottom: 1px solid var(--border); color: var(--text);
+        }
+        .review-table td:last-child { text-align: right; font-weight: 600; }
+        .review-totals {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 0; margin-top: 8px; border-top: 2px solid var(--border);
+        }
+        .review-totals .total-label { font-size: 13px; color: var(--muted); }
+        .review-totals .total-value { font-size: 18px; font-weight: 800; color: var(--primary); }
+
         /* ── CROPPER MODAL ── */
         .st-cropper-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -271,25 +472,30 @@
            ══════════════════════════════════ */
         @media (max-width: 480px) {
             .mode-select { grid-template-columns: 1fr; }
-            .bulk-item-row { 
+            .bulk-main-row { 
                 display: grid;
                 grid-template-columns: auto auto 1fr auto;
                 grid-template-areas: 
                     "drag icon name delete"
                     "cost sell qty qty";
                 gap: 12px 8px;
-                padding: 12px;
+                width: 100%;
                 align-items: center;
             }
-            .bulk-item-row .drag-handle { grid-area: drag; }
-            .bulk-item-row .tag-icon { grid-area: icon; }
-            .bulk-item-row .item-name { grid-area: name; width: 100%; min-width: 0; }
-            .bulk-item-row .bulk-delete-btn { grid-area: delete; margin: 0; }
+            .bulk-main-row .drag-handle { grid-area: drag; }
+            .bulk-main-row .tag-icon { grid-area: icon; }
+            .bulk-main-row .item-name { grid-area: name; width: 100%; min-width: 0; }
+            .bulk-main-row .bulk-delete-btn { grid-area: delete; margin: 0; }
             
-            .bulk-item-row .cost-group { grid-area: cost; }
-            .bulk-item-row .sell-group { grid-area: sell; }
-            .bulk-item-row .qty-group { grid-area: qty; }
+            .bulk-main-row .cost-group { grid-area: cost; }
+            .bulk-main-row .sell-group { grid-area: sell; }
+            .bulk-main-row .qty-group { grid-area: qty; }
 
+            .bulk-details-row {
+                flex-direction: column;
+                align-items: stretch !important;
+                padding-left: 0 !important;
+            }
             .bulk-field-group input { width: 100%; min-width: 0; }
             .review-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         }
@@ -569,129 +775,6 @@
             </div>
         </div>
 
-        <!-- AI LOADING OVERLAY -->
-        <div id="aiLoadingOverlay" class="ai-loading-overlay hidden">
-            <div class="spinner" style="width: 40px; height: 40px; border-width: 4px;"></div>
-            <p>Analyzing with AI... ✨</p>
-        </div>
-    </div>
-
-    <!-- CROPPER MODAL -->
-    <div id="cropperModal" class="st-cropper-modal hidden">
-        <div class="cropper-container-wrapper">
-            <img id="cropperImage" src="" style="max-width: 100%;">
-        </div>
-        <div class="cropper-actions">
-            <button class="btn btn-outline" style="border-color: #555; color: white;" onclick="cancelCrop()">Cancel</button>
-            <button class="btn btn-primary" onclick="confirmCrop()">Crop &amp; Save</button>
-        </div>
-    </div>
-
-    <script src="js/app.js"></script>
-    <script>
-        if (!initPage('add-stock')) { /* redirected */ }
-        else {
-            injectNavbar();
-            injectBottomNav('inventory');
-            loadCategories();
-        }
-
-        const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-            ? ''
-            : 'https://sharptrack-api.onrender.com';
-
-        let selectedUnit = 'pieces';
-        let html5Qrcode = null;
-        let aiImageBase64 = null;
-        let bulkImageBase64 = null;
-        let cropper = null;
-        let activeCropMode = 'manual';
-        let currentMode = 'selection'; // 'selection', 'single', 'bulk'
-        
-        let bulkItems = [];
-
-        // ── MODE SWITCHING ──
-        function showModeSelection() {
-            currentMode = 'selection';
-            document.getElementById('modeSelection').classList.remove('hidden');
-            document.getElementById('singleProductMode').classList.add('hidden');
-            document.getElementById('bulkProductsMode').classList.add('hidden');
-        }
-
-        function showSingleProduct() {
-            currentMode = 'single';
-            document.getElementById('modeSelection').classList.add('hidden');
-            document.getElementById('singleProductMode').classList.remove('hidden');
-            document.getElementById('bulkProductsMode').classList.add('hidden');
-        }
-
-        function showBulkProducts() {
-            currentMode = 'bulk';
-            
-            document.getElementById('modeSelection').classList.add('hidden');
-            document.getElementById('singleProductMode').classList.add('hidden');
-            document.getElementById('bulkProductsMode').classList.remove('hidden');
-            if (bulkItems.length === 0) addBulkItem();
-            renderBulkItems();
-        }
-
-        function goBack() {
-            if (!document.getElementById('scannerSection').classList.contains('hidden')) {
-                stopBarcodeScanner();
-            } else if (currentMode === 'single' || currentMode === 'bulk') {
-                showModeSelection();
-            } else {
-                history.back();
-            }
-        }
-
-        // ── BULK WIZARD STEPS ──
-        
-
-        // ── BULK ITEMS MANAGEMENT ──
-        function addBulkItem(name, costPrice, sellingPrice, qty, brand, specifications, categoryName, image) {
-            bulkItems.push({ 
-                name: name || '', 
-                costPrice: costPrice || '', 
-                sellingPrice: sellingPrice || '', 
-                quantity: qty || '' 
-            });
-            renderBulkItems();
-        }
-
-        function removeBulkItem(index) {
-            bulkItems.splice(index, 1);
-            if (bulkItems.length === 0) addBulkItem();
-            else renderBulkItems();
-        }
-
-        function updateBulkItem(index, field, value) {
-            if (bulkItems[index]) bulkItems[index][field] = value;
-        }
-
-        function renderBulkItems() {
-            const container = document.getElementById('bulkItemsList');
-            const catOptions = '<option value="">Category</option>' + (typeof categoryList !== 'undefined' ? categoryList : []).map(c => `<option value="${c}">${c}</option>`).join('');
-
-            container.innerHTML = bulkItems.map((item, i) => `
-                <div class="bulk-item-row" style="flex-wrap: wrap; padding-bottom: 16px;">
-                    <div style="display:flex; width:100%; gap: 12px; align-items:center;">
-                        <div class="drag-handle">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
-                        </div>
-                        <div class="tag-icon" id="bulk-img-${i}">
-                            ${item.image ? `<img src="${item.image}" style="width:24px;height:24px;border-radius:4px;object-fit:cover;">` : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`}
-                        </div>
-                        <input type="text" class="item-name" placeholder="Product name" value="${item.name}" oninput="updateBulkItem(${i},'name',this.value); debounceGlobalSearch(${i}, this.value)">
-                        <div class="bulk-field-group cost-group">
-                            <label>Cost (₦)</label>
-                            <input type="number" placeholder="0" value="${item.costPrice}" oninput="updateBulkItem(${i},'costPrice',this.value)">
-                        </div>
-                        <div class="bulk-field-group sell-group">
-                            <label>Sell (₦)</label>
-                            <input type="number" placeholder="0" value="${item.sellingPrice}" oninput="updateBulkItem(${i},'sellingPrice',this.value)">
-                        </div>
-                        <div class="bulk-field-group qty-group">
                             <label>Quantity</label>
                             <input type="number" placeholder="0" value="${item.quantity}" oninput="updateBulkItem(${i},'quantity',this.value)">
                         </div>

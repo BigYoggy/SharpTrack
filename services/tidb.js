@@ -27,9 +27,13 @@ function parseRow(row) {
     };
 }
 
+// Track initialization to ensure table exists
+let isInitialized = false;
+
 module.exports = {
     // Basic setup if table doesn't exist
     initTable: async () => {
+        if (isInitialized) return;
         const conn = getConnection();
         if (!conn) return;
         await conn.execute(`
@@ -54,9 +58,11 @@ module.exports = {
                 INDEX idx_userId (userId)
             );
         `);
+        isInitialized = true;
     },
 
     getProductsByUser: async (userId) => {
+        await module.exports.initTable();
         const conn = getConnection();
         if (!conn) return [];
         const result = await conn.execute('SELECT * FROM Product WHERE userId = ? ORDER BY createdAt DESC', [userId]);
@@ -64,6 +70,7 @@ module.exports = {
     },
 
     getProductById: async (id) => {
+        await module.exports.initTable();
         const conn = getConnection();
         if (!conn) return null;
         const result = await conn.execute('SELECT * FROM Product WHERE id = ?', [id]);
@@ -71,6 +78,7 @@ module.exports = {
     },
 
     createProduct: async (data) => {
+        await module.exports.initTable();
         const conn = getConnection();
         if (!conn) return null;
         
@@ -91,6 +99,7 @@ module.exports = {
     },
 
     updateProduct: async (id, data) => {
+        await module.exports.initTable();
         const conn = getConnection();
         if (!conn) return null;
 
@@ -110,6 +119,7 @@ module.exports = {
     },
 
     deleteProduct: async (id) => {
+        await module.exports.initTable();
         const conn = getConnection();
         if (!conn) return false;
         await conn.execute('DELETE FROM Product WHERE id = ?', [id]);
@@ -128,6 +138,7 @@ module.exports = {
     },
 
     countProductsByUser: async (userId) => {
+        await module.exports.initTable();
         const conn = getConnection();
         if (!conn) return 0;
         const result = await conn.execute('SELECT COUNT(*) as count FROM Product WHERE userId = ?', [userId]);
@@ -135,6 +146,7 @@ module.exports = {
     },
 
     countAllProducts: async () => {
+        await module.exports.initTable();
         const conn = getConnection();
         if (!conn) return 0;
         const result = await conn.execute('SELECT COUNT(*) as count FROM Product');
@@ -142,6 +154,7 @@ module.exports = {
     },
 
     deleteProductsByUser: async (userId) => {
+        await module.exports.initTable();
         const conn = getConnection();
         if (!conn) return false;
         await conn.execute('DELETE FROM Product WHERE userId = ?', [userId]);
@@ -149,6 +162,7 @@ module.exports = {
     },
 
     getAllProductsAdmin: async (page = 1, limit = 50) => {
+        await module.exports.initTable();
         const conn = getConnection();
         if (!conn) return [];
         const offset = (page - 1) * limit;
