@@ -844,6 +844,47 @@
         </div>
     </div>
 
+    <!-- D. Ingestion Edit Modal -->
+    <div class="modal-backdrop" id="ingestion-modal">
+        <div class="modal-content glass-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Ingestion Item</h3>
+                <button class="modal-close" onclick="closeModal('ingestion-modal')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <form id="ingestion-form">
+                <div class="modal-body">
+                    <input type="hidden" id="editIngestionId">
+                    <div class="form-group mb-3">
+                        <label for="editIngestionName">Product Name</label>
+                        <input type="text" id="editIngestionName" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="editIngestionBarcode">Barcode</label>
+                        <input type="text" id="editIngestionBarcode">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="editIngestionBrand">Brand</label>
+                        <input type="text" id="editIngestionBrand">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="editIngestionCategory">Category</label>
+                        <input type="text" id="editIngestionCategory">
+                    </div>
+                    <div class="form-group">
+                        <label for="editIngestionSpec">Specification</label>
+                        <input type="text" id="editIngestionSpec">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('ingestion-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="ingestion-modal-submit-btn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- TOAST NOTIFICATION CONTAINER -->
     <div class="toast-container" id="toast-container"></div>
 

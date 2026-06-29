@@ -536,6 +536,35 @@ router.get('/ingestion', adminAuth, async (req, res) => {
     }
 });
 
+router.put('/ingestion/:id', adminAuth, async (req, res) => {
+    if (!['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(req.adminRole)) {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+
+    try {
+        const { name, barcode, brand, category, spec } = req.body;
+        
+        const item = await prisma.ingestionItem.findUnique({ where: { id: req.params.id } });
+        if (!item) return res.status(404).json({ error: 'Ingestion item not found' });
+
+        const updated = await prisma.ingestionItem.update({
+            where: { id: req.params.id },
+            data: {
+                name: name || item.name,
+                barcode: barcode !== undefined ? barcode : item.barcode,
+                brand: brand || item.brand,
+                category: category || item.category,
+                spec: spec !== undefined ? spec : item.spec
+            }
+        });
+
+        res.json({ message: 'Ingestion item updated successfully', item: updated });
+    } catch (err) {
+        console.error('Ingestion edit error:', err);
+        res.status(500).json({ error: 'Failed to update ingestion item' });
+    }
+});
+
 router.post('/ingestion/:id/approve', adminAuth, async (req, res) => {
     if (!['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(req.adminRole)) {
         return res.status(403).json({ error: 'Access denied.' });

@@ -1427,6 +1427,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td><span class="badge badge-warning">${item.reason || 'Flagged'}</span></td>
                     <td class="text-right">
                         <div class="actions-cell">
+                            <button class="btn btn-secondary btn-sm btn-edit-ingestion" data-id="${item.id}" data-name="${(item.name || '').replace(/"/g, '&quot;')}" data-barcode="${(item.barcode || '').replace(/"/g, '&quot;')}" data-brand="${(item.brand || '').replace(/"/g, '&quot;')}" data-category="${(item.category || '').replace(/"/g, '&quot;')}" data-spec="${(item.spec || '').replace(/"/g, '&quot;')}">Edit</button>
                             <button class="btn btn-primary btn-sm btn-approve" data-id="${item.id}">Approve</button>
                             <button class="btn btn-danger btn-sm btn-dismiss" data-id="${item.id}">Dismiss</button>
                         </div>
@@ -1462,6 +1463,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     } catch (err) {
                         showToast('error', 'Write Error', err.message);
                     }
+                });
+            });
+
+            // Action: Edit Ingestion Item
+            body.querySelectorAll('.btn-edit-ingestion').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('editIngestionId').value = btn.getAttribute('data-id');
+                    document.getElementById('editIngestionName').value = btn.getAttribute('data-name');
+                    document.getElementById('editIngestionBarcode').value = btn.getAttribute('data-barcode');
+                    document.getElementById('editIngestionBrand').value = btn.getAttribute('data-brand');
+                    document.getElementById('editIngestionCategory').value = btn.getAttribute('data-category');
+                    document.getElementById('editIngestionSpec').value = btn.getAttribute('data-spec');
+                    document.getElementById('ingestion-modal').classList.add('show');
                 });
             });
 
@@ -1848,4 +1862,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     bootstrap();
+
+    // Ingestion Form Submit
+    document.getElementById('ingestion-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('ingestion-modal-submit-btn');
+        const oldText = btn.textContent;
+        btn.innerHTML = '<div class="loading-spinner" style="width:20px;height:20px;border-width:2px;margin:auto;"></div>';
+        btn.disabled = true;
+
+        const id = document.getElementById('editIngestionId').value;
+        const data = {
+            name: document.getElementById('editIngestionName').value,
+            barcode: document.getElementById('editIngestionBarcode').value,
+            brand: document.getElementById('editIngestionBrand').value,
+            category: document.getElementById('editIngestionCategory').value,
+            spec: document.getElementById('editIngestionSpec').value
+        };
+
+        try {
+            const res = await fetch(`https://sharptrack-api.onrender.com/api/admin/ingestion/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!res.ok) {
+                const responseData = await res.json();
+                throw new Error(responseData.error || 'Failed to save changes');
+            }
+
+            showToast('success', 'Updated', 'Ingestion item details saved successfully.');
+            closeModal('ingestion-modal');
+            loadAllData();
+        } catch (err) {
+            showToast('error', 'Update Failed', err.message);
+        } finally {
+            btn.textContent = oldText;
+            btn.disabled = false;
+        }
+    });
 });
