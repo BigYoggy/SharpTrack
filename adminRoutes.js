@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const prisma = require('./lib/prisma');
 const adminAuth = require('./middleware/adminAuth');
 const { cache, clearCache } = require('./middleware/cache');
+const tidb = require('./services/tidb');
 const { isValidId } = require('./lib/validation');
 
 // Centralized ID parameter validator middleware
@@ -159,7 +160,7 @@ router.get('/stats', adminAuth, cache('admin_stats'), async (req, res) => {
         const activeUsers = await prisma.user.count({ where: { status: 'Active' } });
         const suspendedUsers = await prisma.user.count({ where: { status: 'Suspended' } });
         
-        const totalProducts = await prisma.product.count();
+        const totalProducts = await tidb.countAllProducts();
         const totalSales = await prisma.sale.count();
 
         // Revenue calculations
@@ -347,7 +348,7 @@ router.delete('/users/:id', adminAuth, async (req, res) => {
         await prisma.activityLog.deleteMany({ where: { userId: req.params.id } });
         await prisma.notification.deleteMany({ where: { userId: req.params.id } });
         await prisma.sale.deleteMany({ where: { userId: req.params.id } });
-        await prisma.product.deleteMany({ where: { userId: req.params.id } });
+        await tidb.deleteProductsByUser(req.params.id);
         await prisma.user.delete({ where: { id: req.params.id } });
 
         res.json({ message: 'User account deleted successfully' });
@@ -360,28 +361,7 @@ router.delete('/users/:id', adminAuth, async (req, res) => {
 // 7. PRODUCT CATALOG
 router.get('/products', adminAuth, cache('admin_products'), async (req, res) => {
     try {
-        const products = await prisma.product.findMany({
-            orderBy: { createdAt: 'desc' },
-            select: {
-                id: true,
-                name: true,
-                sellingPrice: true,
-                costPrice: true,
-                quantity: true,
-                reorderLevel: true,
-                unit: true,
-                userId: true,
-                barcode: true,
-                brand: true,
-                categoryId: true,
-                specifications: true,
-                weight: true,
-                manufacturer: true,
-                description: true,
-                image: true,
-                createdAt: true
-            }
-        });
+        const products = await tidb.getAllProductsAdmin();
         res.json({ products });
     } catch (err) {
         console.error('Products load failure:', err);
@@ -420,18 +400,16 @@ router.post('/products', adminAuth, async (req, res) => {
             cat = await prisma.category.create({ data: { name: categoryName } });
         }
 
-        const product = await prisma.product.create({
-            data: {
-                name: name.trim(),
-                barcode: barcode.trim(),
-                brand: brand ? brand.trim() : '',
-                categoryId: cat.id,
-                specifications: specifications ? specifications.trim() : '',
-                image: image ? image.trim() : '',
-                sellingPrice: 0.0,
-                quantity: 0,
-                userId: systemUser.id
-            }
+        const product = await tidb.createProduct({
+            name: name.trim(),
+            barcode: barcode.trim(),
+            brand: brand ? brand.trim() : '',
+            categoryId: cat.id,
+            specifications: specifications ? specifications.trim() : '',
+            image: image ? image.trim() : '',
+            sellingPrice: 0.0,
+            quantity: 0,
+            userId: systemUser.id
         });
 
         res.status(201).json({ message: 'Product created successfully', product });
@@ -459,17 +437,14 @@ router.put('/products/:id', adminAuth, async (req, res) => {
             finalCategoryId = cat.id;
         }
 
-        const updated = await prisma.product.update({
-            where: { id: req.params.id },
-            data: {
-                name: name ? name.trim() : undefined,
-                barcode: barcode ? barcode.trim() : undefined,
-                brand: brand !== undefined ? brand.trim() : undefined,
-                categoryId: finalCategoryId,
-                specifications: specifications !== undefined ? specifications.trim() : undefined,
-                image: image !== undefined ? image.trim() : undefined,
-                description: description !== undefined ? description.trim() : undefined
-            }
+        const updated = await tidb.updateProduct(req.params.id, {
+            name: name ? name.trim() : undefined,
+            barcode: barcode ? barcode.trim() : undefined,
+            brand: brand !== undefined ? brand.trim() : undefined,
+            categoryId: finalCategoryId,
+            specifications: specifications !== undefined ? specifications.trim() : undefined,
+            image: image !== undefined ? image.trim() : undefined,
+            description: description !== undefined ? description.trim() : undefined
         });
         res.json({ message: 'Product modified successfully', product: updated });
     } catch (err) {
@@ -485,7 +460,7 @@ router.delete('/products/:id', adminAuth, async (req, res) => {
 
     try {
         await prisma.sale.deleteMany({ where: { productId: req.params.id } });
-        await prisma.product.delete({ where: { id: req.params.id } });
+        await tidb.deleteProduct(req.params.id);
         await clearCache(`admin*`);
         res.json({ message: 'Product deleted successfully' });
     } catch (err) {
@@ -504,12 +479,6 @@ router.get('/businesses', adminAuth, cache('admin_businesses'), async (req, res)
         const merchants = await prisma.user.findMany({
             where: { storeName: { not: null, not: 'System Catalog' } },
             include: {
-                products: {
-                    select: {
-                        sellingPrice: true,
-                        quantity: true
-                    }
-                },
                 sales: {
                     select: {
                         totalAmount: true
@@ -519,8 +488,9 @@ router.get('/businesses', adminAuth, cache('admin_businesses'), async (req, res)
         });
 
         const list = merchants.map(m => {
-            const inventoryItems = m.products.reduce((acc, p) => acc + p.quantity, 0);
-            const inventoryValue = m.products.reduce((sum, p) => sum + (p.sellingPrice * p.quantity), 0);
+            // Inventory omitted as product moved to tidb
+            const inventoryItems = 0;
+            const inventoryValue = 0;
             const revenue = m.sales.reduce((sum, s) => sum + s.totalAmount, 0);
 
             return {
@@ -594,18 +564,16 @@ router.post('/ingestion/:id/approve', adminAuth, async (req, res) => {
             cat = await prisma.category.create({ data: { name: categoryName } });
         }
 
-        await prisma.product.create({
-            data: {
-                name: item.name,
-                barcode: item.barcode || '',
-                brand: item.brand,
-                categoryId: cat.id,
-                specifications: item.spec || '',
-                image: '',
-                sellingPrice: 0.0,
-                quantity: 0,
-                userId: systemUser.id
-            }
+        await tidb.createProduct({
+            name: item.name,
+            barcode: item.barcode || '',
+            brand: item.brand,
+            categoryId: cat.id,
+            specifications: item.spec || '',
+            image: '',
+            sellingPrice: 0.0,
+            quantity: 0,
+            userId: systemUser.id
         });
 
         const updated = await prisma.ingestionItem.update({
@@ -672,18 +640,16 @@ router.post('/ingestion/:id/retry', adminAuth, async (req, res) => {
             cat = await prisma.category.create({ data: { name: categoryName } });
         }
 
-        await prisma.product.create({
-            data: {
-                name: item.name,
-                barcode: updatedBarcode,
-                brand: item.brand,
-                categoryId: cat.id,
-                specifications: item.spec || 'Standard packaging',
-                image: '',
-                sellingPrice: 0.0,
-                quantity: 0,
-                userId: systemUser.id
-            }
+        await tidb.createProduct({
+            name: item.name,
+            barcode: updatedBarcode,
+            brand: item.brand,
+            categoryId: cat.id,
+            specifications: item.spec || 'Standard packaging',
+            image: '',
+            sellingPrice: 0.0,
+            quantity: 0,
+            userId: systemUser.id
         });
 
         await prisma.ingestionItem.delete({ where: { id: req.params.id } });

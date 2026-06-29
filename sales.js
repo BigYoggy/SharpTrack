@@ -38,43 +38,42 @@ router.post('/', authMiddleware, async (req, res) => {
         }
 
         // Perform stock validation and record sale atomically within a transaction
-        const result = await prisma.$transaction(async (tx) => {
-            const product = await tx.product.findUnique({ where: { id: productId } });
-            if (!product) throw new Error('NOT_FOUND');
-            if (product.userId !== req.userId) throw new Error('FORBIDDEN');
-            if (product.quantity < qtyToSold) {
-                throw new Error('OUT_OF_STOCK');
+        
+        await tidb.initTable();
+        const product = await tidb.getProductById(productId);
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        if (product.userId !== req.userId) {
+            return res.status(403).json({ error: 'Access forbidden' });
+        }
+        if (product.quantity < qtyToSold) {
+            return res.status(400).json({ error: 'Insufficient stock available' });
+        }
+
+        const totalAmount = product.sellingPrice * qtyToSold;
+
+        // Update in TiDB
+        const newQuantity = product.quantity - qtyToSold;
+        await tidb.updateProduct(productId, { quantity: newQuantity });
+
+        // Create Sale in Prisma
+        const sale = await prisma.sale.create({
+            data: {
+                productId,
+                quantitySold: qtyToSold,
+                totalAmount,
+                paymentMethod: paymentMethod || 'cash',
+                userId: req.userId,
+                productName: product.name,
+                unitPrice: product.sellingPrice
             }
-
-            const totalAmount = product.sellingPrice * qtyToSold;
-
-            // Decr stock atomically
-            const updatedProduct = await tx.product.update({
-                where: { id: productId },
-                data: { quantity: { decrement: qtyToSold } }
-            });
-
-            // Double check stock bounds
-            if (updatedProduct.quantity < 0) {
-                throw new Error('OUT_OF_STOCK');
-            }
-
-            const sale = await tx.sale.create({
-                data: {
-                    productId,
-                    quantitySold: qtyToSold,
-                    totalAmount,
-                    paymentMethod: paymentMethod || 'cash',
-                    userId: req.userId,
-                    productName: product.name,
-                    unitPrice: product.sellingPrice
-                }
-            });
-
-            return { sale, newQuantity: updatedProduct.quantity, productName: product.name, reorderLevel: product.reorderLevel, unit: product.unit };
         });
 
-        const { sale, newQuantity, productName, reorderLevel, unit } = result;
+        const productName = product.name;
+        const reorderLevel = product.reorderLevel;
+        const unit = product.unit;
+
 
         // Check for low stock and create notification
         if (newQuantity <= reorderLevel && newQuantity > 0) {
@@ -122,24 +121,29 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 });
 
+
+function formatSales(sales) {
+    return sales.map(s => {
+        if (!s.productId) {
+            s.product = {
+                id: s.productId,
+                name: s.productName || 'Unknown Product',
+                sellingPrice: s.unitPrice || 0,
+                unit: 'pieces'
+            };
+        }
+        return s;
+    });
+}
 // GET ALL SALES
 router.get('/', authMiddleware, cache('sales'), async (req, res) => {
     try {
         const sales = await prisma.sale.findMany({
             where: { userId: req.userId },
-            include: {
-                product: {
-                    select: {
-                        id: true,
-                        name: true,
-                        sellingPrice: true,
-                        unit: true
-                    }
-                }
-            },
+            
             orderBy: { soldAt: 'desc' }
         });
-        res.json({ sales });
+        res.json({ sales: formatSales(sales) });
     } catch (err) {
         console.error('Get all sales error:', err.message);
         res.status(500).json({ error: 'Failed to load sales history' });
@@ -160,16 +164,7 @@ router.get('/today', authMiddleware, cache('sales_today'), async (req, res) => {
     try {
         const sales = await prisma.sale.findMany({
             where: { userId: req.userId, soldAt: { gte: start } },
-            include: {
-                product: {
-                    select: {
-                        id: true,
-                        name: true,
-                        sellingPrice: true,
-                        unit: true
-                    }
-                }
-            },
+            
             orderBy: { soldAt: 'desc' }
         });
 
@@ -203,20 +198,11 @@ router.get('/recent', authMiddleware, cache('sales_recent'), async (req, res) =>
     try {
         const sales = await prisma.sale.findMany({
             where: { userId: req.userId },
-            include: {
-                product: {
-                    select: {
-                        id: true,
-                        name: true,
-                        sellingPrice: true,
-                        unit: true
-                    }
-                }
-            },
+            
             orderBy: { soldAt: 'desc' },
             take: 5
         });
-        res.json({ sales });
+        res.json({ sales: formatSales(sales) });
     } catch (err) {
         console.error('Get recent sales error:', err.message);
         res.status(500).json({ error: 'Failed to load recent sales' });
@@ -323,114 +309,16 @@ router.get('/top-products', authMiddleware, cache('sales_top'), async (req, res)
     try {
         const sales = await prisma.sale.findMany({
             where: { userId: req.userId },
-            include: {
-                product: {
-                    select: {
-                        id: true,
-                        name: true,
-                        unit: true
-                    }
-                }
-            }
-        });
-
-        const productSales = {};
-        sales.forEach(s => {
-            if (!s.product) return;
-            if (!productSales[s.productId]) {
-                productSales[s.productId] = {
-                    id: s.productId,
-                    name: s.product.name,
-                    quantity: 0,
-                    revenue: 0,
-                    unit: s.product.unit
-                };
-            }
-            productSales[s.productId].quantity += s.quantitySold;
-            productSales[s.productId].revenue += s.totalAmount;
-        });
-
-        const sorted = Object.values(productSales)
-            .sort((a, b) => b.revenue - a.revenue)
-            .slice(0, 5);
-
-        res.json({ topProducts: sorted });
-    } catch (err) {
-        console.error('Get top products error:', err.message);
-        res.status(500).json({ error: 'Failed to load top products' });
-    }
-});
-
-// GET DETAILED ANALYTICS (Revenue, Cost, profit/gains)
-// GET DETAILED ANALYTICS (Revenue, Cost, profit/gains)
-router.get('/analytics', authMiddleware, cache('sales_analytics'), async (req, res) => {
-    let timezoneOffset = -60; // Default to Nigeria (UTC+1)
-    if (req.query.timezoneOffset !== undefined) {
-        timezoneOffset = parseInt(req.query.timezoneOffset);
-    }
-    const range = req.query.range || 'week'; // 'day', 'week', 'month'
-
-    const now = new Date();
-    
-    // Convert current time to local time in merchant's timezone
-    const localNow = new Date(now.getTime() - (timezoneOffset * 60 * 1000));
-    
-    // Current boundaries in local time
-    const todayStr = localNow.toISOString().split('T')[0];
-
-    // Last 24 hours start
-    const last24hStart = new Date(now.getTime() - (24 * 60 * 60 * 1000));
-    
-    // Last 7 days start (including today)
-    const last7dStart = new Date(localNow.getTime() - (6 * 24 * 60 * 60 * 1000));
-    last7dStart.setUTCHours(0, 0, 0, 0);
-    const last7dStartUtc = new Date(last7dStart.getTime() + (timezoneOffset * 60 * 1000));
-
-    // Last 30 days start (including today)
-    const last30dStart = new Date(localNow.getTime() - (29 * 24 * 60 * 60 * 1000));
-    last30dStart.setUTCHours(0, 0, 0, 0);
-    const last30dStartUtc = new Date(last30dStart.getTime() + (timezoneOffset * 60 * 1000));
-
-    // Previous periods for comparison
-    const prevLast24hStart = new Date(now.getTime() - (48 * 60 * 60 * 1000));
-    
-    const prevLast7dStart = new Date(last7dStart.getTime() - (7 * 24 * 60 * 60 * 1000));
-    const prevLast7dStartUtc = new Date(prevLast7dStart.getTime() + (timezoneOffset * 60 * 1000));
-    
-    const prevLast30dStart = new Date(last30dStart.getTime() - (30 * 24 * 60 * 60 * 1000));
-    const prevLast30dStartUtc = new Date(prevLast30dStart.getTime() + (timezoneOffset * 60 * 1000));
-
-    // Oldest date to fetch from the database to satisfy the summaries and comparison period
-    // If the active range is month, we need to go back 60 days (previous month range)
-    // Otherwise, we need at least 30 days to populate the monthly summary card correctly
-    const dbStartDateUtc = range === 'month' ? prevLast30dStartUtc : last30dStartUtc;
-
-    try {
-        // Fetch only recent sales for this user, and EXCLUDE the image field to prevent P6009 payload limits (since products can have large base64 images)
-        const sales = await prisma.sale.findMany({
-            where: { 
-                userId: req.userId,
-                soldAt: { gte: dbStartDateUtc }
-            },
-            include: {
-                product: {
-                    select: {
-                        costPrice: true,
-                        sellingPrice: true,
-                        // image: true, <-- Excluded to keep payload size tiny and fast
-                        unit: true
-                    }
-                }
-            },
+            
             orderBy: { soldAt: 'asc' }
         });
 
         // Helper function to calculate cost price for a sale
         const getSaleCostPrice = (sale) => {
-            if (sale.product) {
-                return sale.product.costPrice !== null && sale.product.costPrice !== undefined
-                    ? sale.product.costPrice
-                    : sale.product.sellingPrice * 0.75;
+            if (true) {
+                return (sale.unitPrice * 0.75) !== null && (sale.unitPrice * 0.75) !== undefined
+                    ? (sale.unitPrice * 0.75)
+                    : sale.unitPrice * 0.75;
             }
             return sale.unitPrice * 0.75;
         };

@@ -594,7 +594,8 @@ router.put('/pin', authMiddleware, async (req, res) => {
 // GET USER ACHIEVEMENTS
 router.get('/achievements', authMiddleware, async (req, res) => {
     try {
-        const productCount = await prisma.product.count({ where: { userId: req.userId } });
+        const tidb = require('./services/tidb');
+        const productCount = await tidb.countProductsByUser(req.userId);
         const saleCount = await prisma.sale.count({ where: { userId: req.userId } });
         const user = await prisma.user.findUnique({ where: { id: req.userId } });
         
