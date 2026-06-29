@@ -1366,7 +1366,7 @@ select:focus {
 }
 
 .product-image-container {
-    aspect-ratio: 4/3;
+    height: 160px;
     width: 100%;
     background-color: rgba(255, 255, 255, 0.02);
     display: flex;
@@ -1374,14 +1374,15 @@ select:focus {
     justify-content: center;
     border-bottom: 1px solid var(--card-border);
     position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 .product-image-container img {
-    max-height: 80%;
-    max-width: 80%;
-    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     mix-blend-mode: normal;
-    border-radius: var(--radius-sm);
     transition: transform var(--transition-normal);
 }
 

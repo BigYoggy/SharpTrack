@@ -139,7 +139,7 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-bottom:2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 Edit Profile
             </button>
-            <button class="btn btn-outline btn-sm" onclick="showPinChange()" style="padding: 12px 4px; font-size: 12px; border-radius: var(--radius-md); font-weight: 700;">
+            <button class="btn btn-outline btn-sm" id="navChangeAuthBtn" onclick="showPinChange()" style="padding: 12px 4px; font-size: 12px; border-radius: var(--radius-md); font-weight: 700;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-bottom:2px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 Change PIN
             </button>
@@ -179,18 +179,18 @@
             </div>
         </div>
 
-        <!-- CHANGE PIN (hidden by default) -->
+        <!-- CHANGE PIN/PASSWORD (hidden by default) -->
         <div class="edit-section" id="pinSection">
-            <h2>Change PIN</h2>
+            <h2 id="authSectionTitle">Change PIN</h2>
             <div class="input-group">
-                <label for="currentPin">Current PIN</label>
+                <label for="currentPin" id="currentAuthLabel">Current PIN</label>
                 <div class="input-wrapper">
                     <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
                     <input type="password" id="currentPin" placeholder="6-digit PIN" maxlength="6" inputmode="numeric" style="padding-left:44px;">
                 </div>
             </div>
             <div class="input-group">
-                <label for="newPin">New PIN</label>
+                <label for="newPin" id="newAuthLabel">New PIN</label>
                 <div class="input-wrapper">
                     <span class="icon-left"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
                     <input type="password" id="newPin" placeholder="New 6-digit PIN" maxlength="6" inputmode="numeric" style="padding-left:44px;">
@@ -430,6 +430,35 @@
             if (emailEl) {
                 emailEl.textContent = user.email || 'Not provided';
             }
+
+            // Adjust Change PIN/Password text
+            const isEmailUser = !!user.email;
+            const navAuthBtn = document.getElementById('navChangeAuthBtn');
+            const authSectionTitle = document.getElementById('authSectionTitle');
+            const currentAuthLabel = document.getElementById('currentAuthLabel');
+            const newAuthLabel = document.getElementById('newAuthLabel');
+            const changeAuthBtn = document.getElementById('changePinBtn');
+            const currentInput = document.getElementById('currentPin');
+            const newInput = document.getElementById('newPin');
+
+            if (isEmailUser) {
+                if(navAuthBtn) navAuthBtn.innerHTML = navAuthBtn.innerHTML.replace('Change PIN', 'Change Password');
+                if(authSectionTitle) authSectionTitle.textContent = 'Change Password';
+                if(currentAuthLabel) currentAuthLabel.textContent = 'Current Password';
+                if(newAuthLabel) newAuthLabel.textContent = 'New Password';
+                if(changeAuthBtn) changeAuthBtn.textContent = 'Update Password';
+                
+                if(currentInput) {
+                    currentInput.placeholder = 'Current password';
+                    currentInput.removeAttribute('maxlength');
+                    currentInput.removeAttribute('inputmode');
+                }
+                if(newInput) {
+                    newInput.placeholder = 'New password';
+                    newInput.removeAttribute('maxlength');
+                    newInput.removeAttribute('inputmode');
+                }
+            }
         }
 
         // Support Modal
@@ -465,7 +494,7 @@
                     <p style="margin-bottom:12px;">At SharpTrack, we protect the privacy of retail merchants. We collect store transaction history, inventory status, and business logs strictly to provide real-time sales reporting and alert metrics.</p>
                     <p style="margin-bottom:12px;">Your credentials, including login PINs, are fully encrypted and salted using standard cryptographic algorithms on our backend database.</p>
                     <p style="margin-bottom:12px;">We do not share, sell, or lease merchant business logs or customer details to third-party advertising companies. All analytics are computed in a secure environment.</p>
-                    <p>For inquiries regarding data deletion or exports, please reach out to us at <strong>privacy@sharptrack.com.ng</strong>.</p>
+                    <p>For inquiries regarding data deletion or exports, please reach out to us at <strong>privacy@sharptrack.space</strong>.</p>
                 `;
             } else {
                 title.textContent = 'Terms of Service';
@@ -551,14 +580,27 @@
             const btn = document.getElementById('changePinBtn');
             const currentPin = document.getElementById('currentPin').value.trim();
             const newPin = document.getElementById('newPin').value.trim();
+            const user = getUser();
+            const isEmailUser = user && !!user.email;
 
-            if (!currentPin || currentPin.length !== 6) {
-                showToast('warning', 'Invalid PIN', 'Enter your current 6-digit PIN.');
-                return;
-            }
-            if (!newPin || newPin.length !== 6 || !/^\d{6}$/.test(newPin)) {
-                showToast('warning', 'Invalid PIN', 'New PIN must be exactly 6 digits.');
-                return;
+            if (isEmailUser) {
+                if (!currentPin) {
+                    showToast('warning', 'Invalid Input', 'Enter your current password.');
+                    return;
+                }
+                if (!newPin || newPin.length < 6) {
+                    showToast('warning', 'Weak Password', 'New password must be at least 6 characters.');
+                    return;
+                }
+            } else {
+                if (!currentPin || currentPin.length !== 6) {
+                    showToast('warning', 'Invalid PIN', 'Enter your current 6-digit PIN.');
+                    return;
+                }
+                if (!newPin || newPin.length !== 6 || !/^\d{6}$/.test(newPin)) {
+                    showToast('warning', 'Invalid PIN', 'New PIN must be exactly 6 digits.');
+                    return;
+                }
             }
 
             btn.disabled = true;
@@ -569,13 +611,13 @@
                     method: 'PUT',
                     body: JSON.stringify({ currentPin, newPin })
                 });
-                showToast('success', 'PIN Changed', 'Your login PIN has been updated.');
+                showToast('success', isEmailUser ? 'Password Changed' : 'PIN Changed', isEmailUser ? 'Your password has been updated.' : 'Your login PIN has been updated.');
                 cancelPin();
             } catch (err) {
                 showToast('error', 'Failed', err.message);
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Update PIN';
+                btn.textContent = isEmailUser ? 'Update Password' : 'Update PIN';
             }
         }
 

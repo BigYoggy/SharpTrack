@@ -548,24 +548,31 @@ router.put('/profile', authMiddleware, async (req, res) => {
     }
 });
 
-// CHANGE PIN
+// CHANGE PIN / PASSWORD
 router.put('/pin', authMiddleware, async (req, res) => {
     const { currentPin, newPin } = req.body;
 
     if (!currentPin || !newPin) {
-        return res.status(400).json({ error: 'Current PIN and new PIN are required' });
-    }
-
-    if (newPin.length !== 6 || !/^\d+$/.test(newPin)) {
-        return res.status(400).json({ error: 'New PIN must be exactly 6 digits' });
+        return res.status(400).json({ error: 'Current credential and new credential are required' });
     }
 
     try {
         const user = await prisma.user.findUnique({ where: { id: req.userId } });
         
+        // Validate new credential based on account type
+        if (user.email) {
+            if (newPin.length < 6) {
+                return res.status(400).json({ error: 'New password must be at least 6 characters' });
+            }
+        } else {
+            if (newPin.length !== 6 || !/^\d+$/.test(newPin)) {
+                return res.status(400).json({ error: 'New PIN must be exactly 6 digits' });
+            }
+        }
+
         const pinMatch = await bcrypt.compare(currentPin, user.password);
         if (!pinMatch) {
-            return res.status(400).json({ error: 'Current PIN is incorrect' });
+            return res.status(400).json({ error: `Current ${user.email ? 'password' : 'PIN'} is incorrect` });
         }
 
         const hashedPin = await bcrypt.hash(newPin, 12);
@@ -574,13 +581,13 @@ router.put('/pin', authMiddleware, async (req, res) => {
             data: { password: hashedPin }
         });
 
-        await logActivity(req.userId, 'pin_changed', 'Login PIN was changed');
-        await createNotification(req.userId, 'info', 'PIN Changed', 'Your login PIN has been updated successfully.');
+        await logActivity(req.userId, 'credential_changed', `Login ${user.email ? 'password' : 'PIN'} was changed`);
+        await createNotification(req.userId, 'info', `${user.email ? 'Password' : 'PIN'} Changed`, `Your login ${user.email ? 'password' : 'PIN'} has been updated successfully.`);
 
-        res.json({ message: 'PIN changed successfully' });
+        res.json({ message: `${user.email ? 'Password' : 'PIN'} changed successfully` });
     } catch (err) {
-        console.error('Change PIN error:', err.message);
-        res.status(500).json({ error: 'Failed to change PIN' });
+        console.error('Change credential error:', err.message);
+        res.status(500).json({ error: 'Failed to change credential' });
     }
 });
 

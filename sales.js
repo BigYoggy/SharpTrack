@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('./lib/prisma');
 const authMiddleware = require('./middleware/auth');
+const { cache, clearCache } = require('./middleware/cache');
 const { isValidId } = require('./lib/validation');
 const { createNotification } = require('./lib/monitoring');
 
@@ -122,7 +123,7 @@ router.post('/', authMiddleware, async (req, res) => {
 });
 
 // GET ALL SALES
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', authMiddleware, cache('sales'), async (req, res) => {
     try {
         const sales = await prisma.sale.findMany({
             where: { userId: req.userId },
@@ -146,7 +147,7 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 // GET TODAY'S SALES
-router.get('/today', authMiddleware, async (req, res) => {
+router.get('/today', authMiddleware, cache('sales_today'), async (req, res) => {
     let timezoneOffset = -60; // Default to Nigeria (UTC+1)
     if (req.query.timezoneOffset !== undefined) {
         timezoneOffset = parseInt(req.query.timezoneOffset);
@@ -198,7 +199,7 @@ router.get('/today', authMiddleware, async (req, res) => {
 });
 
 // GET LAST 5 SALES
-router.get('/recent', authMiddleware, async (req, res) => {
+router.get('/recent', authMiddleware, cache('sales_recent'), async (req, res) => {
     try {
         const sales = await prisma.sale.findMany({
             where: { userId: req.userId },
@@ -223,7 +224,7 @@ router.get('/recent', authMiddleware, async (req, res) => {
 });
 
 // GET SALES STATS
-router.get('/stats', authMiddleware, async (req, res) => {
+router.get('/stats', authMiddleware, cache('sales_stats'), async (req, res) => {
     let timezoneOffset = -60; // Default to Nigeria (UTC+1)
     if (req.query.timezoneOffset !== undefined) {
         timezoneOffset = parseInt(req.query.timezoneOffset);
@@ -258,7 +259,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
 });
 
 // GET WEEKLY SALES (Last 7 Days)
-router.get('/weekly', authMiddleware, async (req, res) => {
+router.get('/weekly', authMiddleware, cache('sales_weekly'), async (req, res) => {
     let timezoneOffset = -60; // Default to Nigeria (UTC+1)
     if (req.query.timezoneOffset !== undefined) {
         timezoneOffset = parseInt(req.query.timezoneOffset);
@@ -318,7 +319,7 @@ router.get('/weekly', authMiddleware, async (req, res) => {
 });
 
 // GET TOP-SELLING PRODUCTS
-router.get('/top-products', authMiddleware, async (req, res) => {
+router.get('/top-products', authMiddleware, cache('sales_top'), async (req, res) => {
     try {
         const sales = await prisma.sale.findMany({
             where: { userId: req.userId },
@@ -362,7 +363,7 @@ router.get('/top-products', authMiddleware, async (req, res) => {
 
 // GET DETAILED ANALYTICS (Revenue, Cost, profit/gains)
 // GET DETAILED ANALYTICS (Revenue, Cost, profit/gains)
-router.get('/analytics', authMiddleware, async (req, res) => {
+router.get('/analytics', authMiddleware, cache('sales_analytics'), async (req, res) => {
     let timezoneOffset = -60; // Default to Nigeria (UTC+1)
     if (req.query.timezoneOffset !== undefined) {
         timezoneOffset = parseInt(req.query.timezoneOffset);

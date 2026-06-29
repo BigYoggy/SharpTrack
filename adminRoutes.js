@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('./lib/prisma');
 const adminAuth = require('./middleware/adminAuth');
+const { cache, clearCache } = require('./middleware/cache');
 const { isValidId } = require('./lib/validation');
 
 // Centralized ID parameter validator middleware
@@ -147,7 +148,7 @@ router.get('/me', adminAuth, async (req, res) => {
 });
 
 // 4. GET DASHBOARD STATS
-router.get('/stats', adminAuth, async (req, res) => {
+router.get('/stats', adminAuth, cache('admin_stats'), async (req, res) => {
     try {
         // Enforce Support access (read-only analytics is supported)
         if (!['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(req.adminRole)) {
@@ -217,7 +218,7 @@ router.get('/stats', adminAuth, async (req, res) => {
 });
 
 // 5. GET SALES TREND CHART DATA
-router.get('/charts/sales-trend', adminAuth, async (req, res) => {
+router.get('/charts/sales-trend', adminAuth, cache('admin_sales_trend'), async (req, res) => {
     if (!['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(req.adminRole)) {
         return res.status(403).json({ error: 'Access denied.' });
     }
@@ -278,7 +279,7 @@ router.get('/charts/sales-trend', adminAuth, async (req, res) => {
 });
 
 // 6. USERS MANAGEMENT
-router.get('/users', adminAuth, async (req, res) => {
+router.get('/users', adminAuth, cache('admin_users'), async (req, res) => {
     try {
         const users = await prisma.user.findMany({
             orderBy: { createdAt: 'desc' },
@@ -357,7 +358,7 @@ router.delete('/users/:id', adminAuth, async (req, res) => {
 });
 
 // 7. PRODUCT CATALOG
-router.get('/products', adminAuth, async (req, res) => {
+router.get('/products', adminAuth, cache('admin_products'), async (req, res) => {
     try {
         const products = await prisma.product.findMany({
             orderBy: { createdAt: 'desc' },
@@ -445,7 +446,7 @@ router.put('/products/:id', adminAuth, async (req, res) => {
         return res.status(403).json({ error: 'Access denied.' });
     }
 
-    const { name, barcode, brand, category, specifications, image } = req.body;
+    const { name, barcode, brand, category, specifications, image, description } = req.body;
 
     try {
         let finalCategoryId = undefined;
@@ -466,7 +467,8 @@ router.put('/products/:id', adminAuth, async (req, res) => {
                 brand: brand !== undefined ? brand.trim() : undefined,
                 categoryId: finalCategoryId,
                 specifications: specifications !== undefined ? specifications.trim() : undefined,
-                image: image !== undefined ? image.trim() : undefined
+                image: image !== undefined ? image.trim() : undefined,
+                description: description !== undefined ? description.trim() : undefined
             }
         });
         res.json({ message: 'Product modified successfully', product: updated });
@@ -484,6 +486,7 @@ router.delete('/products/:id', adminAuth, async (req, res) => {
     try {
         await prisma.sale.deleteMany({ where: { productId: req.params.id } });
         await prisma.product.delete({ where: { id: req.params.id } });
+        await clearCache(`admin*`);
         res.json({ message: 'Product deleted successfully' });
     } catch (err) {
         console.error('Delete product error:', err);
@@ -492,7 +495,7 @@ router.delete('/products/:id', adminAuth, async (req, res) => {
 });
 
 // 8. BUSINESS MANAGEMENT
-router.get('/businesses', adminAuth, async (req, res) => {
+router.get('/businesses', adminAuth, cache('admin_businesses'), async (req, res) => {
     if (!['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(req.adminRole)) {
         return res.status(403).json({ error: 'Access denied.' });
     }
@@ -740,7 +743,7 @@ router.delete('/categories/:name', adminAuth, async (req, res) => {
 });
 
 // 11. OPERATIONS FEED (AUDIT LOGS)
-router.get('/activity', adminAuth, async (req, res) => {
+router.get('/activity', adminAuth, cache('admin_activity'), async (req, res) => {
     if (!['SUPER_ADMIN', 'ADMIN'].includes(req.adminRole)) {
         return res.status(403).json({ error: 'Access denied.' });
     }

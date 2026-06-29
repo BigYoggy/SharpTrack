@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('./lib/prisma');
 const authMiddleware = require('./middleware/auth');
+const { cache, clearCache } = require('./middleware/cache');
 const { isValidId, isValidBarcode, validateImageContent } = require('./lib/validation');
 const { logActivity, createNotification } = require('./lib/monitoring');
 
@@ -15,7 +16,7 @@ router.param('id', (req, res, next, id) => {
 
 // ADD PRODUCT
 router.post('/', authMiddleware, async (req, res) => {
-    const { name, sellingPrice, costPrice, quantity, reorderLevel, unit, brand, weight, barcode, description, categoryId, categoryName, image } = req.body;
+    const { name, sellingPrice, costPrice, quantity, reorderLevel, unit, brand, weight, barcode, description, categoryId, categoryName, image, specifications } = req.body;
 
     if (!name || sellingPrice === undefined || costPrice === undefined || quantity === undefined) {
         return res.status(400).json({ error: 'Name, selling price, cost price, and quantity are required' });
@@ -64,6 +65,7 @@ router.post('/', authMiddleware, async (req, res) => {
             userId: req.userId,
             brand: brand || null,
             weight: weight || null,
+            specifications: specifications || null,
             barcode: barcode || null,
             description: description || null,
             categoryId: finalCategoryId,
@@ -76,6 +78,8 @@ router.post('/', authMiddleware, async (req, res) => {
         await logActivity(req.userId, 'product_created', `Created product: ${product.name} (Qty: ${product.quantity})`);
         await createNotification(req.userId, 'info', 'Product Added', `Added product: ${product.name} (${product.quantity} ${product.unit || 'pieces'}).`);
 
+        await clearCache(`products*`);
+        await clearCache(`dashboard:${req.userId}:*`);
         res.status(201).json({ message: 'Product added', product });
     } catch (err) {
         console.error('Add product error:', err.message);
@@ -84,7 +88,7 @@ router.post('/', authMiddleware, async (req, res) => {
 });
 
 // GET ALL PRODUCTS
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', authMiddleware, cache('products'), async (req, res) => {
     try {
         const products = await prisma.product.findMany({
             where: { userId: req.userId },
@@ -98,7 +102,7 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 // GET PRODUCT STATS (for dashboard)
-router.get('/stats', authMiddleware, async (req, res) => {
+router.get('/stats', authMiddleware, cache('products_stats'), async (req, res) => {
     try {
         const products = await prisma.product.findMany({
             where: { userId: req.userId },
@@ -123,7 +127,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
 });
 
 // GET CATEGORIES
-router.get('/categories', authMiddleware, async (req, res) => {
+router.get('/categories', authMiddleware, cache('products_cat'), async (req, res) => {
     try {
         const cats = await prisma.category.findMany({ orderBy: { name: 'asc' } });
         res.json({ categories: cats.map(x => x.name) });
@@ -134,7 +138,7 @@ router.get('/categories', authMiddleware, async (req, res) => {
 });
 
 // LOOKUP PRODUCT BY BARCODE
-router.get('/barcode/:code', authMiddleware, async (req, res) => {
+router.get('/barcode/:code', authMiddleware, cache('products_barcode'), async (req, res) => {
     const { code } = req.params;
     if (!code) {
         return res.status(400).json({ error: 'Barcode parameter is required' });
@@ -277,6 +281,29 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     } catch (err) {
         console.error('Delete product error:', err.message);
         res.status(500).json({ error: 'Failed to delete product' });
+    }
+});
+
+// SEARCH GLOBAL CATALOG BY NAME (Auto-fill support)
+router.get('/search-global', authMiddleware, cache('products_global'), async (req, res) => {
+    const query = req.query.q;
+    if (!query || query.length < 2) {
+        return res.json({ products: [] });
+    }
+
+    try {
+        const products = await prisma.product.findMany({
+            where: {
+                name: { contains: query, mode: 'insensitive' }
+            },
+            include: { category: { select: { name: true } } },
+            take: 5, // Return top 5 matches
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json({ products });
+    } catch (err) {
+        console.error('Global search error:', err.message);
+        res.status(500).json({ error: 'Failed to search catalog' });
     }
 });
 

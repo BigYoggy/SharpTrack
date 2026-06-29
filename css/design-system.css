@@ -459,7 +459,7 @@ input[inputmode="numeric"]::placeholder { letter-spacing: normal; font-weight: 4
 }
 
 .nav-logo { display: flex; align-items: center; gap: 8px; }
-.nav-logo img { height: 48px; width: auto; object-fit: contain; mix-blend-mode: normal; filter: brightness(0) invert(1); }
+.nav-logo img { height: 48px; width: auto; object-fit: contain; }
 
 
 .hamburger {
@@ -2122,36 +2122,32 @@ svg.icon-lg { width: 28px; height: 28px; }
     position: fixed;
     bottom: 84px; /* Above the 64px bottom nav bar, with 20px margin */
     right: max(20px, calc(50vw - 220px)); /* Align within the max-width of 480px centered column */
-    width: 56px;
-    height: 56px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
-    background: var(--primary); /* Green circle */
-    color: #ffffff;
+    background: transparent;
     border: none;
-    box-shadow: 0 4px 16px rgba(10, 77, 51, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1001; /* Must sit ABOVE the bottom navigation bar (which is z-index 1000) */
-    transition: transform var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    padding: 0;
+    overflow: hidden;
 }
 .ai-chat-btn:hover {
     transform: scale(1.05);
-    background: var(--primary-dark);
-    box-shadow: 0 6px 20px rgba(10, 77, 51, 0.45);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
 }
 .ai-chat-btn:active {
     transform: scale(0.95);
 }
-.ai-chat-btn svg {
-    width: 24px;
-    height: 24px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+.ai-chat-btn .ai-chat-icon-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 /* Chat Modal Customization */
@@ -2504,11 +2500,14 @@ svg.icon-lg { width: 28px; height: 28px; }
     /* Base Body - allow full width on PC */
     body {
         max-width: 100% !important;
+        width: 100% !important;
         margin: 0 !important;
         padding-bottom: 40px !important; /* No bottom nav on desktop */
         background: var(--bg);
         min-height: 100vh;
         display: block !important; /* Block prevents flex sticky overlap issues */
+        overflow-x: hidden !important;
+        box-sizing: border-box;
     }
 
     body.has-sidebar {
@@ -2518,7 +2517,7 @@ svg.icon-lg { width: 28px; height: 28px; }
     .content {
         width: 100%;
         max-width: 1400px;
-        margin: 0 auto !important; /* Perfectly centers content next to the navigation sidebar */
+        margin: 0 auto 0 0 !important; 
         padding: 40px 60px;        /* Increases padding to let complex data grids "breathe" */
     }
 
@@ -2585,12 +2584,15 @@ svg.icon-lg { width: 28px; height: 28px; }
     .nav-item {
         flex-direction: row !important;
         justify-content: flex-start !important;
+        align-items: center !important;
         padding: 14px 20px !important;
-        font-size: 14px !important;
+        font-size: 15px !important;
+        font-weight: 500 !important;
         gap: 16px !important;
         border-radius: 12px !important;
         width: 100% !important;
         transition: background-color 0.2s, color 0.2s, transform 0.1s !important;
+        position: relative;
     }
 
     .nav-item:hover {
@@ -2600,6 +2602,20 @@ svg.icon-lg { width: 28px; height: 28px; }
     .nav-item.active {
         background: var(--primary-ghost) !important;
         color: var(--primary) !important;
+        font-weight: 600 !important;
+    }
+    
+    .nav-item.active::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        bottom: auto;
+        width: 4px;
+        height: 20px;
+        border-radius: 0 4px 4px 0;
+        background: var(--primary);
     }
 
     .nav-indicator {
@@ -2666,8 +2682,15 @@ svg.icon-lg { width: 28px; height: 28px; }
 
     /* AI Chat Floating Button on Desktop */
     .ai-chat-btn {
+        position: fixed !important;
         right: 40px !important;
         bottom: 40px !important;
+        z-index: 9999 !important;
+        transform: none !important;
+    }
+
+    .ai-chat-btn:hover {
+        transform: scale(1.05) !important;
     }
 
     /* Keep the logo centered in the navbar */

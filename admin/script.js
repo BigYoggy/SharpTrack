@@ -1113,6 +1113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="product-barcode-pill">EAN: ${p.barcode || 'N/A'}</span>
                     <span class="prod-spec-text">${p.specifications || 'Standard packaging'}</span>
                     <span class="prod-brand-text">Brand: ${p.brand || 'Unbranded'}</span>
+                    <p class="prod-desc-text" style="font-size: 12px; color: var(--text-secondary); margin-top: 8px; max-height: 40px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${p.description || 'No description provided.'}</p>
                 </div>
                 ${['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'DEV'].includes(state.currentAdminRole) ? `
                 <div class="prod-action-block">
@@ -1145,6 +1146,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('prod-brand').value = prod.brand || '';
                     document.getElementById('prod-spec').value = prod.specifications || '';
                     document.getElementById('prod-img').value = prod.image || '';
+                    document.getElementById('prod-desc').value = prod.description || '';
 
                     const select = document.getElementById('prod-category');
                     select.innerHTML = '';
@@ -1194,8 +1196,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const category = document.getElementById('prod-category').value;
         const specifications = document.getElementById('prod-spec').value.trim();
         const image = document.getElementById('prod-img').value.trim();
+        const description = document.getElementById('prod-desc').value.trim();
 
-        const bodyData = { name, barcode, brand, category, specifications, image };
+        const bodyData = { name, barcode, brand, category, specifications, image, description };
 
         try {
             if (id) {

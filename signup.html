@@ -62,9 +62,9 @@
         }
     </style>
 </head>
-<body class="h-full font-sans text-text bg-bg flex items-center justify-center p-4 relative overflow-x-hidden transition-colors duration-300">
+<body class="w-full min-h-screen font-sans text-text bg-bg flex items-center justify-center p-4 relative overflow-x-hidden transition-colors duration-300">
     <!-- Top Ambient Glow -->
-    <div class="absolute top-0 left-0 w-full h-[500px] bg-glow pointer-events-none z-0"></div>
+    <div class="absolute top-0 left-0 w-full h-full bg-glow pointer-events-none z-0"></div>
 
     <div class="w-full max-w-[420px] bg-bg-card border border-border p-8 rounded-2xl shadow-lg relative z-10 animate-fade-in transition-all duration-300">
         <!-- Logo Header -->
@@ -124,7 +124,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
                         </span>
-                        <input type="text" id="email-or-phone" placeholder="owner@pharmacy.com or 08012345678" 
+                        <input type="text" id="email-or-phone" placeholder="Email or phone number" 
                                class="w-full bg-bg border border-border rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-brand text-text transition-colors duration-200" required
                                oninput="detectInputType(this)">
                     </div>
@@ -299,20 +299,39 @@
             const emailIcon = `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>`;
             const phoneIcon = `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>`;
 
+            const pwLabel = document.querySelector('label[for="password"]');
+            const pwInput = document.getElementById('password');
+
             if (!val) {
                 hint.textContent = '';
                 icon.innerHTML = emailIcon;
+                pwLabel.textContent = 'Password';
+                pwInput.placeholder = 'Min. 6 characters';
+                pwInput.removeAttribute('maxLength');
+                pwInput.inputMode = '';
                 return;
             }
             if (val.includes('@')) {
                 hint.textContent = '📧 Detected as email';
                 icon.innerHTML = emailIcon;
+                pwLabel.textContent = 'Password';
+                pwInput.placeholder = 'Min. 6 characters';
+                pwInput.removeAttribute('maxLength');
+                pwInput.inputMode = '';
             } else if (/^[0+]/.test(val)) {
                 hint.textContent = '📱 Detected as phone number';
                 icon.innerHTML = phoneIcon;
+                pwLabel.textContent = 'PIN';
+                pwInput.placeholder = 'Enter 6-digit PIN';
+                pwInput.maxLength = 6;
+                pwInput.inputMode = 'numeric';
             } else {
                 hint.textContent = '';
                 icon.innerHTML = emailIcon;
+                pwLabel.textContent = 'Password';
+                pwInput.placeholder = 'Min. 6 characters';
+                pwInput.removeAttribute('maxLength');
+                pwInput.inputMode = '';
             }
         }
 
@@ -383,13 +402,19 @@
             btn.innerHTML = `<span class="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"></span>Sending Code...`;
 
             try {
-                // Send OTP to email
-                await apiRequest('/api/otp/send-email', {
-                    method: 'POST',
-                    body: JSON.stringify({ email: email || phone })
-                });
+                if (email) {
+                    await apiRequest('/api/otp/send-email', {
+                        method: 'POST',
+                        body: JSON.stringify({ email })
+                    });
+                } else {
+                    await apiRequest('/api/otp/send', {
+                        method: 'POST',
+                        body: JSON.stringify({ phone })
+                    });
+                }
 
-                signupData = { name, email: email || phone, phone, password };
+                signupData = { name, email, phone, password, pin: phone ? password : '' };
                 
                 // Show OTP form and hide logo, Google button, divider
                 document.getElementById('signup-logo-header').classList.add('hidden');
@@ -399,7 +424,7 @@
                 document.getElementById('otp-form-container').classList.remove('hidden');
                 document.getElementById('display-email').textContent = email || phone;
 
-                showToast('success', 'Code Sent', 'Please check your email for the verification code.');
+                showToast('success', 'Code Sent', 'Please check your ' + (email ? 'email' : 'phone') + ' for the verification code.');
             } catch (err) {
                 showToast('error', 'Error', err.message);
                 btn.disabled = false;
@@ -424,17 +449,29 @@
 
             try {
                 // Verify OTP
-                await apiRequest('/api/otp/verify-email', {
-                    method: 'POST',
-                    body: JSON.stringify({ email: signupData.email, otp })
-                });
+                if (signupData.email) {
+                    await apiRequest('/api/otp/verify-email', {
+                        method: 'POST',
+                        body: JSON.stringify({ email: signupData.email, otp })
+                    });
+                } else {
+                    await apiRequest('/api/otp/verify', {
+                        method: 'POST',
+                        body: JSON.stringify({ phone: signupData.phone, otp })
+                    });
+                }
 
                 // Create Account
                 btn.innerHTML = `<span class="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"></span>Creating Account...`;
 
-                const response = await apiRequest('/api/auth/register-email', {
+                const endpoint = signupData.email ? '/api/auth/register-email' : '/api/auth/register';
+                const payload = signupData.email ? 
+                    { name: signupData.name, email: signupData.email, password: signupData.password } : 
+                    { name: signupData.name, phone: signupData.phone, pin: signupData.pin };
+
+                const response = await apiRequest(endpoint, {
                     method: 'POST',
-                    body: JSON.stringify(signupData)
+                    body: JSON.stringify(payload)
                 });
 
                 showToast('success', 'Welcome! 🎉', 'Your account has been created.');

@@ -88,6 +88,26 @@
         .bottom-bar button:disabled { background: var(--muted); cursor: not-allowed; transform: none; box-shadow: none; }
 
         .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+
+        @media (min-width: 768px) {
+            .bottom-bar {
+                left: 240px; /* Offset for sidebar */
+                bottom: 30px;
+                background: transparent;
+                border-top: none;
+                max-width: none;
+                display: flex;
+                justify-content: flex-end;
+                padding-right: 60px; /* Match content padding */
+                pointer-events: none; /* Let clicks pass through empty space */
+            }
+            .bottom-bar button {
+                width: auto;
+                min-width: 250px;
+                pointer-events: auto; /* Re-enable clicks on button */
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            }
+        }
     </style>
 </head>
 <body>
