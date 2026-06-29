@@ -473,7 +473,24 @@
                         <label>Select Unit</label>
                         <div class="quick-units">
                             <button class="unit-tag active" onclick="selectUnit(this, 'pieces')">Pieces</button>
-                  <!-- ═══════════════════════════════════
+                            <button class="unit-tag" onclick="selectUnit(this, 'cartons')">Cartons</button>
+                            <button class="unit-tag" onclick="selectUnit(this, 'bags')">Bags</button>
+                            <button class="unit-tag" onclick="selectUnit(this, 'packs')">Packs</button>
+                            <button class="unit-tag" onclick="selectUnit(this, 'crates')">Crates</button>
+                            <button class="unit-tag" onclick="selectUnit(this, 'kg')">Kg</button>
+                            <button class="unit-tag" onclick="selectUnit(this, 'litres')">Litres</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-block btn-lg" id="submitBtn" onclick="handleSubmit()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Save Product
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════
              BULK PRODUCTS MODE
              ═══════════════════════════════════ -->
         <div id="bulkProductsMode" class="hidden">
@@ -483,7 +500,7 @@
             </div>
 
             <!-- STEP 1: CAPTURE -->
-            <div id="bulkStep1">
+            <div class="bulk-capture-section">
                 <div class="form-card">
                     <h2>📷 Product Photo</h2>
                     <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Take one photo for this product group or category</p>
@@ -527,7 +544,7 @@
             </div>
 
             <!-- STEP 2: ADD ITEMS -->
-            <div id="bulkStep2">
+            <div class="bulk-items-section">
                 <div class="form-card">
                     <h2>
                         Add Items
@@ -543,7 +560,7 @@
             </div>
 
             <!-- SAVE SECTION -->
-            <div id="bulkStep3">
+            <div class="bulk-save-section">
                 <button class="btn btn-primary btn-block btn-lg" onclick="handleBulkSubmit()" id="bulkSubmitBtn">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1-2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                     Save to Inventory
@@ -590,7 +607,7 @@
         let cropper = null;
         let activeCropMode = 'manual';
         let currentMode = 'selection'; // 'selection', 'single', 'bulk'
-        let currentBulkStep = 1;
+        
         let bulkItems = [];
 
         // ── MODE SWITCHING ──
@@ -610,12 +627,12 @@
 
         function showBulkProducts() {
             currentMode = 'bulk';
-            currentBulkStep = 1;
+            
             document.getElementById('modeSelection').classList.add('hidden');
             document.getElementById('singleProductMode').classList.add('hidden');
             document.getElementById('bulkProductsMode').classList.remove('hidden');
             if (bulkItems.length === 0) addBulkItem();
-            goToStep(1);
+            renderBulkItems();
         }
 
         function goBack() {
@@ -629,10 +646,7 @@
         }
 
         // ── BULK WIZARD STEPS ──
-        function goToStep(step) {
-            currentBulkStep = step;
-            renderBulkItems();
-        }
+        
 
         // ── BULK ITEMS MANAGEMENT ──
         function addBulkItem(name, costPrice, sellingPrice, qty, brand, specifications, categoryName, image) {
@@ -898,7 +912,7 @@
         // ── BARCODE SCANNER ──
         function startBarcodeScanner() {
             document.getElementById('singleFormContainer')?.classList.add('hidden');
-            document.getElementById('bulkStep1')?.classList.add('hidden');
+            
             document.getElementById('scannerSection').classList.remove('hidden');
             if (!html5Qrcode) html5Qrcode = new Html5Qrcode("reader");
             html5Qrcode.start(
@@ -918,7 +932,7 @@
             }
             document.getElementById('scannerSection').classList.add('hidden');
             if (currentMode === 'single') document.getElementById('singleFormContainer')?.classList.remove('hidden');
-            if (currentMode === 'bulk') document.getElementById('bulkStep1')?.classList.remove('hidden');
+            
         }
 
         async function onScanSuccess(decodedText) {
