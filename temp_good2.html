@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -271,30 +271,24 @@
            ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
         @media (max-width: 480px) {
             .mode-select { grid-template-columns: 1fr; }
-            .bulk-main-row { 
+            .bulk-item-row { 
                 display: grid;
                 grid-template-columns: auto auto 1fr auto;
                 grid-template-areas: 
                     "drag icon name delete"
                     "cost sell qty qty";
                 gap: 12px 8px;
-                width: 100%;
+                padding: 12px;
                 align-items: center;
             }
-            .bulk-main-row .drag-handle { grid-area: drag; }
-            .bulk-main-row .tag-icon { grid-area: icon; }
-            .bulk-main-row .item-name { grid-area: name; width: 100%; min-width: 0; }
-            .bulk-main-row .bulk-delete-btn { grid-area: delete; margin: 0; }
+            .bulk-item-row .drag-handle { grid-area: drag; }
+            .bulk-item-row .tag-icon { grid-area: icon; }
+            .bulk-item-row .item-name { grid-area: name; width: 100%; min-width: 0; }
+            .bulk-item-row .bulk-delete-btn { grid-area: delete; margin: 0; }
             
-            .bulk-main-row .cost-group { grid-area: cost; }
-            .bulk-main-row .sell-group { grid-area: sell; }
-            .bulk-main-row .qty-group { grid-area: qty; }
-
-            .bulk-details-row {
-                flex-direction: column;
-                align-items: stretch !important;
-                padding-left: 0 !important;
-            }
+            .bulk-item-row .cost-group { grid-area: cost; }
+            .bulk-item-row .sell-group { grid-area: sell; }
+            .bulk-item-row .qty-group { grid-area: qty; }
 
             .bulk-field-group input { width: 100%; min-width: 0; }
             .review-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -681,7 +675,7 @@
 
             container.innerHTML = bulkItems.map((item, i) => `
                 <div class="bulk-item-row" style="flex-wrap: wrap; padding-bottom: 16px;">
-                    <div class="bulk-main-row" style="display:flex; width:100%; gap: 12px; align-items:center;">
+                    <div style="display:flex; width:100%; gap: 12px; align-items:center;">
                         <div class="drag-handle">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
                         </div>
@@ -690,11 +684,11 @@
                         </div>
                         <input type="text" class="item-name" placeholder="Product name" value="${item.name}" oninput="updateBulkItem(${i},'name',this.value); debounceGlobalSearch(${i}, this.value)">
                         <div class="bulk-field-group cost-group">
-                            <label>Cost (₦)</label>
+                            <label>Cost (Γéª)</label>
                             <input type="number" placeholder="0" value="${item.costPrice}" oninput="updateBulkItem(${i},'costPrice',this.value)">
                         </div>
                         <div class="bulk-field-group sell-group">
-                            <label>Sell (₦)</label>
+                            <label>Sell (Γéª)</label>
                             <input type="number" placeholder="0" value="${item.sellingPrice}" oninput="updateBulkItem(${i},'sellingPrice',this.value)">
                         </div>
                         <div class="bulk-field-group qty-group">
@@ -705,7 +699,7 @@
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         </button>
                     </div>
-                    <div class="bulk-details-row" style="display:flex; width:100%; gap: 12px; padding-left: 36px; margin-top: 8px;">
+                    <div style="display:flex; width:100%; gap: 12px; padding-left: 36px; margin-top: 8px;">
                         <input type="text" id="bulk-brand-${i}" placeholder="Brand" value="${item.brand || ''}" oninput="updateBulkItem(${i},'brand',this.value)" style="flex:1; padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px;">
                         <input type="text" id="bulk-spec-${i}" placeholder="Size (e.g. 50cl)" value="${item.specifications || ''}" oninput="updateBulkItem(${i},'specifications',this.value)" style="flex:1; padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px;">
                         <select id="bulk-cat-${i}" onchange="updateBulkItem(${i},'categoryName',this.value)" style="flex:1; padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px;">
